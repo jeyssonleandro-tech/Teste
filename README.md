@@ -19,3 +19,20 @@ os comandos do ECC.
 
 O que vem junto: 284 skills, 68 agentes, 94 comandos e hooks gerenciados pelo
 plugin. Licença MIT.
+
+## Superpowers (Claude Code plugin)
+
+Este repositório também vem com o plugin [Superpowers](https://github.com/obra/superpowers)
+habilitado em `.claude/settings.json` (marketplace `superpowers`, plugin
+`superpowers@superpowers`).
+
+Ao abrir o projeto no Claude Code, o plugin é reconhecido automaticamente e o
+Claude pede confiança na primeira vez. Para instalar manualmente (ou fora deste
+projeto), rode dentro do Claude Code:
+
+```text
+/plugin marketplace add https://github.com/obra/superpowers
+/plugin install superpowers@superpowers
+```
+
+Verificação: `/plugin` lista `superpowers@superpowers` como instalado.
