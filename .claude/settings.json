@@ -5,9 +5,16 @@
         "source": "github",
         "repo": "affaan-m/ECC"
       }
+    },
+    "superpowers": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers"
+      }
     }
   },
   "enabledPlugins": {
-    "ecc@ecc": true
+    "ecc@ecc": true,
+    "superpowers@superpowers": true
   }
 }
