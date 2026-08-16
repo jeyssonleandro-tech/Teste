@@ -1,4 +1,4 @@
-<title>Painel Financeiro 2026</title>
+<title>Financeiro do Casal</title>
 <style>
   :root {
     color-scheme: light;
@@ -12,10 +12,11 @@
     --axis:         #c7c6bd;
     --grid:         #e8e8e1;
 
-    --s1:           #2a78d6;  /* receitas  */
-    --s2:           #eb6834;  /* despesas  */
+    --s1: #2a78d6;   /* renda / sobra   */
+    --s2: #eb6834;   /* custo de vida   */
+    --s3: #1baf7a;   /* aportes         */
 
-    --r1:#86b6ef; --r2:#5598e7; --r3:#2a78d6; --r4:#1c5cab; --r5:#104281;
+    --r3: #2a78d6;   /* barras de magnitude, uma só cor */
 
     --good:     #0ca30c;
     --good-ink: #006300;
@@ -46,8 +47,8 @@
 
       --s1: #3987e5;
       --s2: #d95926;
-
-      --r1:#184f95; --r2:#256abf; --r3:#3987e5; --r4:#6da7ec; --r5:#9ec5f4;
+      --s3: #199e70;
+      --r3: #3987e5;
 
       --good-ink: #0ca30c;
 
@@ -73,8 +74,8 @@
 
     --s1: #3987e5;
     --s2: #d95926;
-
-    --r1:#184f95; --r2:#256abf; --r3:#3987e5; --r4:#6da7ec; --r5:#9ec5f4;
+    --s3: #199e70;
+    --r3: #3987e5;
 
     --good-ink: #0ca30c;
 
@@ -88,30 +89,15 @@
 
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--plane);
-    color: var(--ink);
-    font-family: var(--sans);
-    font-size: 15px;
-    line-height: 1.5;
+    margin: 0; background: var(--plane); color: var(--ink);
+    font-family: var(--sans); font-size: 15px; line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
-  .shell {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 28px 20px 64px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
+  .shell { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; display: flex; flex-direction: column; gap: 20px; }
   [hidden] { display: none !important; }
 
-  /* ---------- header ---------- */
   .top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 24px; }
-  .eyebrow {
-    font-size: 11px; font-weight: 650; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--ink-muted);
-  }
+  .eyebrow { font-size: 11px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-muted); }
   h1 { font-size: 26px; font-weight: 600; letter-spacing: -.015em; margin: 2px 0 0; text-wrap: balance; }
   .top .meta { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
   .chip {
@@ -119,20 +105,10 @@
     border: 1px solid var(--ring); border-radius: 999px;
     padding: 4px 11px; font-size: 12px; color: var(--ink-2); background: var(--surface);
   }
-  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warning); flex: none; }
-  .chip.real .dot { background: var(--good); }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); flex: none; }
 
-  /* ---------- controles ---------- */
   .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
   .controls .label { font-size: 12px; color: var(--ink-muted); }
-  .segmented { display: inline-flex; background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; padding: 3px; gap: 3px; }
-  .segmented button {
-    font: inherit; font-size: 13px; color: var(--ink-2);
-    background: none; border: 0; border-radius: 6px; padding: 5px 12px; cursor: pointer;
-  }
-  .segmented button:hover:not(:disabled) { background: var(--wash); color: var(--ink); }
-  .segmented button[aria-pressed="true"] { background: var(--wash-hard); color: var(--ink); font-weight: 600; }
-  .segmented button:disabled { opacity: .38; cursor: default; }
   .btn {
     font: inherit; font-size: 13px; font-weight: 550; color: var(--ink);
     background: var(--surface); border: 1px solid var(--ring); border-radius: 8px;
@@ -143,26 +119,21 @@
   .push { margin-left: auto; }
   :is(button, summary, a, input):focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; border-radius: 6px; }
 
-  /* ---------- avisos ---------- */
   .banner {
     display: flex; align-items: flex-start; gap: 10px;
     border: 1px solid var(--ring); border-left: 3px solid var(--axis);
     border-radius: 10px; padding: 11px 14px; font-size: 13px; background: var(--surface); color: var(--ink-2);
   }
-  .banner.erro { border-left-color: var(--critical); }
-  .banner.ok   { border-left-color: var(--good); }
+  .banner.erro  { border-left-color: var(--critical); }
+  .banner.ok    { border-left-color: var(--good); }
+  .banner.alerta{ border-left-color: var(--warning); }
   .banner b { color: var(--ink); font-weight: 620; }
   .banner code { font-size: 12px; background: var(--wash); padding: 1px 5px; border-radius: 4px; }
 
-  /* ---------- cards ---------- */
   .card {
-    background: var(--surface);
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    padding: 16px 18px 18px;
-    display: flex; flex-direction: column; gap: 14px;
-    min-width: 0;
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 16px 18px 18px;
+    display: flex; flex-direction: column; gap: 14px; min-width: 0;
   }
   .card > header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .card h2 { font-size: 14px; font-weight: 650; letter-spacing: -.005em; margin: 0; }
@@ -170,28 +141,21 @@
 
   .grid { display: grid; gap: 16px; }
   .kpis { grid-template-columns: repeat(4, minmax(0,1fr)); }
-  .split-wide { grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); }
+  .split-wide { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
   .split-even { grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .grid.solo { grid-template-columns: minmax(0,1fr); }
   @media (max-width: 900px) {
     .kpis { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .split-wide, .split-even { grid-template-columns: minmax(0,1fr); }
   }
   @media (max-width: 460px) { .kpis { grid-template-columns: minmax(0,1fr); } }
 
-  /* ---------- stat tiles ---------- */
-  .tile { gap: 10px; padding: 14px 16px 16px; }
+  .tile { gap: 8px; padding: 14px 16px 16px; }
   .tile .name { font-size: 12px; font-weight: 600; color: var(--ink-2); }
-  .tile .value { font-size: 28px; font-weight: 620; letter-spacing: -.025em; line-height: 1.1; }
-  .tile .foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .delta { font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-  .delta.up   { color: var(--good-ink); }
-  .delta.down { color: var(--critical); }
-  .delta.flat { color: var(--ink-muted); }
-  .delta .note { font-weight: 450; color: var(--ink-muted); }
-  .spark { display: block; width: 92px; height: 30px; flex: none; }
+  .tile .value { font-size: 27px; font-weight: 620; letter-spacing: -.025em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .tile .hint { font-size: 12px; color: var(--ink-muted); }
+  .tile .hint b { color: var(--ink-2); font-weight: 620; }
+  .tile.destaque { border-color: color-mix(in srgb, var(--s1) 45%, var(--hairline)); }
 
-  /* ---------- gráficos ---------- */
   .plot { position: relative; }
   .plot svg { display: block; width: 100%; height: auto; overflow: visible; }
   .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--ink-2); }
@@ -213,51 +177,51 @@
   .tip .t-key { display: inline-flex; align-items: center; gap: 6px; opacity: .85; }
   @media (prefers-reduced-motion: reduce) { .tip { transition: none; } }
 
-  /* ---------- barras HTML ---------- */
-  .bars { display: flex; flex-direction: column; gap: 14px; }
-  #bars-nat { flex: 1; }
+  /* barra empilhada única */
+  .stack { display: flex; gap: 2px; height: 34px; }
+  .stack > i { border-radius: 3px; min-width: 3px; }
+  .stack > i:first-child { border-radius: 6px 3px 3px 6px; }
+  .stack > i:last-child { border-radius: 3px 6px 6px 3px; }
+  .stack-legend { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+  .stack-legend .item { display: flex; flex-direction: column; gap: 1px; font-size: 12px; }
+  .stack-legend .rot { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-2); }
+  .stack-legend .val { font-size: 15px; font-weight: 620; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .stack-legend .pc { color: var(--ink-muted); font-weight: 450; font-size: 12px; }
+
+  .bars { display: flex; flex-direction: column; gap: 13px; }
+  .bars.tight { gap: 9px; }
   .bar-row { display: flex; flex-direction: column; gap: 5px; }
   .bar-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px; }
   .bar-head .cc { font-weight: 550; }
-  .bar-head .num { font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 12px; }
+  .bar-head .num { font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 12px; white-space: nowrap; }
   .track { position: relative; height: 10px; background: var(--surface-sunk); border-radius: 5px; }
   .fill { position: absolute; inset: 0 auto 0 0; border-radius: 5px 4px 4px 5px; }
-  .pair { display: flex; flex-direction: column; gap: 3px; }
-  .tag {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px;
-    border: 1px solid var(--ring); color: var(--ink-2); font-variant-numeric: tabular-nums;
-  }
-  .tag.over  { color: var(--critical); border-color: color-mix(in srgb, var(--critical) 40%, transparent); }
-  .tag.under { color: var(--good-ink); border-color: color-mix(in srgb, var(--good) 40%, transparent); }
   .total-row {
     display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
     border-top: 1px solid var(--hairline); padding-top: 10px; margin-top: auto; font-size: 13px;
   }
   .total-row b { font-variant-numeric: tabular-nums; font-weight: 650; }
 
-  /* ---------- tabelas ---------- */
+  .stat {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: auto;
+    background: var(--surface-sunk); border-radius: 10px; padding: 11px 14px;
+  }
+  .stat .big { font-size: 22px; font-weight: 630; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat .txt { font-size: 12px; color: var(--ink-2); }
+
   .scroll { overflow-x: auto; }
   table { border-collapse: collapse; width: 100%; font-size: 13px; }
-  th, td { text-align: left; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
-  th {
-    font-size: 11px; font-weight: 620; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--ink-muted); border-bottom-color: var(--axis);
-  }
+  th, td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
+  th { font-size: 11px; font-weight: 620; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); border-bottom-color: var(--axis); }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 0; }
-  th.rot {
-    text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink); font-weight: 550;
-  }
+  th.rot { text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink); font-weight: 550; }
   tbody tr:last-child td { border-bottom: 0; }
   tbody tr:hover td { background: var(--wash); }
   .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
   .pill::before { content: ""; width: 8px; height: 8px; border-radius: 2px; flex: none; }
-  .pill.vencido::before   { background: var(--critical); }
-  .pill.vence::before     { background: var(--warning); }
-  .pill.programado::before{ background: var(--axis); }
-  .pill.vencido { color: var(--critical); }
-  .pill.vence   { color: var(--ink-2); }
-  .pill.programado { color: var(--ink-muted); }
+  .pill.receita::before { background: var(--s1); } .pill.receita { color: var(--ink-2); }
+  .pill.despesa::before { background: var(--s2); } .pill.despesa { color: var(--ink-2); }
+  .pill.aporte::before  { background: var(--s3); } .pill.aporte  { color: var(--ink-2); }
 
   details.data { border-top: 1px solid var(--hairline); padding-top: 10px; }
   details.data summary { font-size: 12px; color: var(--ink-2); cursor: pointer; }
@@ -265,136 +229,122 @@
   details.ajuda summary { font-size: 13px; color: var(--ink-2); cursor: pointer; font-weight: 550; }
   details.ajuda .corpo { font-size: 13px; color: var(--ink-2); display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
   details.ajuda code { font-size: 12px; background: var(--wash); padding: 1px 5px; border-radius: 4px; }
-  pre.exemplo {
-    margin: 0; padding: 11px 13px; background: var(--surface-sunk); border-radius: 8px;
-    font-size: 12px; line-height: 1.7; overflow-x: auto; color: var(--ink-2);
-  }
 
   footer.note { font-size: 12px; color: var(--ink-muted); border-top: 1px solid var(--hairline); padding-top: 14px; }
 
-  /* ---------- área de soltar arquivo ---------- */
   .dropzone {
-    position: fixed; inset: 0; z-index: 20; display: none;
-    align-items: center; justify-content: center;
+    position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center;
     background: color-mix(in srgb, var(--plane) 88%, transparent);
-    border: 3px dashed var(--s1); font-size: 17px; font-weight: 600; color: var(--ink);
+    border: 3px dashed var(--s1); font-size: 17px; font-weight: 600; color: var(--ink); text-align: center; padding: 20px;
   }
   .dropzone.on { display: flex; }
 </style>
 
-<div class="dropzone" id="dropzone">Solte o arquivo CSV para carregar os dados</div>
+<div class="dropzone" id="dropzone">Solte os CSV das abas <b>&nbsp;Contas Fixas&nbsp;</b> e/ou <b>&nbsp;Investimentos&nbsp;</b></div>
 
 <div class="shell">
   <header class="top">
     <div>
-      <div class="eyebrow" id="eyebrow">Controle financeiro</div>
-      <h1 id="titulo">Painel Financeiro</h1>
+      <div class="eyebrow">Orçamento mensal do casal</div>
+      <h1>Financeiro do Casal</h1>
     </div>
     <div class="meta">
-      <span class="chip" id="chip-origem"><span class="dot"></span>Dados fictícios · demonstração</span>
-      <span class="chip" id="chip-periodo"></span>
+      <span class="chip" id="chip-origem"><span class="dot"></span></span>
+      <span class="chip" id="chip-linhas"></span>
     </div>
   </header>
 
   <div class="controls">
-    <span class="label">Período</span>
-    <div class="segmented" id="periodo" role="group" aria-label="Período de análise">
-      <button type="button" data-n="0" aria-pressed="true">Tudo</button>
-      <button type="button" data-n="6" aria-pressed="false">Últimos 6 meses</button>
-      <button type="button" data-n="3" aria-pressed="false">Últimos 3 meses</button>
-    </div>
-    <span class="label" id="periodo-desc"></span>
+    <span class="label">Os valores são os lançamentos fixos da planilha, repetidos todo mês.</span>
     <div class="push"></div>
-    <button type="button" class="btn" id="btn-csv">Carregar planilha (CSV)</button>
-    <button type="button" class="btn ghost" id="btn-exemplo" hidden>Voltar ao exemplo</button>
-    <input type="file" id="file-csv" accept=".csv,.tsv,.txt,text/csv" hidden>
+    <button type="button" class="btn" id="btn-csv">Atualizar com CSV</button>
+    <button type="button" class="btn ghost" id="btn-planilha" hidden>Voltar à planilha original</button>
+    <input type="file" id="file-csv" accept=".csv,.tsv,.txt,text/csv" multiple hidden>
   </div>
 
   <div class="banner" id="aviso" hidden></div>
 
-  <section class="grid kpis" id="kpis" aria-label="Indicadores do período"></section>
+  <section class="grid kpis" id="kpis" aria-label="Indicadores do mês"></section>
 
   <section class="grid split-wide">
     <div class="card">
       <header>
-        <h2>Fluxo de caixa</h2>
-        <span class="sub" id="sub-fluxo">entradas e saídas por mês</span>
+        <h2>Para onde vai a renda</h2>
+        <span class="sub">todo mês, sobre a renda total</span>
       </header>
-      <div class="legend">
-        <span><i class="swatch" style="background:var(--s1)"></i>Receitas</span>
-        <span><i class="swatch" style="background:var(--s2)"></i>Despesas</span>
-      </div>
-      <div class="plot" id="plot-fluxo"><div class="tip" id="tip-fluxo"></div></div>
+      <div class="stack" id="stack-destino" role="img" aria-label="Divisão da renda entre custo de vida, aportes e sobra"></div>
+      <div class="stack-legend" id="legenda-destino"></div>
+      <div class="stat" id="stat-poupanca"></div>
     </div>
 
     <div class="card">
       <header>
-        <h2>Resultado mensal</h2>
-        <span class="sub">receitas − despesas</span>
+        <h2>De onde vem a renda</h2>
+        <span class="sub">somando os dois pagamentos</span>
       </header>
-      <div class="plot" id="plot-resultado"><div class="tip" id="tip-resultado"></div></div>
+      <div class="bars" id="bars-origem"></div>
     </div>
   </section>
 
-  <section class="grid split-even" id="linha-detalhe">
-    <div class="card" id="card-cc">
+  <section class="grid split-even">
+    <div class="card">
       <header>
-        <h2>Orçado × realizado por centro de custo</h2>
-        <span class="sub">acumulado do período</span>
+        <h2>Os dois pagamentos do mês</h2>
+        <span class="sub">o que entra e o que sai em cada data</span>
       </header>
       <div class="legend">
-        <span><i class="swatch" style="background:var(--s1)"></i>Orçado</span>
-        <span><i class="swatch" style="background:var(--s2)"></i>Realizado</span>
+        <span><i class="swatch" style="background:var(--s1)"></i>Renda</span>
+        <span><i class="swatch" style="background:var(--s2)"></i>Custo de vida</span>
+        <span><i class="swatch" style="background:var(--s3)"></i>Aportes</span>
       </div>
-      <div class="bars plot" id="bars-cc"><div class="tip" id="tip-cc"></div></div>
+      <div class="plot" id="plot-ciclos"><div class="tip" id="tip-ciclos"></div></div>
     </div>
 
-    <div class="card" id="card-nat">
+    <div class="card">
       <header>
-        <h2 id="tit-nat">Despesas por natureza</h2>
-        <span class="sub">acumulado do período</span>
+        <h2>Custo de vida por categoria</h2>
+        <span class="sub">sem contar os aportes</span>
       </header>
-      <div class="bars" id="bars-nat"></div>
+      <div class="bars plot" id="bars-cat"><div class="tip" id="tip-cat"></div></div>
     </div>
   </section>
 
-  <section class="card" id="card-ap">
-    <header>
-      <h2>Contas a pagar em aberto</h2>
-      <span class="sub" id="sub-ap"></span>
-    </header>
-    <div class="scroll">
-      <table id="tab-ap">
-        <thead>
-          <tr>
-            <th scope="col">Vencimento</th>
-            <th scope="col">Fornecedor</th>
-            <th scope="col">Centro de custo</th>
-            <th scope="col">Situação</th>
-            <th scope="col" class="num">Valor</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot></tfoot>
-      </table>
+  <section class="grid split-even">
+    <div class="card">
+      <header>
+        <h2>Assinaturas na fatura do cartão</h2>
+        <span class="sub" id="sub-cartao"></span>
+      </header>
+      <div class="bars tight" id="bars-cartao"></div>
+    </div>
+
+    <div class="card">
+      <header>
+        <h2>Investimentos</h2>
+        <span class="sub">saldo por conta e rendimento do mês</span>
+      </header>
+      <div class="legend" id="legenda-invest"></div>
+      <div class="bars" id="bars-invest"></div>
+      <div class="stat" id="stat-reserva"></div>
     </div>
   </section>
 
   <section class="card">
     <details class="data">
-      <summary>Ver série mensal em tabela</summary>
+      <summary>Ver todos os lançamentos fixos</summary>
       <div class="scroll">
-        <table id="tab-serie">
+        <table id="tab-itens">
           <thead>
             <tr>
-              <th scope="col">Mês</th>
-              <th scope="col" class="num">Receitas</th>
-              <th scope="col" class="num">Despesas</th>
-              <th scope="col" class="num">Resultado</th>
-              <th scope="col" class="num">Caixa acumulado</th>
+              <th scope="col">Item</th>
+              <th scope="col">Pagamento</th>
+              <th scope="col">Categoria</th>
+              <th scope="col">Tipo</th>
+              <th scope="col" class="num">Valor</th>
             </tr>
           </thead>
           <tbody></tbody>
+          <tfoot></tfoot>
         </table>
       </div>
     </details>
@@ -402,33 +352,27 @@
 
   <section class="card">
     <details class="ajuda">
-      <summary>Como carregar sua planilha</summary>
+      <summary>Como atualizar o painel quando a planilha mudar</summary>
       <div class="corpo">
         <p style="margin:0">
-          No Google Sheets: <b>Arquivo → Fazer download → Valores separados por vírgula (.csv)</b>.
-          Depois clique em <b>Carregar planilha (CSV)</b> ou arraste o arquivo para esta página.
-          O arquivo é lido no seu navegador — nada é enviado para fora.
+          No Google Sheets, com a aba <b>Contas Fixas</b> aberta:
+          <b>Arquivo → Fazer download → Valores separados por vírgula (.csv)</b>.
+          Repita com a aba <b>Investimentos</b> aberta — o download exporta só a aba visível.
+          Depois clique em <b>Atualizar com CSV</b> e escolha os dois arquivos de uma vez,
+          ou arraste-os para esta página. A leitura acontece no seu navegador; nada é enviado para fora.
         </p>
         <p style="margin:0">
-          A primeira linha precisa ser o cabeçalho. Os nomes de coluna são reconhecidos por
-          sinônimos, sem diferenciar maiúsculas ou acentos:
+          O painel procura os blocos pelos títulos: <code>Cartão</code> e qualquer coisa com
+          <code>Dia 15</code>, <code>Dia 30</code> ou outro dia. Cada bloco é lido como
+          pares de <b>nome</b> e <b>valor</b> nas duas colunas, até a primeira linha vazia —
+          então pode incluir ou tirar linhas à vontade. As linhas <code>Receita</code> e
+          <code>Despesa</code> no fim de cada bloco são usadas só para conferência.
         </p>
-        <ul style="margin:0; padding-left: 20px; display:flex; flex-direction:column; gap:4px">
-          <li><b>Data</b> (obrigatória) — <code>data</code>, <code>vencimento</code>, <code>competência</code>, <code>mês</code>. Aceita <code>15/08/2026</code>, <code>2026-08-15</code> ou <code>ago/2026</code>.</li>
-          <li><b>Valor</b> (obrigatória) — <code>valor</code>, <code>montante</code>, <code>total</code>, <code>r$</code>. Aceita <code>R$ 1.234,56</code> e negativos.</li>
-          <li><b>Tipo</b> — <code>tipo</code>, <code>entrada/saída</code>, <code>d/c</code>. Valores como <code>receita</code>, <code>entrada</code>, <code>crédito</code> × <code>despesa</code>, <code>saída</code>, <code>débito</code>. Sem esta coluna, valores negativos viram despesa.</li>
-          <li><b>Categoria</b> — <code>categoria</code>, <code>natureza</code>, <code>classificação</code>, <code>conta</code>. Alimenta o gráfico de despesas por natureza.</li>
-          <li><b>Centro de custo</b> — <code>centro de custo</code>, <code>setor</code>, <code>departamento</code>.</li>
-          <li><b>Orçado</b> — <code>orçado</code>, <code>orçamento</code>, <code>previsto</code>. Sem ela, o cartão de orçado × realizado fica oculto.</li>
-          <li><b>Descrição</b> — <code>descrição</code>, <code>fornecedor</code>, <code>histórico</code>, <code>item</code>.</li>
-          <li><b>Situação</b> — <code>situação</code>, <code>status</code>, <code>pago</code>. Títulos não quitados aparecem em contas a pagar.</li>
-        </ul>
-        <pre class="exemplo">Data;Descrição;Categoria;Centro de custo;Tipo;Orçado;Valor;Situação
-05/01/2026;Faturamento loja;Vendas;Comercial;Receita;;18.420,00;Recebido
-08/01/2026;Energia elétrica;Utilidades;Fábrica;Despesa;2.900,00;3.124,50;Pago
-12/08/2026;Metalúrgica Vale Verde;Manutenção;Fábrica;Despesa;3.400,00;18.450,00;Em aberto</pre>
         <p style="margin:0">
-          Uma linha cuja descrição contenha <b>saldo inicial</b> é usada como caixa de abertura.
+          Classificação automática: vira <b>renda</b> o que tem <code>salário</code> ou
+          <code>aluguel apart</code> no nome; vira <b>aporte</b> o que começa com
+          <code>Inv.</code>; o resto é custo de vida, dividido em categorias pelo nome
+          (moradia, transporte, cartão, saúde, e assim por diante).
         </p>
       </div>
     </details>
@@ -441,34 +385,54 @@
 (() => {
   "use strict";
 
-  /* ============================================================ formatação */
-  const nf = (d = 0) => new Intl.NumberFormat("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
-  const brl = v => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(v);
-  const pct = (v, d = 1) => nf(d).format(v) + "%";
-  const SVG_NS = "http://www.w3.org/2000/svg";
-  const MES_ABR = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-
-  /* escala dos valores: define a unidade dos eixos e rótulos a partir da ordem de grandeza */
-  let ESCALA = { div: 1, sufixo: "", legenda: "em reais" };
-  function definirEscala(max) {
-    ESCALA = max >= 1e6 ? { div: 1e3, sufixo: "", legenda: "em R$ mil" }
-           : { div: 1, sufixo: "", legenda: "em reais" };
-  }
-  const eixo = v => nf(0).format(Math.round(v / ESCALA.div));
-  const compacto = v => {
-    const a = Math.abs(v), sinal = v < 0 ? "−" : "";
-    if (a >= 1e6) return sinal + "R$ " + nf(2).format(a / 1e6) + " mi";
-    if (a >= 1e3) return sinal + "R$ " + nf(1).format(a / 1e3) + " mil";
-    return brl(v);
+  /* ===================================================== dados da planilha
+     Financeiro_Casal.xlsx — aba "Contas Fixas" e aba "Investimentos".
+     Para mexer nos números à mão, é só editar daqui até o fim de PLANILHA. */
+  const PLANILHA = {
+    arquivo: "Financeiro_Casal.xlsx",
+    ciclos: [
+      { nome: "Dia 15", itens: [
+        ["Salário Jeysson", 4275.38], ["Aluguel Apart", 1100.00], ["Salário Lorrayne", 4842.09],
+        ["Apartamento Financiamento", 776.84], ["Condomínio", 510.86], ["Luz Casa", 160.00],
+        ["Celular", 88.24], ["Aluguel", 980.00], ["Gás", 116.79], ["Cartão Agosto", 350.00],
+        ["Fatura", 1700.00], ["Café Trabalho", 60.00], ["Inv. Pixinguinha", 1000.00],
+        ["Combustível", 450.00], ["Inv. Viagem", 1500.00], ["Carro Adiantamento", 602.00],
+        ["Gastos com casal", 600.00], ["Mesada", 1200.00]
+      ] },
+      { nome: "Dia 30", itens: [
+        ["Salário Jeysson", 2579.18], ["Salário Lorrayne", 4830.18],
+        ["Financiamento Carro", 862.65], ["Seguro Carro", 459.00], ["Unha/ Sobrancelha", 200.00],
+        ["Inv. Pixinguinha", 1000.00], ["Combustível", 450.00], ["Tag Itaú", 150.00],
+        ["Farmácia", 200.00], ["Prod. Academia", 200.00], ["Imposto de renda 01/04", 113.90],
+        ["Empréstimo", 330.00], ["Inv. Reserva emerg.", 1500.00], ["Inv. Viagem", 1500.00]
+      ] }
+    ],
+    cartao: [
+      ["Cartão - Apple", 5.90], ["Cartão - Spotify", 31.90], ["Cartão - Google One", 9.99],
+      ["WellHub", 82.40], ["Espaço Laser", 243.68], ["Cashbarber", 89.90], ["Alergorio", 140.00],
+      ["WellHub", 82.40], ["Netflix", 20.90], ["Internet", 99.90], ["Claude", 120.00], ["Alergorio", 148.00]
+    ],
+    investimentos: [
+      { objetivo: "Reserva de emergência", conta: "Mercado Pago", modalidade: "Conta 105%",   valor: 7852.91,  rendimento: 28.06 },
+      { objetivo: "Reserva de emergência", conta: "Mercado Pago", modalidade: "Cofrinho 115%", valor: 5000.00,  rendimento: 109.54 },
+      { objetivo: "Reserva de emergência", conta: "PicPay",       modalidade: "Cofrinho 121%", valor: 10000.00, rendimento: 187.05 },
+      { objetivo: "Reserva de emergência", conta: "Personallité", modalidade: "",              valor: 10200.00, rendimento: 14.06 },
+      { objetivo: "Viagem",                conta: "Itaú",         modalidade: "Cofrinho",      valor: 6200.00,  rendimento: 101.41 }
+    ],
+    /* totais digitados na planilha, usados só para conferência */
+    conferencia: { "Dia 15": { receita: 10217.47, despesa: 10094.73 }, "Dia 30": { receita: 7409.36, despesa: 6965.55 },
+                   investido: 32852.91 + 6200.00, rendimento: 330.11 + 101.41 }
   };
 
-  /* passo de eixo "redondo" (1, 2, 2,5 ou 5 × 10^k) para o intervalo dado */
-  function passoEixo(span, divisoes = 5) {
-    const bruto = Math.abs(span) / divisoes || 1;
-    const mag = Math.pow(10, Math.floor(Math.log10(bruto)));
-    const norm = bruto / mag;
-    return (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
-  }
+  /* ============================================================ formatação */
+  const nf = (d = 0) => new Intl.NumberFormat("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const brl = (v, d = 2) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+  const brl0 = v => brl(v, 0);
+  const pct = (v, d = 1) => nf(d).format(v) + "%";
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const soma = arr => arr.reduce((a, b) => a + b, 0);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const plural = (n, um, muitos) => `${nf(0).format(n)} ${n === 1 ? um : muitos}`;
 
   const el = (tag, attrs = {}, text) => {
     const n = document.createElementNS(SVG_NS, tag);
@@ -477,76 +441,415 @@
     return n;
   };
   const css = name => getComputedStyle(document.body).getPropertyValue(name).trim();
-  const soma = arr => arr.reduce((a, b) => a + b, 0);
-  const plural = (n, um, muitos) => `${nf(0).format(n)} ${n === 1 ? um : muitos}`;
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-  /* barra ancorada na linha de base, com a extremidade do dado arredondada */
-  const barra = (x, base, w, h, r, paraCima = true) => {
+  const barraPath = (x, base, w, h, r) => {
     const rr = Math.min(r, w / 2, Math.abs(h));
-    const s = paraCima ? -1 : 1;               /* sentido do crescimento */
-    const ponta = base + s * Math.abs(h);      /* extremidade do dado */
-    const ombro = ponta - s * rr;
-    return `M${x},${base} L${x},${ombro} Q${x},${ponta} ${x + rr},${ponta} ` +
-           `L${x + w - rr},${ponta} Q${x + w},${ponta} ${x + w},${ombro} L${x + w},${base} Z`;
+    const topo = base - Math.abs(h), ombro = topo + rr;
+    return `M${x},${base} L${x},${ombro} Q${x},${topo} ${x + rr},${topo} ` +
+           `L${x + w - rr},${topo} Q${x + w},${topo} ${x + w},${ombro} L${x + w},${base} Z`;
   };
 
-  /* ============================================================ dados-base */
-  function dadosExemplo() {
-    const rec = [1842, 1756, 2014, 1930, 2188, 2105, 2342, 2276].map(v => v * 1000);
-    const des = [1594, 1688, 1712, 1845, 1766, 1902, 1858, 2011].map(v => v * 1000);
-    const meses = rec.map((r, i) => ({
-      chave: `2026-${String(i + 1).padStart(2, "0")}`,
-      rotulo: `${MES_ABR[i]}/26`,
-      curto: MES_ABR[i].replace(/^./, c => c.toUpperCase()),
-      receitas: r, despesas: des[i]
+  function passoEixo(span, divisoes = 4) {
+    const bruto = Math.abs(span) / divisoes || 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(bruto)));
+    const norm = bruto / mag;
+    return (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+  }
+
+  /* ======================================================== classificação */
+  const semAcento = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+  const CATEGORIAS = [
+    { nome: "Transporte",           re: /carro|combust|\btag\b|ipva|uber|\bposto\b|estacion|pedagio/ },
+    { nome: "Moradia",              re: /financiamento|condomin|\bluz\b|\bgas\b|\bagua\b|iptu|aluguel|\bcasa\b|faxin/ },
+    { nome: "Cartão de crédito",    re: /fatura|cartao/ },
+    { nome: "Saúde e cuidados",     re: /farmac|academia|unha|sobrancelha|laser|barber|wellhub|alergorio|medic|dentista|saude|\bplano\b/ },
+    { nome: "Dívidas e impostos",   re: /emprestim|imposto|juros|tarifa|iof|multa/ },
+    { nome: "Assinaturas e telecom",re: /celular|internet|netflix|spotify|apple|google|claude|streaming|assinatura/ },
+    { nome: "Pessoal e lazer",      re: /mesada|casal|cafe|lazer|viagem|presente|restaurante|delivery|mercado|padaria/ }
+  ];
+  const RE_RENDA  = /salario|aluguel apart|\brendas?\b|pro.?labore|bonus|13o|decimo|freela|recebiment/;
+  const RE_APORTE = /^inv\.|investiment|aporte|reserva emerg|poupanca|previdenc/;
+  /* "Imposto de renda" tem "renda" no nome e é saída: estes vêm antes do teste de renda */
+  const RE_SAIDA_FIXA = /imposto|tarifa|multa|taxa\b|juros/;
+
+  function classificar(nome) {
+    const k = semAcento(nome);
+    if (RE_APORTE.test(k)) return { tipo: "aporte", categoria: "Aportes" };
+    if (RE_RENDA.test(k) && !RE_SAIDA_FIXA.test(k)) return { tipo: "receita", categoria: "Renda" };
+    const c = CATEGORIAS.find(c => c.re.test(k));
+    return { tipo: "despesa", categoria: c ? c.nome : "Outros" };
+  }
+
+  const quemRecebe = nome => {
+    const k = semAcento(nome);
+    const m = k.match(/salario\s+(.+)/);
+    if (m) return m[1].replace(/^./, c => c.toUpperCase());
+    if (/aluguel apart/.test(k)) return "Aluguel do apartamento";
+    return "Outras entradas";
+  };
+
+  /* ============================================================== derivação */
+  let dados = null;
+
+  function montar(fonte) {
+    const itens = [];
+    fonte.ciclos.forEach(c => c.itens.forEach(([nome, valor]) => {
+      itens.push({ nome, valor, ciclo: c.nome, ...classificar(nome) });
     }));
-    const k = 1000;
+
+    const porTipo = t => itens.filter(i => i.tipo === t);
+    const renda = soma(porTipo("receita").map(i => i.valor));
+    const consumo = soma(porTipo("despesa").map(i => i.valor));
+    const aportes = soma(porTipo("aporte").map(i => i.valor));
+
+    const ciclos = fonte.ciclos.map(c => {
+      const doCiclo = itens.filter(i => i.ciclo === c.nome);
+      const r = soma(doCiclo.filter(i => i.tipo === "receita").map(i => i.valor));
+      const d = soma(doCiclo.filter(i => i.tipo === "despesa").map(i => i.valor));
+      const a = soma(doCiclo.filter(i => i.tipo === "aporte").map(i => i.valor));
+      return { nome: c.nome, renda: r, consumo: d, aportes: a, sobra: r - d - a };
+    });
+
+    const porCat = new Map();
+    porTipo("despesa").forEach(i => porCat.set(i.categoria, (porCat.get(i.categoria) || 0) + i.valor));
+    const categorias = [...porCat.entries()].map(([nome, valor]) => ({ nome, valor })).sort((a, b) => b.valor - a.valor);
+
+    const porPessoa = new Map();
+    porTipo("receita").forEach(i => {
+      const q = quemRecebe(i.nome);
+      porPessoa.set(q, (porPessoa.get(q) || 0) + i.valor);
+    });
+    const origens = [...porPessoa.entries()].map(([nome, valor]) => ({ nome, valor })).sort((a, b) => b.valor - a.valor);
+
+    const objetivos = [...new Set(fonte.investimentos.map(i => i.objetivo))];
+    const investido = soma(fonte.investimentos.map(i => i.valor));
+    const rendimento = soma(fonte.investimentos.map(i => i.rendimento || 0));
+    const reserva = soma(fonte.investimentos.filter(i => /emerg/i.test(i.objetivo)).map(i => i.valor));
+    const aporteReserva = soma(porTipo("aporte").filter(i => /reserva|emerg/i.test(semAcento(i.nome))).map(i => i.valor));
+
+    const fatura = soma(itens.filter(i => i.categoria === "Cartão de crédito").map(i => i.valor));
+    const assinaturas = soma(fonte.cartao.map(([, v]) => v));
+
     return {
-      origem: "exemplo",
-      titulo: "Painel Financeiro 2026",
-      meses,
-      caixaInicial: 1250 * k,
-      centros: [
-        { nome: "Pessoal e encargos", orcado: 4150 * k, realizado: 4088 * k },
-        { nome: "Manutenção industrial", orcado: 3400 * k, realizado: 3612 * k },
-        { nome: "Utilidades", orcado: 2900 * k, realizado: 2744 * k },
-        { nome: "Logística", orcado: 1680 * k, realizado: 1792 * k },
-        { nome: "Administrativo", orcado: 1230 * k, realizado: 1262 * k },
-        { nome: "Qualidade e laboratório", orcado: 940 * k, realizado: 939 * k }
-      ],
-      natureza: [
-        { nome: "Folha e benefícios", valor: 4088 * k },
-        { nome: "Materiais e insumos", valor: 3410 * k },
-        { nome: "Serviços contratados", valor: 2862 * k },
-        { nome: "Energia, água e efluentes", valor: 2744 * k },
-        { nome: "Despesas gerais", valor: 1272 * k }
-      ],
-      contas: [
-        { venc: new Date(2026, 7, 8), forn: "Metalúrgica Vale Verde", cc: "Manutenção industrial", valor: 184500 },
-        { venc: new Date(2026, 7, 12), forn: "Rotoquímica Insumos", cc: "Materiais e insumos", valor: 96780 },
-        { venc: new Date(2026, 7, 18), forn: "Delta Energia", cc: "Utilidades", valor: 312400 },
-        { venc: new Date(2026, 7, 21), forn: "TransLog Cargas", cc: "Logística", valor: 74250 },
-        { venc: new Date(2026, 7, 29), forn: "Hidroservice Ambiental", cc: "Utilidades", valor: 128900 },
-        { venc: new Date(2026, 8, 5), forn: "Labtec Instrumentos", cc: "Qualidade e laboratório", valor: 45300 },
-        { venc: new Date(2026, 8, 11), forn: "Prisma Manutenção Predial", cc: "Administrativo", valor: 61150 },
-        { venc: new Date(2026, 8, 20), forn: "Aliança Seguros", cc: "Administrativo", valor: 98000 }
-      ],
-      referencia: new Date(2026, 7, 15),
-      rotuloNatureza: "Despesas por natureza"
+      arquivo: fonte.arquivo, origem: fonte.origem || "planilha",
+      itens, ciclos, categorias, origens,
+      cartao: [...fonte.cartao].sort((a, b) => b[1] - a[1]),
+      investimentos: [...fonte.investimentos].sort((a, b) => b.valor - a.valor),
+      objetivos, conferencia: fonte.conferencia,
+      total: { renda, consumo, aportes, sobra: renda - consumo - aportes, investido, rendimento, reserva, aporteReserva, fatura, assinaturas }
     };
   }
 
-  let dados = dadosExemplo();
-  let nMeses = 0;   /* 0 = todo o período */
+  /* ================================================================ KPIs */
+  function tile({ nome, valor, hint, destaque }) {
+    const c = document.createElement("article");
+    c.className = "card tile" + (destaque ? " destaque" : "");
+    c.innerHTML = `<div class="name">${esc(nome)}</div><div class="value">${valor}</div><div class="hint">${hint}</div>`;
+    return c;
+  }
 
-  /* ========================================================== leitura CSV */
+  function renderKpis() {
+    const t = dados.total;
+    const box = document.getElementById("kpis");
+    box.textContent = "";
+    [
+      { nome: "Renda do mês", valor: brl0(t.renda), hint: `${esc(dados.origens[0].nome)} responde por <b>${pct((dados.origens[0].valor / t.renda) * 100, 0)}</b>` },
+      { nome: "Custo de vida", valor: brl0(t.consumo), hint: `<b>${pct((t.consumo / t.renda) * 100, 0)}</b> da renda · maior peso: ${esc(dados.categorias[0].nome.toLowerCase())}` },
+      { nome: "Aportes", valor: brl0(t.aportes), hint: `<b>${pct((t.aportes / t.renda) * 100, 0)}</b> da renda vira investimento` },
+      { nome: "Sobra no mês", valor: brl0(t.sobra), destaque: true,
+        hint: `depois de tudo pago e investido · <b>${pct((t.sobra / t.renda) * 100, 1)}</b> da renda` }
+    ].forEach(k => box.appendChild(tile(k)));
+  }
+
+  /* =================================================== para onde vai a renda */
+  function renderDestino() {
+    const t = dados.total;
+    const partes = [
+      { nome: "Custo de vida", valor: t.consumo, cor: css("--s2") },
+      { nome: "Aportes", valor: t.aportes, cor: css("--s3") },
+      { nome: "Sobra", valor: t.sobra, cor: css("--s1") }
+    ];
+    const stack = document.getElementById("stack-destino");
+    stack.textContent = "";
+    partes.forEach(p => {
+      const i = document.createElement("i");
+      i.style.background = p.cor;
+      i.style.flex = `${Math.max(p.valor, 0)} 0 auto`;
+      i.title = `${p.nome}: ${brl(p.valor)}`;
+      stack.appendChild(i);
+    });
+
+    const leg = document.getElementById("legenda-destino");
+    leg.textContent = "";
+    partes.forEach(p => {
+      const d = document.createElement("div");
+      d.className = "item";
+      d.innerHTML = `<span class="rot"><i class="swatch" style="background:${p.cor}"></i>${esc(p.nome)}</span>` +
+        `<span class="val">${brl0(p.valor)} <span class="pc">${pct((p.valor / t.renda) * 100, 1)}</span></span>`;
+      leg.appendChild(d);
+    });
+
+    const guardado = t.aportes + t.sobra;
+    document.getElementById("stat-poupanca").innerHTML =
+      `<span class="big">${pct((guardado / t.renda) * 100)}</span>` +
+      `<span class="txt">da renda fica com vocês — ${brl0(guardado)} entre aportes e sobra. ` +
+      `Cada R$ 100 que entram viram R$ ${nf(0).format((t.consumo / t.renda) * 100)} de contas.</span>`;
+  }
+
+  /* ======================================================= de onde vem a renda */
+  function barrasSimples(host, linhas, cor, formata) {
+    host.textContent = "";
+    const max = Math.max(...linhas.map(l => l.valor), 1);
+    const total = soma(linhas.map(l => l.valor));
+    linhas.forEach(l => {
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      row.innerHTML =
+        `<div class="bar-head"><span class="cc">${esc(l.nome)}</span>` +
+        `<span class="num">${formata ? formata(l) : `${brl0(l.valor)} · ${pct((l.valor / total) * 100, 0)}`}</span></div>` +
+        `<div class="track"><div class="fill" style="width:${(l.valor / max) * 100}%;background:${cor}"></div></div>`;
+      host.appendChild(row);
+    });
+    return total;
+  }
+
+  function renderOrigem() {
+    barrasSimples(document.getElementById("bars-origem"), dados.origens, css("--s1"));
+  }
+
+  /* ============================================================ dois ciclos */
+  function renderCiclos() {
+    const host = document.getElementById("plot-ciclos");
+    const tip = (() => {
+      const t = document.getElementById("tip-ciclos");
+      return {
+        show(x, y, html) {
+          t.innerHTML = html; t.classList.add("on");
+          const meia = t.offsetWidth / 2 + 4;
+          t.style.left = Math.max(meia, Math.min(host.clientWidth - meia, x)) + "px";
+          t.style.top = Math.max(t.offsetHeight, y) + "px";
+        },
+        hide() { t.classList.remove("on"); }
+      };
+    })();
+    host.querySelectorAll("svg").forEach(s => s.remove());
+
+    const W = 400, H = 250, L = 54, R = 8, T = 26, B = 40;
+    const series = [
+      { nome: "Renda", cor: css("--s1"), key: "renda" },
+      { nome: "Custo de vida", cor: css("--s2"), key: "consumo" },
+      { nome: "Aportes", cor: css("--s3"), key: "aportes" }
+    ];
+    const maxV = Math.max(...dados.ciclos.flatMap(c => series.map(s => c[s.key])));
+    const passo = passoEixo(maxV, 4);
+    const topo = Math.ceil(maxV / passo) * passo;
+    const py = v => T + (1 - v / topo) * (H - T - B);
+
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Renda, custo de vida e aportes em cada data de pagamento" });
+    for (let v = 0; v <= topo + 1e-6; v += passo) {
+      svg.appendChild(el("line", { x1: L, x2: W - R, y1: py(v), y2: py(v), stroke: v === 0 ? css("--axis") : css("--grid"), "stroke-width": "1" }));
+      svg.appendChild(el("text", { x: L - 9, y: py(v) + 4, "text-anchor": "end", "font-size": "11", fill: css("--ink-muted"), "font-family": "inherit" }, nf(0).format(v / 1000) + "k"));
+    }
+
+    const faixa = (W - L - R) / dados.ciclos.length;
+    const larg = Math.min(26, (faixa - 26) / 3);
+    dados.ciclos.forEach((c, gi) => {
+      const x0 = L + gi * faixa + (faixa - (larg * 3 + 8)) / 2;
+      series.forEach((s, si) => {
+        const x = x0 + si * (larg + 4);
+        const v = c[s.key];
+        const marca = el("path", { d: barraPath(x, py(0), larg, py(0) - py(v), 4), fill: s.cor });
+        svg.appendChild(marca);
+        const hit = el("rect", { x, y: T, width: larg, height: H - T - B, fill: "transparent", "pointer-events": "all" });
+        svg.appendChild(hit);
+        hit.addEventListener("pointerenter", () => {
+          marca.setAttribute("fill-opacity", ".78");
+          const r = svg.getBoundingClientRect();
+          tip.show(((x + larg / 2) / W) * r.width, (py(v) / H) * r.height,
+            `<div class="t-head">${esc(c.nome)}</div>` +
+            `<div class="t-row"><span class="t-key"><i class="swatch" style="background:${s.cor}"></i>${s.nome}</span><b>${brl(v)}</b></div>` +
+            `<div class="t-row"><span class="t-key">Sobra do pagamento</span><b>${brl(c.sobra)}</b></div>`);
+        });
+        hit.addEventListener("pointerleave", () => { marca.removeAttribute("fill-opacity"); tip.hide(); });
+      });
+      svg.appendChild(el("text", { x: x0 + (larg * 3 + 8) / 2, y: H - 22, "text-anchor": "middle", "font-size": "12", "font-weight": "600", fill: css("--ink-2"), "font-family": "inherit" }, c.nome));
+      svg.appendChild(el("text", { x: x0 + (larg * 3 + 8) / 2, y: H - 7, "text-anchor": "middle", "font-size": "11", fill: css("--ink-muted"), "font-family": "inherit" }, `sobra ${brl0(c.sobra)}`));
+    });
+
+    host.appendChild(svg);
+  }
+
+  /* ================================================== custo de vida por categoria */
+  function renderCategorias() {
+    const host = document.getElementById("bars-cat");
+    const tipEl = document.getElementById("tip-cat");
+    host.querySelectorAll(".bar-row, .total-row").forEach(n => n.remove());
+    const total = dados.total.consumo;
+    const max = Math.max(...dados.categorias.map(c => c.valor));
+
+    dados.categorias.forEach(c => {
+      const itens = dados.itens.filter(i => i.categoria === c.nome).sort((a, b) => b.valor - a.valor);
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      row.innerHTML =
+        `<div class="bar-head"><span class="cc">${esc(c.nome)}</span>` +
+        `<span class="num">${brl0(c.valor)} · ${pct((c.valor / total) * 100, 0)}</span></div>` +
+        `<div class="track"><div class="fill" style="width:${(c.valor / max) * 100}%;background:var(--r3)"></div></div>`;
+      row.addEventListener("pointermove", ev => {
+        const r = host.getBoundingClientRect();
+        tipEl.innerHTML = `<div class="t-head">${esc(c.nome)}</div>` +
+          itens.slice(0, 6).map(i => `<div class="t-row"><span class="t-key">${esc(i.nome)}</span><b>${brl(i.valor)}</b></div>`).join("") +
+          (itens.length > 6 ? `<div class="t-row"><span class="t-key">+ ${itens.length - 6} itens</span></div>` : "");
+        tipEl.classList.add("on");
+        const meia = tipEl.offsetWidth / 2 + 4;
+        tipEl.style.left = Math.max(meia, Math.min(host.clientWidth - meia, ev.clientX - r.left)) + "px";
+        tipEl.style.top = Math.max(tipEl.offsetHeight, ev.clientY - r.top - 6) + "px";
+      });
+      row.addEventListener("pointerleave", () => tipEl.classList.remove("on"));
+      host.appendChild(row);
+    });
+
+    const foot = document.createElement("div");
+    foot.className = "total-row";
+    foot.innerHTML = `<span>Custo de vida no mês</span><b>${brl(total)}</b>`;
+    host.appendChild(foot);
+  }
+
+  /* ============================================================ cartão */
+  function renderCartao() {
+    const host = document.getElementById("bars-cartao");
+    const t = dados.total;
+    const total = barrasSimples(host, dados.cartao.map(([nome, valor]) => ({ nome, valor })), css("--r3"),
+      l => brl(l.valor));
+    const foot = document.createElement("div");
+    foot.className = "total-row";
+    foot.innerHTML = `<span>Assinaturas fixas</span><b>${brl(total)}</b>`;
+    host.appendChild(foot);
+    document.getElementById("sub-cartao").innerHTML = t.fatura
+      ? `${brl0(total)} de ${brl0(t.fatura)} lançados no cartão — ${pct((total / t.fatura) * 100, 0)} da fatura é recorrente`
+      : "cobranças recorrentes do cartão";
+  }
+
+  /* ===================================================== investimentos */
+  function renderInvest() {
+    const host = document.getElementById("bars-invest");
+    host.textContent = "";
+    const t = dados.total;
+    const cores = [css("--s1"), css("--s3"), css("--s2")];
+    const corDe = obj => cores[dados.objetivos.indexOf(obj) % cores.length];
+
+    const leg = document.getElementById("legenda-invest");
+    leg.innerHTML = dados.objetivos.map(o =>
+      `<span><i class="swatch" style="background:${corDe(o)}"></i>${esc(o)}</span>`).join("");
+
+    const max = Math.max(...dados.investimentos.map(i => i.valor));
+    dados.investimentos.forEach(i => {
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      const nome = i.modalidade ? `${i.conta} · ${i.modalidade}` : i.conta;
+      row.innerHTML =
+        `<div class="bar-head"><span class="cc">${esc(nome)}</span>` +
+        `<span class="num">${brl0(i.valor)} · rende ${brl0(i.rendimento || 0)}</span></div>` +
+        `<div class="track"><div class="fill" style="width:${(i.valor / max) * 100}%;background:${corDe(i.objetivo)}"></div></div>`;
+      host.appendChild(row);
+    });
+
+    const foot = document.createElement("div");
+    foot.className = "total-row";
+    foot.innerHTML = `<span>Total investido · rendimento no mês</span><b>${brl0(t.investido)} · ${brl0(t.rendimento)}</b>`;
+    host.appendChild(foot);
+
+    const meses = t.consumo ? t.reserva / t.consumo : 0;
+    document.getElementById("stat-reserva").innerHTML =
+      `<span class="big">${nf(1).format(meses)} meses</span>` +
+      `<span class="txt">de custo de vida cobertos pela reserva de emergência (${brl0(t.reserva)})` +
+      (t.aporteReserva ? `. Com ${brl0(t.aporteReserva)} de aporte por mês, cada mês a mais de folga leva ${nf(1).format(t.consumo / t.aporteReserva)} meses para juntar` : "") +
+      `.</span>`;
+  }
+
+  /* ============================================================== tabela */
+  function renderTabela() {
+    const tbody = document.querySelector("#tab-itens tbody");
+    const tfoot = document.querySelector("#tab-itens tfoot");
+    tbody.textContent = "";
+    const ordem = { receita: 0, despesa: 1, aporte: 2 };
+    [...dados.itens].sort((a, b) => ordem[a.tipo] - ordem[b.tipo] || b.valor - a.valor).forEach(i => {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        `<th scope="row" class="rot">${esc(i.nome)}</th><td>${esc(i.ciclo)}</td><td>${esc(i.categoria)}</td>` +
+        `<td><span class="pill ${i.tipo}">${i.tipo === "receita" ? "Renda" : i.tipo === "aporte" ? "Aporte" : "Custo"}</span></td>` +
+        `<td class="num">${brl(i.valor)}</td>`;
+      tbody.appendChild(tr);
+    });
+    const t = dados.total;
+    tfoot.innerHTML =
+      `<tr><td colspan="4" style="color:var(--ink-muted)">${plural(dados.itens.length, "lançamento fixo", "lançamentos fixos")} · renda ${brl0(t.renda)} − custos ${brl0(t.consumo)} − aportes ${brl0(t.aportes)}</td>` +
+      `<td class="num" style="font-weight:650">${brl(t.sobra)}</td></tr>`;
+  }
+
+  /* ======================================================= conferência */
+  function conferir() {
+    if (!dados.conferencia) return "";
+    const notas = [];
+    dados.ciclos.forEach(c => {
+      const ref = dados.conferencia[c.nome];
+      if (!ref) return;
+      if (Math.abs(ref.receita - c.renda) > 0.01) notas.push(`renda do ${c.nome.toLowerCase()} (${brl(c.renda)} calculado × ${brl(ref.receita)} na planilha)`);
+      if (Math.abs(ref.despesa - (c.consumo + c.aportes)) > 0.01) notas.push(`saídas do ${c.nome.toLowerCase()} (${brl(c.consumo + c.aportes)} × ${brl(ref.despesa)})`);
+    });
+    const t = dados.total;
+    if (dados.conferencia.investido != null && Math.abs(dados.conferencia.investido - t.investido) > 0.01)
+      notas.push(`total investido (${brl(t.investido)} somando as contas × ${brl(dados.conferencia.investido)} escrito na linha TOTAL)`);
+    if (dados.conferencia.rendimento != null && Math.abs(dados.conferencia.rendimento - t.rendimento) > 0.01)
+      notas.push(`rendimento do mês (${brl(t.rendimento)} × ${brl(dados.conferencia.rendimento)})`);
+    return notas.length
+      ? `<div><b>Confira a planilha:</b> ${notas.length === 1 ? "um total não bate" : "alguns totais não batem"} com a soma das linhas — ${notas.join("; ")}. O painel usa sempre a soma das linhas.</div>`
+      : "";
+  }
+
+  /* ========================================================= orquestração */
+  function render() {
+    renderKpis();
+    renderDestino();
+    renderOrigem();
+    renderCiclos();
+    renderCategorias();
+    renderCartao();
+    renderInvest();
+    renderTabela();
+
+    const t = dados.total;
+    document.getElementById("chip-origem").innerHTML =
+      `<span class="dot"></span>${esc(dados.arquivo)}`;
+    document.getElementById("chip-linhas").textContent =
+      `${plural(dados.itens.length, "lançamento", "lançamentos")} · ${plural(dados.investimentos.length, "conta", "contas")}`;
+    document.getElementById("btn-planilha").hidden = dados.origem !== "csv";
+    document.getElementById("rodape").innerHTML =
+      `Números vindos de <b>${esc(dados.arquivo)}</b>. São os lançamentos fixos, que se repetem todo mês — ` +
+      `gastos variáveis fora da planilha não entram. Renda ${brl(t.renda)} − custo de vida ${brl(t.consumo)} − ` +
+      `aportes ${brl(t.aportes)} = ${brl(t.sobra)}. Página privada: só quem tem o link e sua permissão consegue abrir.`;
+
+    const nota = conferir();
+    const box = document.getElementById("aviso");
+    if (nota && !box.dataset.travado) { box.hidden = false; box.className = "banner alerta"; box.innerHTML = nota; }
+  }
+
+  function aviso(tipo, html) {
+    const box = document.getElementById("aviso");
+    box.dataset.travado = "1";
+    box.hidden = !html;
+    box.className = "banner " + tipo;
+    box.innerHTML = html || "";
+  }
+
+  /* ============================================================ import CSV */
   function separaCSV(texto) {
     const t = texto.replace(/^﻿/, "");
-    const cab = t.slice(0, t.indexOf("\n") > 0 ? t.indexOf("\n") : t.length);
-    const cont = d => (cab.match(new RegExp("\\" + d, "g")) || []).length;
+    const fim = t.indexOf("\n");
+    const cab = fim > 0 ? t.slice(0, fim) : t;
+    const cont = d => (cab.split(d).length - 1);
     const sep = [";", ",", "\t"].sort((a, b) => cont(b) - cont(a))[0];
-
     const linhas = [];
     let campo = "", linha = [], aspas = false;
     for (let i = 0; i < t.length; i++) {
@@ -561,43 +864,8 @@
       else if (c !== "\r") campo += c;
     }
     linha.push(campo);
-    if (linha.some(v => v.trim() !== "")) linhas.push(linha);
-    return linhas.filter(l => l.some(v => v.trim() !== ""));
-  }
-
-  const chave = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-
-  const SINONIMOS = {
-    data:      ["data", "dt", "vencimento", "competencia", "mes", "data de vencimento", "data lancamento", "date", "periodo"],
-    valor:     ["valor", "valor r$", "montante", "total", "r$", "realizado", "valor realizado", "amount", "vlr"],
-    tipo:      ["tipo", "natureza da operacao", "entrada/saida", "entrada saida", "d/c", "debito/credito", "operacao", "movimento"],
-    categoria: ["categoria", "natureza", "classificacao", "conta", "grupo", "rubrica", "plano de contas"],
-    centro:    ["centro de custo", "centro custo", "cc", "setor", "departamento", "area", "unidade"],
-    orcado:    ["orcado", "orcamento", "previsto", "budget", "valor orcado", "meta"],
-    descricao: ["descricao", "historico", "fornecedor", "item", "lancamento", "detalhe", "favorecido", "cliente"],
-    situacao:  ["situacao", "status", "pago", "quitado", "condicao"]
-  };
-
-  function mapearColunas(cabecalho) {
-    const mapa = {};
-    cabecalho.forEach((nome, i) => {
-      const k = chave(nome);
-      if (!k) return;
-      for (const campo in SINONIMOS) {
-        if (mapa[campo] != null) continue;
-        if (SINONIMOS[campo].some(s => k === s)) { mapa[campo] = i; return; }
-      }
-    });
-    /* segunda passada, por conteúdo parcial, para cabeçalhos como "Valor pago (R$)" */
-    cabecalho.forEach((nome, i) => {
-      const k = chave(nome);
-      if (!k || Object.values(mapa).includes(i)) return;
-      for (const campo in SINONIMOS) {
-        if (mapa[campo] != null) continue;
-        if (SINONIMOS[campo].some(s => k.includes(s))) { mapa[campo] = i; return; }
-      }
-    });
-    return mapa;
+    linhas.push(linha);
+    return linhas;
   }
 
   function paraNumero(bruto) {
@@ -607,571 +875,160 @@
     const neg = /^\(.*\)$/.test(s) || s.includes("-");
     s = s.replace(/[^\d.,]/g, "");
     if (!s) return NaN;
-    const ultVirg = s.lastIndexOf(","), ultPonto = s.lastIndexOf(".");
-    if (ultVirg > -1 && ultPonto > -1) {
-      s = ultVirg > ultPonto ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
-    } else if (ultVirg > -1) {
-      s = s.length - ultVirg - 1 === 3 && s.indexOf(",") !== ultVirg ? s.replace(/,/g, "") : s.replace(",", ".");
-    } else if (ultPonto > -1 && ((s.split(".").length > 2) || (s.length - ultPonto - 1 === 3 && /^\d{1,3}(\.\d{3})+$/.test(s)))) {
-      s = s.replace(/\./g, "");   /* pontos como separador de milhar */
-    }
+    const uv = s.lastIndexOf(","), up = s.lastIndexOf(".");
+    if (uv > -1 && up > -1) s = uv > up ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
+    else if (uv > -1) s = s.length - uv - 1 === 3 && s.indexOf(",") !== uv ? s.replace(/,/g, "") : s.replace(",", ".");
+    else if (up > -1 && (s.split(".").length > 2 || (s.length - up - 1 === 3 && /^\d{1,3}(\.\d{3})+$/.test(s)))) s = s.replace(/\./g, "");
     const n = parseFloat(s);
     return isNaN(n) ? NaN : (neg ? -Math.abs(n) : n);
   }
 
-  function paraData(bruto) {
-    const s = String(bruto || "").trim();
-    if (!s) return null;
-    let m;
-    if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return new Date(+m[1], +m[2] - 1, +m[3]);
-    if ((m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/))) {
-      const ano = +m[3] < 100 ? 2000 + +m[3] : +m[3];
-      return new Date(ano, +m[2] - 1, +m[1]);
+  const cel = (m, r, c) => ((m[r] || [])[c] || "").trim();
+
+  /* aba "Contas Fixas": blocos com título (Cartão / Dia 15 / Dia 30) e pares nome+valor abaixo */
+  function lerContasFixas(m) {
+    const ciclos = [], cartao = [], conferencia = {};
+    for (let r = 0; r < m.length; r++) {
+      for (let c = 0; c < (m[r] || []).length; c++) {
+        const titulo = cel(m, r, c);
+        if (!titulo) continue;
+        const k = semAcento(titulo);
+        const ehCartao = /^cartao$/.test(k);
+        const ehCiclo = /dia\s*\d+/.test(k);
+        if (!ehCartao && !ehCiclo) continue;
+
+        const itens = [];
+        let vazias = 0;
+        for (let l = r + 1; l < m.length && vazias < 2; l++) {
+          const nome = cel(m, l, c), valor = paraNumero(cel(m, l, c + 1));
+          if (!nome) { vazias++; continue; }
+          vazias = 0;
+          const kn = semAcento(nome);
+          if (/^receita$/.test(kn) || /^despesa$/.test(kn)) {
+            if (!isNaN(valor)) (conferencia[titulo] = conferencia[titulo] || {})[/^receita$/.test(kn) ? "receita" : "despesa"] = valor;
+            continue;
+          }
+          if (isNaN(valor)) continue;
+          itens.push([nome, Math.abs(valor)]);
+        }
+        if (!itens.length) continue;
+        if (ehCartao) cartao.push(...itens);
+        else ciclos.push({ nome: titulo.replace(/^.*?(dia\s*\d+).*$/i, "$1").replace(/^./, x => x.toUpperCase()), itens, tituloOriginal: titulo });
+      }
     }
-    if ((m = s.match(/^(\d{1,2})[\/.-](\d{4})$/))) return new Date(+m[2], +m[1] - 1, 1);
-    if ((m = s.match(/^([a-zç]{3,})[\/.\s-]+(\d{2,4})$/i))) {
-      const i = MES_ABR.indexOf(chave(m[1]).slice(0, 3));
-      if (i > -1) { const ano = +m[2] < 100 ? 2000 + +m[2] : +m[2]; return new Date(ano, i, 1); }
-    }
-    const d = new Date(s);
-    return isNaN(d) ? null : d;
+    ciclos.forEach(c => { if (conferencia[c.tituloOriginal]) conferencia[c.nome] = conferencia[c.tituloOriginal]; });
+    return ciclos.length ? { ciclos, cartao, conferencia } : null;
   }
 
-  const RE_RECEITA = /receit|entrada|credit|recebi|venda|faturament|ganho|\bc\b|\+/i;
-  const RE_DESPESA = /despes|saida|saída|debit|pagament|custo|gasto|compra|\bd\b|-/i;
-  const RE_QUITADO = /pago|quitad|liquidad|baixad|recebid|conciliad|\bok\b|\bsim\b/i;
-
-  function lerCSV(texto, nomeArquivo) {
-    const linhas = separaCSV(texto);
-    if (linhas.length < 2) throw new Error("O arquivo não tem linhas de dados abaixo do cabeçalho.");
-    const mapa = mapearColunas(linhas[0]);
-    const faltando = ["data", "valor"].filter(c => mapa[c] == null);
-    if (faltando.length) {
-      throw new Error(
-        `Não encontrei ${faltando.length > 1 ? "as colunas" : "a coluna"} de <b>${faltando.join("</b> e <b>")}</b> ` +
-        `no cabeçalho <code>${esc(linhas[0].join(" | "))}</code>. Renomeie a coluna na planilha ou veja os nomes aceitos em “Como carregar sua planilha”.`);
+  /* aba "Investimentos": cabeçalho CONTA | MODALIDADE | VALOR | RENDIMENTO sob o nome do objetivo */
+  function lerInvestimentos(m) {
+    const linhas = [];
+    const declarado = { investido: 0, rendimento: 0, achou: false };
+    for (let r = 0; r < m.length; r++) {
+      for (let c = 0; c < (m[r] || []).length; c++) {
+        if (semAcento(cel(m, r, c)) !== "conta") continue;
+        let objetivo = "Investimentos";
+        for (let a = r - 1; a >= 0 && a >= r - 3; a--) {
+          const t = cel(m, a, c) || cel(m, a, c - 1) || cel(m, a, c + 1);
+          if (t) { objetivo = t; break; }
+        }
+        for (let l = r + 1; l < m.length; l++) {
+          const conta = cel(m, l, c);
+          /* acabaram as contas: a linha de TOTAL pode vir depois de uma linha vazia
+             e deslocada uma coluna. Serve só para conferência. */
+          if (!conta || /total/.test(semAcento(conta))) {
+            for (let t = l; t <= l + 5 && t < m.length; t++) {
+              if (!/total/.test(semAcento(cel(m, t, c) || cel(m, t, c + 1)))) continue;
+              const v = paraNumero(cel(m, t, c + 2)), rd = paraNumero(cel(m, t, c + 3));
+              if (!isNaN(v)) { declarado.investido += v; declarado.achou = true; }
+              if (!isNaN(rd)) declarado.rendimento += rd;
+              break;
+            }
+            break;
+          }
+          const valor = paraNumero(cel(m, l, c + 2));
+          if (isNaN(valor)) continue;
+          linhas.push({ objetivo, conta, modalidade: cel(m, l, c + 1), valor, rendimento: paraNumero(cel(m, l, c + 3)) || 0 });
+        }
+      }
     }
+    return linhas.length ? { linhas, declarado } : null;
+  }
 
-    const campo = (l, c) => (mapa[c] == null ? "" : (l[mapa[c]] || "").trim());
-    const registros = [];
-    let caixaInicial = 0, ignoradas = 0;
-
-    for (let i = 1; i < linhas.length; i++) {
-      const l = linhas[i];
-      const desc = campo(l, "descricao");
-      const valor = paraNumero(campo(l, "valor"));
-      if (isNaN(valor)) { ignoradas++; continue; }
-      if (/saldo inicial|saldo anterior|caixa inicial/i.test(desc)) { caixaInicial = Math.abs(valor); continue; }
-      const data = paraData(campo(l, "data"));
-      if (!data) { ignoradas++; continue; }
-
-      const tipoBruto = campo(l, "tipo");
-      let receita;
-      if (tipoBruto) receita = RE_RECEITA.test(tipoBruto) && !RE_DESPESA.test(tipoBruto) ? true
-                             : RE_DESPESA.test(tipoBruto) ? false : valor >= 0;
-      else receita = valor >= 0;
-
-      registros.push({
-        data, desc,
-        valor: Math.abs(valor),
-        receita,
-        categoria: campo(l, "categoria") || campo(l, "centro") || "Sem categoria",
-        centro: campo(l, "centro") || campo(l, "categoria") || "Sem centro de custo",
-        orcado: paraNumero(campo(l, "orcado")),
-        situacao: campo(l, "situacao"),
-        temSituacao: mapa.situacao != null
-      });
-    }
-    if (!registros.length) throw new Error("Nenhuma linha tinha data e valor reconhecíveis ao mesmo tempo.");
-
-    /* ---- série mensal */
-    const porMes = new Map();
-    registros.forEach(r => {
-      const k = `${r.data.getFullYear()}-${String(r.data.getMonth() + 1).padStart(2, "0")}`;
-      if (!porMes.has(k)) porMes.set(k, { chave: k, receitas: 0, despesas: 0, ano: r.data.getFullYear(), mes: r.data.getMonth() });
-      const m = porMes.get(k);
-      r.receita ? (m.receitas += r.valor) : (m.despesas += r.valor);
-    });
-    const meses = [...porMes.values()].sort((a, b) => a.chave.localeCompare(b.chave)).map(m => ({
-      ...m,
-      rotulo: `${MES_ABR[m.mes]}/${String(m.ano).slice(2)}`,
-      curto: MES_ABR[m.mes].replace(/^./, c => c.toUpperCase())
-    }));
-
-    /* ---- centros de custo com orçamento */
-    const temOrcado = mapa.orcado != null && registros.some(r => !isNaN(r.orcado) && r.orcado > 0);
-    let centros = [];
-    if (temOrcado) {
-      const porCentro = new Map();
-      registros.filter(r => !r.receita).forEach(r => {
-        if (!porCentro.has(r.centro)) porCentro.set(r.centro, { nome: r.centro, orcado: 0, realizado: 0, vistos: new Set() });
-        const c = porCentro.get(r.centro);
-        c.realizado += r.valor;
-        /* o orçamento costuma repetir em toda linha do mesmo centro: conta uma vez por mês */
-        const k = `${r.data.getFullYear()}-${r.data.getMonth()}`;
-        if (!isNaN(r.orcado) && r.orcado > 0 && !c.vistos.has(k)) { c.vistos.add(k); c.orcado += r.orcado; }
-      });
-      centros = [...porCentro.values()]
-        .filter(c => c.orcado > 0)
-        .map(({ nome, orcado, realizado }) => ({ nome, orcado, realizado }))
-        .sort((a, b) => b.realizado - a.realizado).slice(0, 8);
-    }
-
-    /* ---- despesas por categoria */
-    const porCat = new Map();
-    registros.filter(r => !r.receita).forEach(r => porCat.set(r.categoria, (porCat.get(r.categoria) || 0) + r.valor));
-    let natureza = [...porCat.entries()].map(([nome, valor]) => ({ nome, valor })).sort((a, b) => b.valor - a.valor);
-    if (natureza.length > 5) {
-      const outros = soma(natureza.slice(4).map(x => x.valor));
-      natureza = natureza.slice(0, 4).concat({ nome: "Outras categorias", valor: outros });
-    }
-
-    /* ---- contas a pagar em aberto */
-    const usaSituacao = mapa.situacao != null;
-    const referencia = new Date();
-    const contas = usaSituacao
-      ? registros.filter(r => !r.receita && r.situacao && !RE_QUITADO.test(r.situacao))
-          .sort((a, b) => a.data - b.data)
-          .map(r => ({ venc: r.data, forn: r.desc || r.categoria, cc: r.centro, valor: r.valor }))
-      : [];
-
-    return {
+  function aplicarArquivos(arquivos) {
+    const fonte = {
+      arquivo: arquivos.map(a => a.nome).join(" + "),
       origem: "csv",
-      arquivo: nomeArquivo,
-      titulo: "Painel Financeiro",
-      meses, caixaInicial, centros, natureza, contas, referencia,
-      rotuloNatureza: mapa.categoria != null ? "Despesas por categoria" : "Despesas por centro de custo",
-      registros: registros.length,
-      ignoradas
+      ciclos: null, cartao: [], investimentos: [], conferencia: {}
     };
-  }
+    const lidos = [];
+    arquivos.forEach(a => {
+      const m = separaCSV(a.texto);
+      const cf = lerContasFixas(m);
+      if (cf) {
+        fonte.ciclos = cf.ciclos;
+        fonte.cartao = cf.cartao;
+        Object.assign(fonte.conferencia, cf.conferencia);
+        lidos.push(`contas fixas (${a.nome})`);
+        return;
+      }
+      const inv = lerInvestimentos(m);
+      if (inv) {
+        fonte.investimentos = inv.linhas;
+        if (inv.declarado.achou) {
+          fonte.conferencia.investido = inv.declarado.investido;
+          fonte.conferencia.rendimento = inv.declarado.rendimento;
+        }
+        lidos.push(`investimentos (${a.nome})`);
+        return;
+      }
+      lidos.push(`<b>${esc(a.nome)}: nenhum bloco reconhecido</b>`);
+    });
 
-  /* ============================================================== tooltips */
-  function ligaTip(host, tip) {
-    return {
-      show(x, y, html) {
-        tip.innerHTML = html;
-        tip.classList.add("on");
-        const meia = tip.offsetWidth / 2 + 4;
-        tip.style.left = Math.max(meia, Math.min(host.clientWidth - meia, x)) + "px";
-        tip.style.top = Math.max(tip.offsetHeight, y) + "px";
-      },
-      hide() { tip.classList.remove("on"); }
-    };
-  }
-  const linhaTip = (cor, nome, valor) =>
-    `<div class="t-row"><span class="t-key"><i class="swatch" style="background:${cor}"></i>${esc(nome)}</span><b>${valor}</b></div>`;
-
-  /* ================================================================= KPIs */
-  const janela = () => (nMeses > 0 ? dados.meses.slice(Math.max(0, dados.meses.length - nMeses)) : dados.meses);
-
-  function caixaAcumulado() {
-    let acc = dados.caixaInicial;
-    return dados.meses.map(m => (acc += m.receitas - m.despesas));
-  }
-
-  function sparkline(valores, cor) {
-    const W = 92, H = 30, p = 3;
-    const min = Math.min(...valores), max = Math.max(...valores);
-    const span = max - min || 1;
-    const px = i => p + (i * (W - 2 * p)) / Math.max(valores.length - 1, 1);
-    const py = v => H - p - ((v - min) / span) * (H - 2 * p);
-    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "spark", "aria-hidden": "true", focusable: "false" });
-    if (valores.length === 1) {
-      svg.appendChild(el("line", { x1: p, x2: W - p, y1: H / 2, y2: H / 2, stroke: cor, "stroke-width": "2", "stroke-linecap": "round" }));
-      return svg;
+    if (!fonte.ciclos) {
+      if (!fonte.investimentos.length) {
+        aviso("erro", `<div><b>Não reconheci o conteúdo.</b> Esperava um bloco com <code>Dia 15</code>/<code>Dia 30</code> ` +
+          `ou um cabeçalho <code>CONTA · MODALIDADE · VALOR</code>. Lidos: ${lidos.join("; ")}.</div>`);
+        return;
+      }
+      /* só investimentos: mantém as contas fixas atuais */
+      fonte.ciclos = PLANILHA.ciclos;
+      fonte.cartao = PLANILHA.cartao;
+      fonte.arquivo = `${PLANILHA.arquivo} + ${arquivos.map(a => a.nome).join(" + ")}`;
     }
-    const d = valores.map((v, i) => `${i ? "L" : "M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(" ");
-    svg.appendChild(el("path", { d: `${d} L${px(valores.length - 1).toFixed(1)},${H} L${px(0).toFixed(1)},${H} Z`, fill: cor, "fill-opacity": ".10" }));
-    svg.appendChild(el("path", { d, fill: "none", stroke: cor, "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }));
-    svg.appendChild(el("circle", { cx: px(valores.length - 1).toFixed(1), cy: py(valores[valores.length - 1]).toFixed(1), r: "3", fill: cor, stroke: css("--surface"), "stroke-width": "2" }));
-    return svg;
-  }
+    if (!fonte.investimentos.length) fonte.investimentos = PLANILHA.investimentos;
 
-  function tile({ nome, valor, delta, deltaFmt, deltaNota, bom, serie, cor }) {
-    const card = document.createElement("article");
-    card.className = "card tile";
-    const temDelta = delta != null && isFinite(delta);
-    const classe = !temDelta ? "flat" : (delta >= 0) === bom ? "up" : "down";
-    const seta = !temDelta ? "" : delta >= 0 ? "▲ " : "▼ ";
-    card.innerHTML =
-      `<div class="name">${esc(nome)}</div>` +
-      `<div class="value">${valor}</div>` +
-      `<div class="foot"><span class="delta ${classe}">${seta}${temDelta ? (deltaFmt || pct)(Math.abs(delta)) : "—"}` +
-      `<span class="note">${esc(deltaNota)}</span></span></div>`;
-    card.querySelector(".foot").appendChild(sparkline(serie, cor));
-    return card;
-  }
-
-  function renderKpis() {
-    const jan = janela();
-    const rec = jan.map(m => m.receitas), des = jan.map(m => m.despesas);
-    const res = jan.map(m => m.receitas - m.despesas);
-    const margem = jan.map(m => (m.receitas ? ((m.receitas - m.despesas) / m.receitas) * 100 : 0));
-    const caixaTodo = caixaAcumulado();
-    const cx = nMeses > 0 ? caixaTodo.slice(Math.max(0, caixaTodo.length - nMeses)) : caixaTodo;
-
-    const varia = a => (a.length < 2 || !a[a.length - 2] ? null : ((a[a.length - 1] - a[a.length - 2]) / Math.abs(a[a.length - 2])) * 100);
-    const anterior = jan.length > 1 ? `vs. ${jan[jan.length - 2].rotulo.split("/")[0]}` : "mês único";
-    const totalRec = soma(rec);
-
-    const box = document.getElementById("kpis");
-    box.textContent = "";
-    [
-      { nome: dados.caixaInicial ? "Caixa disponível" : "Resultado acumulado", valor: compacto(caixaTodo[caixaTodo.length - 1]), delta: varia(cx), deltaNota: anterior, bom: true, serie: cx, cor: css("--s1") },
-      { nome: "Receitas no período", valor: compacto(totalRec), delta: varia(rec), deltaNota: anterior, bom: true, serie: rec, cor: css("--s1") },
-      { nome: "Despesas no período", valor: compacto(soma(des)), delta: varia(des), deltaNota: anterior, bom: false, serie: des, cor: css("--s2") },
-      { nome: "Margem líquida", valor: totalRec ? pct((soma(res) / totalRec) * 100) : "—",
-        delta: margem.length > 1 ? margem[margem.length - 1] - margem[margem.length - 2] : null,
-        deltaFmt: v => nf(1).format(v), deltaNota: jan.length > 1 ? `p.p. ${anterior}` : "mês único", bom: true, serie: margem, cor: css("--s1") }
-    ].forEach(k => box.appendChild(tile(k)));
-
-    document.getElementById("periodo-desc").textContent =
-      `${jan[0].rotulo}–${jan[jan.length - 1].rotulo} · ${plural(jan.length, "mês", "meses")}`;
-  }
-
-  /* ================================================== gráfico de linhas */
-  function renderFluxo() {
-    const host = document.getElementById("plot-fluxo");
-    const tip = ligaTip(host, document.getElementById("tip-fluxo"));
-    host.querySelectorAll("svg").forEach(s => s.remove());
-
-    const jan = janela();
-    const rec = jan.map(m => m.receitas), des = jan.map(m => m.despesas);
-    const W = 720, H = 286, L = 52, R = 78, T = 14, B = 30;
-    const bruto = Math.max(...rec, ...des), piso = Math.min(...rec, ...des);
-    const passoY = passoEixo(bruto - piso * 0.6 || bruto, 5);
-    const max = Math.ceil(bruto / passoY) * passoY;
-    const min = Math.max(0, Math.floor((piso - passoY * 0.5) / passoY) * passoY);
-    const px = i => L + (i * (W - L - R)) / Math.max(jan.length - 1, 1);
-    const py = v => T + (1 - (v - min) / (max - min || 1)) * (H - T - B);
-
-    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `Receitas e despesas por mês, ${ESCALA.legenda}` });
-    for (let v = min; v <= max + 1e-6; v += passoY) {
-      svg.appendChild(el("line", { x1: L, x2: W - R, y1: py(v), y2: py(v), stroke: css("--grid"), "stroke-width": "1" }));
-      svg.appendChild(el("text", { x: L - 10, y: py(v) + 4, "text-anchor": "end", "font-size": "11", fill: css("--ink-muted"), "font-family": "inherit" }, eixo(v)));
-    }
-    svg.appendChild(el("line", { x1: L, x2: W - R, y1: py(min), y2: py(min), stroke: css("--axis"), "stroke-width": "1" }));
-
-    const salto = Math.ceil(jan.length / 12);
-    jan.forEach((m, i) => {
-      if (i % salto) return;
-      svg.appendChild(el("text", { x: px(i), y: H - 8, "text-anchor": "middle", "font-size": "11", fill: css("--ink-muted"), "font-family": "inherit" }, jan.length > 12 ? m.rotulo : m.curto));
-    });
-
-    const series = [
-      { nome: "Receitas", cor: css("--s1"), vals: rec },
-      { nome: "Despesas", cor: css("--s2"), vals: des }
-    ];
-    /* rótulos diretos no fim de cada linha, afastados quando as pontas se encostam */
-    const last = jan.length - 1;
-    const rotY = series.map(s => py(s.vals[last]));
-    if (Math.abs(rotY[0] - rotY[1]) < 32) {
-      const meio = (rotY[0] + rotY[1]) / 2;
-      const cima = rotY[0] <= rotY[1] ? 0 : 1;
-      rotY[cima] = meio - 16; rotY[1 - cima] = meio + 16;
-    }
-
-    series.forEach((s, k) => {
-      const d = s.vals.map((v, i) => `${i ? "L" : "M"}${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(" ");
-      svg.appendChild(el("path", { d: `${d} L${px(last)},${py(min)} L${px(0)},${py(min)} Z`, fill: s.cor, "fill-opacity": ".07" }));
-      svg.appendChild(el("path", { d, fill: "none", stroke: s.cor, "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }));
-      svg.appendChild(el("circle", { cx: px(last), cy: py(s.vals[last]), r: "4", fill: s.cor, stroke: css("--surface"), "stroke-width": "2" }));
-      svg.appendChild(el("text", { x: px(last) + 10, y: rotY[k] - 3, "font-size": "11", "font-weight": "650", fill: css("--ink-2"), "font-family": "inherit" }, s.nome));
-      svg.appendChild(el("text", { x: px(last) + 10, y: rotY[k] + 11, "font-size": "11", fill: css("--ink-muted"), "font-family": "inherit" }, eixo(s.vals[last])));
-    });
-
-    const cross = el("line", { y1: T, y2: py(min), stroke: css("--axis"), "stroke-width": "1", "stroke-dasharray": "3 3", opacity: "0" });
-    svg.appendChild(cross);
-    const dots = series.map(s => {
-      const c = el("circle", { r: "5", fill: s.cor, stroke: css("--surface"), "stroke-width": "2", opacity: "0" });
-      svg.appendChild(c);
-      return c;
-    });
-
-    const alvo = el("rect", { x: 0, y: 0, width: W, height: H, fill: "transparent", "pointer-events": "all" });
-    svg.appendChild(alvo);
-
-    alvo.addEventListener("pointermove", ev => {
-      const r = svg.getBoundingClientRect();
-      const xv = ((ev.clientX - r.left) / r.width) * W;
-      const passo = (W - L - R) / Math.max(jan.length - 1, 1);
-      const i = Math.max(0, Math.min(jan.length - 1, Math.round((xv - L) / passo)));
-      cross.setAttribute("x1", px(i)); cross.setAttribute("x2", px(i)); cross.setAttribute("opacity", "1");
-      series.forEach((s, k) => {
-        dots[k].setAttribute("cx", px(i)); dots[k].setAttribute("cy", py(s.vals[i])); dots[k].setAttribute("opacity", "1");
-      });
-      const resu = rec[i] - des[i];
-      tip.show((px(i) / W) * r.width, (py(Math.max(rec[i], des[i])) / H) * r.height,
-        `<div class="t-head">${esc(jan[i].rotulo)}</div>` +
-        linhaTip(series[0].cor, "Receitas", brl(rec[i])) +
-        linhaTip(series[1].cor, "Despesas", brl(des[i])) +
-        `<div class="t-row"><span class="t-key">Resultado</span><b>${resu >= 0 ? "+" : "−"}${brl(Math.abs(resu)).replace("-", "")}</b></div>`);
-    });
-    alvo.addEventListener("pointerleave", () => {
-      cross.setAttribute("opacity", "0"); dots.forEach(d => d.setAttribute("opacity", "0")); tip.hide();
-    });
-
-    host.appendChild(svg);
-    document.getElementById("sub-fluxo").textContent = `entradas e saídas por mês, ${ESCALA.legenda}`;
-  }
-
-  /* ============================================== barras de resultado */
-  function renderResultado() {
-    const host = document.getElementById("plot-resultado");
-    const tip = ligaTip(host, document.getElementById("tip-resultado"));
-    host.querySelectorAll("svg").forEach(s => s.remove());
-
-    const jan = janela();
-    const res = jan.map(m => m.receitas - m.despesas);
-    const W = 380, H = 286, L = 52, R = 10, T = 16, B = 30;
-    const passoY = passoEixo(Math.max(...res, 0) - Math.min(...res, 0) || 1, 4);
-    const topo = Math.ceil(Math.max(...res, 0) / passoY) * passoY;
-    const base = Math.floor(Math.min(...res, 0) / passoY) * passoY;
-    const span = (topo - base) || 1;
-    const py = v => T + (1 - (v - base) / span) * (H - T - B);
-    const faixa = (W - L - R) / jan.length;
-    const larg = Math.max(6, Math.min(30, faixa - 10));
-
-    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `Resultado por mês, ${ESCALA.legenda}` });
-    for (let v = base; v <= topo + 1e-6; v += passoY) {
-      svg.appendChild(el("line", { x1: L, x2: W - R, y1: py(v), y2: py(v), stroke: css("--grid"), "stroke-width": "1" }));
-      svg.appendChild(el("text", { x: L - 9, y: py(v) + 4, "text-anchor": "end", "font-size": "11", fill: css("--ink-muted"), "font-family": "inherit" }, eixo(v)));
-    }
-    svg.appendChild(el("line", { x1: L, x2: W - R, y1: py(0), y2: py(0), stroke: css("--axis"), "stroke-width": "1" }));
-
-    const salto = Math.ceil(jan.length / 8);
-    res.forEach((v, i) => {
-      const x = L + i * faixa + (faixa - larg) / 2;
-      const negativo = v < 0;
-      const alt = Math.abs(py(v) - py(0));
-      const marca = el("path", {
-        d: barra(x, py(0), larg, alt, 4, !negativo),
-        fill: negativo ? css("--s2") : css("--s1")
-      });
-      svg.appendChild(marca);
-
-      const hit = el("rect", { x: L + i * faixa, y: T, width: faixa, height: H - T - B, fill: "transparent", "pointer-events": "all" });
-      svg.appendChild(hit);
-      hit.addEventListener("pointerenter", () => {
-        marca.setAttribute("fill-opacity", ".78");
-        const r = svg.getBoundingClientRect();
-        tip.show(((x + larg / 2) / W) * r.width, (Math.min(py(v), py(0)) / H) * r.height,
-          `<div class="t-head">${esc(jan[i].rotulo)}</div>` +
-          `<div class="t-row"><span class="t-key">Resultado</span><b>${brl(v)}</b></div>` +
-          `<div class="t-row"><span class="t-key">Margem</span><b>${jan[i].receitas ? pct((v / jan[i].receitas) * 100) : "—"}</b></div>`);
-      });
-      hit.addEventListener("pointerleave", () => { marca.removeAttribute("fill-opacity"); tip.hide(); });
-
-      if (i % salto === 0)
-        svg.appendChild(el("text", { x: x + larg / 2, y: H - 8, "text-anchor": "middle", "font-size": "11", fill: css("--ink-muted"), "font-family": "inherit" }, jan[i].curto));
-    });
-
-    host.appendChild(svg);
-  }
-
-  /* ================================== orçado × realizado por centro de custo */
-  function renderCentros() {
-    const card = document.getElementById("card-cc");
-    card.hidden = !dados.centros.length;
-    if (card.hidden) return;
-
-    const host = document.getElementById("bars-cc");
-    const tip = ligaTip(host, document.getElementById("tip-cc"));
-    host.querySelectorAll(".bar-row").forEach(r => r.remove());
-    const max = Math.max(...dados.centros.map(c => Math.max(c.orcado, c.realizado)));
-
-    dados.centros.forEach(c => {
-      const dif = c.realizado - c.orcado;
-      const dp = c.orcado ? (dif / c.orcado) * 100 : 0;
-      const row = document.createElement("div");
-      row.className = "bar-row";
-      row.innerHTML =
-        `<div class="bar-head"><span class="cc">${esc(c.nome)}</span>` +
-        `<span class="tag ${dif > 0 ? "over" : "under"}">${dif > 0 ? "▲" : "▼"} ${pct(Math.abs(dp))} ${dif > 0 ? "acima" : "abaixo"}</span></div>` +
-        `<div class="pair">` +
-        `<div class="track"><div class="fill" style="width:${(c.orcado / max) * 100}%;background:var(--s1)"></div></div>` +
-        `<div class="track"><div class="fill" style="width:${(c.realizado / max) * 100}%;background:var(--s2)"></div></div>` +
-        `</div>` +
-        `<div class="bar-head"><span class="num">Orçado ${eixo(c.orcado)}</span><span class="num">Realizado ${eixo(c.realizado)}</span></div>`;
-      row.addEventListener("pointermove", ev => {
-        const r = host.getBoundingClientRect();
-        tip.show(ev.clientX - r.left, ev.clientY - r.top - 6,
-          `<div class="t-head">${esc(c.nome)}</div>` +
-          linhaTip(css("--s1"), "Orçado", brl(c.orcado)) +
-          linhaTip(css("--s2"), "Realizado", brl(c.realizado)) +
-          `<div class="t-row"><span class="t-key">Desvio</span><b>${dif > 0 ? "+" : "−"}${brl(Math.abs(dif))} (${pct(Math.abs(dp))})</b></div>`);
-      });
-      row.addEventListener("pointerleave", tip.hide);
-      host.appendChild(row);
-    });
-  }
-
-  /* ======================================== despesas por categoria/natureza */
-  function renderNatureza() {
-    const host = document.getElementById("bars-nat");
-    host.textContent = "";
-    document.getElementById("tit-nat").textContent = dados.rotuloNatureza;
-    document.getElementById("card-nat").hidden = !dados.natureza.length;
-    if (!dados.natureza.length) return;
-
-    const total = soma(dados.natureza.map(x => x.valor));
-    const max = Math.max(...dados.natureza.map(x => x.valor));
-    dados.natureza.slice(0, 5).forEach((x, i) => {
-      const row = document.createElement("div");
-      row.className = "bar-row";
-      row.innerHTML =
-        `<div class="bar-head"><span class="cc">${esc(x.nome)}</span>` +
-        `<span class="num">${eixo(x.valor)} · ${pct((x.valor / total) * 100, 0)}</span></div>` +
-        `<div class="track"><div class="fill" style="width:${(x.valor / max) * 100}%;background:var(--r${5 - i})"></div></div>`;
-      host.appendChild(row);
-    });
-    const foot = document.createElement("div");
-    foot.className = "total-row";
-    foot.innerHTML = `<span>Total de despesas no período</span><b>${compacto(total)}</b>`;
-    host.appendChild(foot);
-  }
-
-  /* ==================================================== contas a pagar */
-  function renderContas() {
-    const card = document.getElementById("card-ap");
-    card.hidden = !dados.contas.length;
-    if (card.hidden) return;
-
-    const tbody = document.querySelector("#tab-ap tbody");
-    const tfoot = document.querySelector("#tab-ap tfoot");
-    tbody.textContent = "";
-    const dia = 86400000;
-    const ref = dados.referencia;
-    const fdata = d => d.toLocaleDateString("pt-BR");
-
-    dados.contas.slice(0, 40).forEach(c => {
-      const dias = Math.round((c.venc - ref) / dia);
-      const est = dias < 0 ? ["vencido", `Vencido há ${Math.abs(dias)} d`]
-        : dias <= 7 ? ["vence", `Vence em ${dias} d`]
-        : ["programado", "Programado"];
-      const tr = document.createElement("tr");
-      tr.innerHTML =
-        `<td>${fdata(c.venc)}</td><td>${esc(c.forn)}</td><td>${esc(c.cc)}</td>` +
-        `<td><span class="pill ${est[0]}">${est[1]}</span></td>` +
-        `<td class="num">${brl(c.valor)}</td>`;
-      tbody.appendChild(tr);
-    });
-
-    const total = soma(dados.contas.map(c => c.valor));
-    const vencido = soma(dados.contas.filter(c => c.venc < ref).map(c => c.valor));
-    tfoot.innerHTML =
-      `<tr><td colspan="3" style="color:var(--ink-muted)">${plural(dados.contas.length, "título em aberto", "títulos em aberto")} · ${brl(vencido)} vencidos</td>` +
-      `<th scope="row" class="rot">Total</th><td class="num" style="font-weight:650">${brl(total)}</td></tr>`;
-    document.getElementById("sub-ap").textContent = `posição em ${fdata(ref)}`;
-  }
-
-  /* ====================================================== tabela da série */
-  function renderSerie() {
-    const tbody = document.querySelector("#tab-serie tbody");
-    tbody.textContent = "";
-    const caixa = caixaAcumulado();
-    dados.meses.forEach((m, i) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<th scope="row" class="rot">${esc(m.rotulo)}</th>` +
-        `<td class="num">${brl(m.receitas)}</td><td class="num">${brl(m.despesas)}</td>` +
-        `<td class="num">${brl(m.receitas - m.despesas)}</td><td class="num">${brl(caixa[i])}</td>`;
-      tbody.appendChild(tr);
-    });
-  }
-
-  /* ========================================================== orquestração */
-  function renderCabecalho() {
-    const jan = janela();
-    const csv = dados.origem === "csv";
-    document.getElementById("titulo").textContent = dados.titulo;
-    document.title = dados.titulo;
-    document.getElementById("eyebrow").textContent = csv ? "Controle financeiro · dados da planilha" : "Controle financeiro";
-
-    const chip = document.getElementById("chip-origem");
-    chip.classList.toggle("real", csv);
-    chip.innerHTML = csv
-      ? `<span class="dot"></span>${esc(dados.arquivo)} · ${plural(dados.registros, "lançamento", "lançamentos")}`
-      : `<span class="dot"></span>Dados fictícios · demonstração`;
-    document.getElementById("chip-periodo").textContent = `Último mês: ${jan[jan.length - 1].rotulo}`;
-    document.getElementById("btn-exemplo").hidden = !csv;
-
-    document.getElementById("rodape").innerHTML = csv
-      ? `Valores calculados a partir de <b>${esc(dados.arquivo)}</b>, lido no navegador — o arquivo não é enviado para lugar nenhum. ` +
-        `Eixos ${ESCALA.legenda}; tabelas e tooltips em reais.` +
-        (dados.ignoradas ? ` ${plural(dados.ignoradas, "linha foi ignorada", "linhas foram ignoradas")} por não ter data ou valor reconhecíveis.` : "")
-      : `Todos os valores são fictícios e servem apenas para demonstrar o layout. Carregue um CSV para ver seus próprios números. ` +
-        `Eixos ${ESCALA.legenda}; tabelas e tooltips em reais.`;
-
-    document.querySelectorAll("#periodo button").forEach(b => {
-      const n = Number(b.dataset.n);
-      b.disabled = n > 0 && n >= dados.meses.length;
-    });
-  }
-
-  function render() {
-    const maxValor = Math.max(...dados.meses.map(m => Math.max(m.receitas, m.despesas)), 0);
-    definirEscala(maxValor);
-    renderCabecalho();
-    renderKpis();
-    renderFluxo();
-    renderResultado();
-    renderCentros();
-    renderNatureza();
-    renderContas();
-    renderSerie();
-  }
-
-  function aviso(tipo, html) {
-    const box = document.getElementById("aviso");
-    box.hidden = !html;
-    box.className = "banner " + tipo;
-    box.innerHTML = html || "";
-  }
-
-  function carregarTexto(texto, nome) {
-    try {
-      dados = lerCSV(texto, nome);
-      nMeses = 0;
-      document.querySelectorAll("#periodo button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.n === "0")));
-      render();
-      const faltas = [];
-      if (!dados.centros.length) faltas.push("orçado × realizado (falta uma coluna de orçamento)");
-      if (!dados.contas.length) faltas.push("contas a pagar (falta uma coluna de situação com títulos em aberto)");
-      aviso("ok",
-        `<div><b>${esc(nome)} carregada.</b> ${plural(dados.registros, "lançamento", "lançamentos")} em ` +
-        `${plural(dados.meses.length, "mês", "meses")}` +
-        (dados.ignoradas ? `, ${plural(dados.ignoradas, "linha ignorada", "linhas ignoradas")}` : "") + "." +
-        (faltas.length ? ` Cartões ocultos: ${faltas.join("; ")}.` : "") + "</div>");
-    } catch (e) {
-      aviso("erro", `<div><b>Não consegui ler o arquivo.</b> ${e.message}</div>`);
-    }
-  }
-
-  function lerArquivo(file) {
-    if (!file) return;
-    const leitor = new FileReader();
-    leitor.onload = () => carregarTexto(String(leitor.result), file.name);
-    leitor.onerror = () => aviso("erro", "<div><b>Não consegui abrir o arquivo.</b> Tente exportar novamente como CSV.</div>");
-    leitor.readAsText(file, "utf-8");
-  }
-
-  /* --------------------------------------------------------------- eventos */
-  document.getElementById("periodo").addEventListener("click", ev => {
-    const b = ev.target.closest("button");
-    if (!b || b.disabled) return;
-    nMeses = Number(b.dataset.n);
-    document.querySelectorAll("#periodo button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    dados = montar(fonte);
+    document.getElementById("aviso").dataset.travado = "";
     render();
-  });
+    const nota = conferir();
+    aviso(nota ? "alerta" : "ok",
+      `<div><b>Atualizado.</b> Lidos: ${lidos.join("; ")} — ${plural(dados.itens.length, "lançamento", "lançamentos")} e ` +
+      `${plural(dados.investimentos.length, "conta de investimento", "contas de investimento")}.` +
+      (nota ? " " + nota.replace(/^<div>|<\/div>$/g, "") : "") + "</div>");
+  }
+
+  function lerArquivos(lista) {
+    const arquivos = [...lista].slice(0, 4);
+    if (!arquivos.length) return;
+    Promise.all(arquivos.map(f => new Promise((ok, falha) => {
+      const l = new FileReader();
+      l.onload = () => ok({ nome: f.name, texto: String(l.result) });
+      l.onerror = falha;
+      l.readAsText(f, "utf-8");
+    })))
+      .then(aplicarArquivos)
+      .catch(() => aviso("erro", "<div><b>Não consegui abrir o arquivo.</b> Exporte de novo como CSV e tente outra vez.</div>"));
+  }
 
   const input = document.getElementById("file-csv");
   document.getElementById("btn-csv").addEventListener("click", () => input.click());
-  input.addEventListener("change", () => { lerArquivo(input.files[0]); input.value = ""; });
-  document.getElementById("btn-exemplo").addEventListener("click", () => {
-    dados = dadosExemplo(); nMeses = 0;
-    document.querySelectorAll("#periodo button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.n === "0")));
-    aviso("", ""); render();
+  input.addEventListener("change", () => { lerArquivos(input.files); input.value = ""; });
+  document.getElementById("btn-planilha").addEventListener("click", () => {
+    dados = montar(PLANILHA);
+    document.getElementById("aviso").dataset.travado = "";
+    document.getElementById("aviso").hidden = true;
+    render();
   });
 
   const zona = document.getElementById("dropzone");
@@ -1179,16 +1036,14 @@
   addEventListener("dragenter", ev => { ev.preventDefault(); if (++arrastando === 1) zona.classList.add("on"); });
   addEventListener("dragover", ev => ev.preventDefault());
   addEventListener("dragleave", () => { if (--arrastando <= 0) { arrastando = 0; zona.classList.remove("on"); } });
-  addEventListener("drop", ev => {
-    ev.preventDefault(); arrastando = 0; zona.classList.remove("on");
-    lerArquivo(ev.dataTransfer.files[0]);
-  });
+  addEventListener("drop", ev => { ev.preventDefault(); arrastando = 0; zona.classList.remove("on"); lerArquivos(ev.dataTransfer.files); });
 
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   let t;
   addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 150); });
 
+  dados = montar(PLANILHA);
   render();
 })();
 </script>
