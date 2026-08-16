@@ -230,6 +230,15 @@
   details.ajuda .corpo { font-size: 13px; color: var(--ink-2); display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
   details.ajuda code { font-size: 12px; background: var(--wash); padding: 1px 5px; border-radius: 4px; }
 
+  textarea {
+    width: 100%; font: inherit; font-size: 13px; line-height: 1.5; resize: vertical;
+    color: var(--ink); background: var(--surface-sunk);
+    border: 1px solid var(--hairline); border-radius: 10px; padding: 11px 13px;
+    font-variant-numeric: tabular-nums; white-space: pre; overflow-x: auto;
+  }
+  textarea::placeholder { color: var(--ink-muted); }
+  #painel-colar .controls { gap: 10px; }
+
   footer.note { font-size: 12px; color: var(--ink-muted); border-top: 1px solid var(--hairline); padding-top: 14px; }
 
   .dropzone {
@@ -257,10 +266,28 @@
   <div class="controls">
     <span class="label">Os valores são os lançamentos fixos da planilha, repetidos todo mês.</span>
     <div class="push"></div>
+    <button type="button" class="btn" id="btn-colar">Colar da planilha</button>
     <button type="button" class="btn" id="btn-csv">Atualizar com CSV</button>
     <button type="button" class="btn ghost" id="btn-planilha" hidden>Voltar à planilha original</button>
     <input type="file" id="file-csv" accept=".csv,.tsv,.txt,text/csv" multiple hidden>
   </div>
+
+  <section class="card" id="painel-colar" hidden>
+    <header>
+      <h2>Colar da planilha</h2>
+      <span class="sub">funciona no celular, sem precisar exportar arquivo</span>
+    </header>
+    <p style="margin:0;font-size:13px;color:var(--ink-2)">
+      Na planilha, selecione as células da aba (<b>Ctrl+A</b> ou <b>Cmd+A</b> dentro dela),
+      copie e cole aqui. Pode colar uma aba de cada vez — a de contas fixas e a de investimentos.
+    </p>
+    <textarea id="area-colar" rows="6" spellcheck="false"
+      placeholder="Cole aqui o conteúdo copiado da planilha…"></textarea>
+    <div class="controls">
+      <button type="button" class="btn" id="btn-usar-colado">Usar estes dados</button>
+      <button type="button" class="btn ghost" id="btn-fechar-colar">Fechar</button>
+    </div>
+  </section>
 
   <div class="banner" id="aviso" hidden></div>
 
@@ -355,7 +382,13 @@
       <summary>Como atualizar o painel quando a planilha mudar</summary>
       <div class="corpo">
         <p style="margin:0">
-          No Google Sheets, com a aba <b>Contas Fixas</b> aberta:
+          <b>Pelo celular, ou se o download falhar:</b> abra a aba na planilha, selecione tudo
+          (<b>Ctrl+A</b> / <b>Cmd+A</b>, ou tocar e segurar → Selecionar tudo), copie, clique em
+          <b>Colar da planilha</b> e cole na caixa — ou simplesmente cole com a página aberta.
+          Faça uma aba de cada vez. É o mesmo resultado do CSV.
+        </p>
+        <p style="margin:0">
+          No Google Sheets pelo computador, com a aba <b>Contas Fixas</b> aberta:
           <b>Arquivo → Fazer download → Valores separados por vírgula (.csv)</b>.
           Repita com a aba <b>Investimentos</b> aberta — o download exporta só a aba visível.
           Depois clique em <b>Atualizar com CSV</b> e escolha os dois arquivos de uma vez,
@@ -846,10 +879,11 @@
   /* ============================================================ import CSV */
   function separaCSV(texto) {
     const t = texto.replace(/^﻿/, "");
-    const fim = t.indexOf("\n");
-    const cab = fim > 0 ? t.slice(0, fim) : t;
-    const cont = d => (cab.split(d).length - 1);
-    const sep = [";", ",", "\t"].sort((a, b) => cont(b) - cont(a))[0];
+    /* o separador é decidido pelo começo inteiro do texto, não pela primeira linha:
+       a planilha começa com uma linha vazia, e conteúdo colado vem com tabulação */
+    const amostra = t.split("\n").slice(0, 20).join("\n");
+    const cont = d => (amostra.split(d).length - 1);
+    const sep = ["\t", ";", ","].sort((a, b) => cont(b) - cont(a))[0];
     const linhas = [];
     let campo = "", linha = [], aspas = false;
     for (let i = 0; i < t.length; i++) {
@@ -1020,6 +1054,43 @@
       .then(aplicarArquivos)
       .catch(() => aviso("erro", "<div><b>Não consegui abrir o arquivo.</b> Exporte de novo como CSV e tente outra vez.</div>"));
   }
+
+  /* ---------------------------------------------- colar direto da planilha */
+  const painelColar = document.getElementById("painel-colar");
+  const areaColar = document.getElementById("area-colar");
+
+  function abrirColar(texto) {
+    painelColar.hidden = false;
+    if (texto != null) areaColar.value = texto;
+    areaColar.focus();
+    painelColar.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+
+  function usarColado() {
+    const texto = areaColar.value.trim();
+    if (!texto) { aviso("erro", "<div><b>Nada para ler.</b> Cole o conteúdo copiado da planilha na caixa antes de confirmar.</div>"); return; }
+    aplicarArquivos([{ nome: "conteúdo colado", texto }]);
+    if (!document.getElementById("aviso").classList.contains("erro")) {
+      painelColar.hidden = true;
+      areaColar.value = "";
+    }
+  }
+
+  document.getElementById("btn-colar").addEventListener("click", () => abrirColar());
+  document.getElementById("btn-usar-colado").addEventListener("click", usarColado);
+  document.getElementById("btn-fechar-colar").addEventListener("click", () => {
+    painelColar.hidden = true; areaColar.value = "";
+  });
+
+  /* colar em qualquer lugar da página abre a caixa já preenchida */
+  addEventListener("paste", ev => {
+    if (ev.target === areaColar) return;
+    const texto = (ev.clipboardData || window.clipboardData).getData("text");
+    if (!texto || texto.length < 20) return;
+    ev.preventDefault();
+    abrirColar(texto);
+    usarColado();
+  });
 
   const input = document.getElementById("file-csv");
   document.getElementById("btn-csv").addEventListener("click", () => input.click());

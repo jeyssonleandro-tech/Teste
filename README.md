@@ -50,11 +50,16 @@ investimentos está R$ 200,00 abaixo da soma das contas, e o rendimento R$ 8,60
 abaixo — os totais foram digitados à mão e não acompanharam a edição das linhas.
 **O painel usa sempre a soma das linhas.**
 
-## Atualizando pelo CSV
+## Atualizando os números
 
-No Google Sheets, com a aba **Contas Fixas** aberta: *Arquivo → Fazer download →
-CSV*; repita com a aba **Investimentos**. Clique em **Atualizar com CSV** e
-escolha os dois arquivos, ou arraste-os para a página.
+**Colando (funciona no celular).** Abra a aba na planilha, selecione tudo, copie
+e cole na página — pelo botão **Colar da planilha** ou colando com a página
+aberta, que a caixa abre sozinha. Uma aba de cada vez. O conteúdo copiado do
+Sheets vem separado por tabulação e é lido igual ao CSV.
+
+**Por arquivo.** No Google Sheets, com a aba **Contas Fixas** aberta: *Arquivo →
+Fazer download → CSV*; repita com a aba **Investimentos**. Clique em **Atualizar
+com CSV** e escolha os dois arquivos, ou arraste-os para a página.
 
 O leitor não depende de posições fixas:
 
