@@ -73,7 +73,11 @@ comment on column public.ocorrencias.descricao is
 -- -------------------------------------------------------------
 -- 5) VIEW usada pelo dashboard (já com os nomes resolvidos)
 -- -------------------------------------------------------------
-create or replace view public.vw_dashboard
+-- Recriada com drop + create: 'create or replace view' não permite
+-- remover colunas de uma view já existente.
+drop view if exists public.vw_dashboard;
+
+create view public.vw_dashboard
 with (security_invoker = on) as
 select
   l.id,
