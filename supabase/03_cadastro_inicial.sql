@@ -5,11 +5,13 @@
 -- -------------------------------------------------------------
 -- UNIDADES
 -- -------------------------------------------------------------
-insert into public.unidades (nome, tipo, localizacao) values
-  ('ETE Industrial', 'ETE Industrial', '1'),
-  ('ETE Sanitária',  'ETE Sanitária',  '2'),
-  ('ETA',            'ETA',            '3'),
-  ('Represa',        'Represa',        '4')
+-- localizacao fica em branco por ora; será usada no futuro,
+-- quando houver o link com a planta baixa.
+insert into public.unidades (nome, tipo) values
+  ('ETE Industrial', 'ETE Industrial'),
+  ('ETE Sanitária',  'ETE Sanitária'),
+  ('ETA',            'ETA'),
+  ('Represa',        'Represa')
 on conflict (nome) do nothing;
 
 -- -------------------------------------------------------------

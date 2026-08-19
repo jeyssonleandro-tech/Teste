@@ -10,7 +10,7 @@ create table if not exists public.unidades (
   id            bigint generated always as identity primary key,
   nome          text not null unique,
   tipo          text not null,
-  localizacao   text,
+  localizacao   text,                 -- reservado: futuro link com planta baixa
   capacidade    numeric,              -- capacidade nominal (opcional)
   unidade_capacidade text,            -- ex.: 'm3/dia'
   ativo         boolean not null default true,
@@ -79,7 +79,6 @@ select
   l.id,
   u.nome            as unidade,
   u.tipo            as tipo_unidade,
-  u.localizacao,
   p.nome            as parametro,
   p.unidade_medida,
   p.ordem           as ordem_parametro,
