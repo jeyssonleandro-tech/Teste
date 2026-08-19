@@ -1,0 +1,38 @@
+name: Publicar posts agendados no LinkedIn
+
+on:
+  schedule:
+    # A cada hora, no minuto 15 (evita concorrência no minuto 0 com outros jobs do GitHub)
+    - cron: '15 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: linkedin-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Publicar posts aprovados e no horário
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+        run: node scripts/publish-due.mjs
+
+      - name: Salvar status atualizado da fila
+        run: |
+          git config user.name "linkedin-agent-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add content/queue
+          git diff --cached --quiet || git commit -m "chore: atualiza status de posts publicados"
+          git push

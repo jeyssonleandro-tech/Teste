@@ -1,5 +1,23 @@
 # Teste
 
+## Agente de conteúdo do LinkedIn
+
+Automação para gerar, revisar, agendar e publicar posts no LinkedIn via API,
+com aprovação manual antes de qualquer publicação. Veja o guia completo de
+configuração em [`docs/SETUP.md`](docs/SETUP.md) — inclui como criar o app no
+LinkedIn Developer Portal, autorizar via OAuth e cadastrar os GitHub Secrets.
+
+Estrutura:
+
+- `src/lib/` — clientes de OAuth e da API do LinkedIn, e a fila de posts.
+- `scripts/` — CLIs (`npm run auth:*`, `npm run queue:*`, `npm run metrics:collect`).
+- `content/queue/` — fila de posts (rascunho → revisão → aprovado → publicado). Ver [`content/README.md`](content/README.md).
+- `.github/workflows/` — publicação agendada (hora em hora) e coleta diária de métricas.
+
+**Limitação importante**: a API pública do LinkedIn não expõe métricas de
+alcance/impressões para posts de perfil pessoal — apenas curtidas/comentários
+quando disponíveis. Detalhes em `docs/SETUP.md`.
+
 ## ECC (Claude Code plugin)
 
 Este repositório já vem com o plugin [ECC](https://github.com/affaan-m/ECC)

@@ -1,0 +1,32 @@
+name: Coletar métricas dos posts publicados
+
+on:
+  schedule:
+    - cron: '30 6 * * *' # uma vez por dia
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Coletar métricas disponíveis via API
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+        run: node scripts/collect-metrics.mjs
+
+      - name: Salvar métricas atualizadas
+        run: |
+          git config user.name "linkedin-agent-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add content/queue
+          git diff --cached --quiet || git commit -m "chore: atualiza metricas dos posts"
+          git push

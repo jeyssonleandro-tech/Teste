@@ -1,0 +1,19 @@
+{
+  "name": "linkedin-content-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Agente para gerar, revisar, agendar e publicar conteúdo no LinkedIn via API",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "auth:url": "node scripts/auth-url.mjs",
+    "auth:exchange": "node scripts/exchange-code.mjs",
+    "auth:refresh": "node scripts/refresh-token.mjs",
+    "auth:profile": "node scripts/get-profile.mjs",
+    "queue:new": "node scripts/new-draft.mjs",
+    "queue:publish-due": "node scripts/publish-due.mjs",
+    "metrics:collect": "node scripts/collect-metrics.mjs"
+  }
+}
