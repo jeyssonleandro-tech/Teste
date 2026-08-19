@@ -1,37 +1,37 @@
 -- =============================================================
 -- Cadastro inicial — rodar UMA VEZ, depois do 02_rls.sql
---
--- AJUSTE os nomes e localizações antes de rodar: os valores abaixo
--- são exemplos. Se preferir, pule este arquivo e cadastre pelo
--- Table Editor (veja docs/guia-lancamento-supabase.md).
 -- =============================================================
 
 -- -------------------------------------------------------------
--- UNIDADES (ajuste nome e localização para os reais)
+-- UNIDADES
 -- -------------------------------------------------------------
 insert into public.unidades (nome, tipo, localizacao) values
-  ('ETE Industrial',  'ETE Industrial', 'ajustar'),
-  ('ETE Sanitária',   'ETE Sanitária',  'ajustar'),
-  ('ETA',             'ETA',            'ajustar'),
-  ('Represa',         'Represa',        'ajustar')
+  ('ETE Industrial', 'ETE Industrial', '1'),
+  ('ETE Sanitária',  'ETE Sanitária',  '2'),
+  ('ETA',            'ETA',            '3'),
+  ('Represa',        'Represa',        '4')
 on conflict (nome) do nothing;
 
 -- -------------------------------------------------------------
--- PARAMETROS (acrescente/remova conforme o que você realmente mede)
+-- PARAMETROS
 -- 'ordem' controla a ordem das colunas no dashboard.
 -- -------------------------------------------------------------
 insert into public.parametros (nome, unidade_medida, aplica_a_tipo, ordem) values
   -- ETE
-  ('DQO',                    'mg/L',  'ETE',     10),
-  ('DBO',                    'mg/L',  'ETE',     20),
-  ('pH',                     '-',     'ETE',     30),
-  ('Acidez do reator',       'mg/L',  'ETE Industrial', 40),
-  ('Volume tratado',         'm3',    'ETE',     50),
+  ('DQO Equalizado',       'mg/L', 'ETE',            10),
+  ('DQO Químico',          'mg/L', 'ETE',            20),
+  ('pH Equalizado',        '-',    'ETE',            30),
+  ('pH Químico',           '-',    'ETE',            40),
+  ('pH Elev. Orgânico',    '-',    'ETE',            50),
+  ('Acidez do reator',     'mg/L', 'ETE Industrial', 60),
+  ('Volume tratado',       'm3',   'ETE',            70),
   -- ETA
-  ('Volume do tanque',       'm3',    'ETA',     10),
-  ('Vazão de tratamento',    'm3/h',  'ETA',     20),
-  ('Vazão de captação',      'm3/h',  'ETA',     30),
-  ('Turbidez',               'NTU',   'ETA',     40),
+  ('Vol Tratado',          'm3',   'ETA',            10),
+  ('Vazão de tratamento',  'm3/h', 'ETA',            20),
+  ('Turbidez',             'NTU',  'ETA',            30),
+  ('Cloro Semi',           'ppm',  'ETA',            40),
   -- Represa
-  ('Nível do reservatório',  'm',     'Represa', 10)
+  ('Vazão de captação',    'm3/h', 'Represa',        10),
+  ('Régua linimétrica',    'm',    'Represa',        20),
+  ('Pluviometria',         'mm',   'Represa',        30)
 on conflict (nome) do nothing;
