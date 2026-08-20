@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lançamento diário — Estações de Tratamento</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface:   #fcfcfb;
+    --plane:     #f9f9f7;
+    --ink:       #0b0b0b;
+    --ink-2:     #52514e;
+    --ink-muted: #898781;
+    --grid:      #e1e0d9;
+    --border:    rgba(11,11,11,0.10);
+    --acao:      #2a78d6;
+    --bom:       #0ca30c;
+    --erro:      #d03b3b;
+    --aviso-bg:  rgba(42,120,214,0.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface: #1a1a19; --plane: #0d0d0d; --ink: #fff; --ink-2: #c3c2b7;
+      --ink-muted: #898781; --grid: #2c2c2a; --border: rgba(255,255,255,0.10);
+      --acao: #3987e5; --bom: #0ca30c; --erro: #e66767; --aviso-bg: rgba(57,135,229,0.12);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--plane); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 18px 64px; }
+  h1 { font-size: 20px; margin: 0 0 2px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); font-size: 13px; margin: 0 0 22px; }
+
+  .painel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
+  input, select {
+    font: inherit; width: 100%; padding: 10px 12px;
+    border: 1px solid var(--grid); border-radius: 8px;
+    background: var(--plane); color: var(--ink);
+  }
+  input:focus, select:focus { outline: 2px solid var(--acao); outline-offset: 1px; border-color: var(--acao); }
+  .campo { margin-bottom: 16px; }
+  .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .dupla { grid-template-columns: 1fr; } }
+
+  button.principal {
+    font: inherit; font-weight: 600; cursor: pointer; width: 100%;
+    padding: 12px 16px; border: none; border-radius: 8px;
+    background: var(--acao); color: #fff;
+  }
+  button.principal:disabled { opacity: .55; cursor: default; }
+  button.texto {
+    font: inherit; font-size: 13px; cursor: pointer; background: none;
+    border: none; color: var(--acao); padding: 4px; text-decoration: underline;
+  }
+
+  .linha-param {
+    display: grid; grid-template-columns: 1fr 128px; gap: 12px;
+    align-items: center; padding: 10px 0; border-top: 1px solid var(--grid);
+  }
+  .linha-param:first-of-type { border-top: none; }
+  .nome-param { font-size: 14px; }
+  .nome-param .un { color: var(--ink-muted); font-size: 12px; margin-left: 4px; }
+  .linha-param input { text-align: right; font-variant-numeric: tabular-nums; }
+  .ja-lancado {
+    font-size: 11px; color: var(--ink-muted); display: block; margin-top: 1px;
+  }
+
+  .aviso {
+    background: var(--aviso-bg); border-radius: 8px;
+    padding: 11px 13px; font-size: 13px; color: var(--ink-2); margin-bottom: 16px;
+  }
+  .recado { font-size: 14px; padding: 12px 14px; border-radius: 8px; margin-top: 16px; }
+  .recado.ok  { background: rgba(12,163,12,.10); color: var(--bom); }
+  .recado.ruim{ background: rgba(208,59,59,.10); color: var(--erro); }
+
+  .topo-sessao {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; margin-bottom: 16px; font-size: 13px; color: var(--ink-muted);
+  }
+  .oculto { display: none; }
+  footer { margin-top: 24px; font-size: 12px; color: var(--ink-muted); text-align: center; }
+  footer a { color: var(--acao); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Lançamento diário</h1>
+  <p class="sub">Estações de Tratamento</p>
+
+  <!-- ================= LOGIN ================= -->
+  <section class="painel" id="tela-login">
+    <div class="aviso">
+      Use o e-mail e a senha que o supervisor cadastrou para você.
+    </div>
+    <form id="form-login">
+      <div class="campo">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" autocomplete="username" required>
+      </div>
+      <div class="campo">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" autocomplete="current-password" required>
+      </div>
+      <button class="principal" type="submit" id="btn-entrar">Entrar</button>
+    </form>
+    <div id="recado-login"></div>
+  </section>
+
+  <!-- ================= LANÇAMENTO ================= -->
+  <section class="painel oculto" id="tela-lancamento">
+    <div class="topo-sessao">
+      <span id="quem"></span>
+      <button class="texto" type="button" id="btn-sair">Sair</button>
+    </div>
+
+    <div class="dupla">
+      <div class="campo">
+        <label for="unidade">Unidade</label>
+        <select id="unidade"></select>
+      </div>
+      <div class="campo">
+        <label for="data">Data da medição</label>
+        <input type="date" id="data">
+      </div>
+    </div>
+
+    <form id="form-lancamento">
+      <div id="parametros"></div>
+
+      <div class="campo" style="margin-top:16px">
+        <label for="observacao">Observação (opcional)</label>
+        <input type="text" id="observacao" maxlength="200"
+               placeholder="Ex.: coleta feita após manutenção da bomba">
+      </div>
+
+      <div class="aviso">
+        Não escreva nome, CPF, telefone ou e-mail de pessoas na observação —
+        este conteúdo aparece no painel compartilhado.
+      </div>
+
+      <button class="principal" type="submit" id="btn-salvar">Salvar lançamento</button>
+    </form>
+    <div id="recado"></div>
+  </section>
+
+  <footer>
+    <a href="index.html">Ver o painel</a>
+  </footer>
+</div>
+
+<script>
+/* =============================================================
+   CONFIGURAÇÃO — mesmos valores do painel.
+   A chave anon só permite ler; gravar exige o login abaixo.
+   ============================================================= */
+const SUPABASE_URL = "https://hylrytsydjijrimwtpnv.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5bHJ5dHN5ZGppanJpbXd0cG52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzA4ODcsImV4cCI6MjEwMjc0Njg4N30.5BpfaLg2vsEVmCK3GWaQRF1yInkijv7LQbB4CHPh60I";
+
+const CHAVE_SESSAO = "ete_sessao";
+
+let sessao = null;      // { access_token, refresh_token, email }
+let unidades = [];
+let parametros = [];
+
+/* ---------- utilidades ---------- */
+const hojeSaoPaulo = () =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"
+  }).format(new Date());
+
+const numeroBR = txt => {
+  const limpo = String(txt).trim().replace(/\./g, "").replace(",", ".");
+  if (limpo === "") return null;
+  const n = Number(limpo);
+  return isFinite(n) ? n : NaN;
+};
+
+const recado = (elId, texto, ok) => {
+  const el = document.getElementById(elId);
+  el.innerHTML = texto ? `<p class="recado ${ok ? "ok" : "ruim"}">${texto}</p>` : "";
+};
+
+/* ---------- chamadas ao Supabase ---------- */
+async function api(caminho, opcoes = {}, comLogin = true) {
+  const cabecalhos = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${comLogin && sessao ? sessao.access_token : SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json",
+    ...(opcoes.headers || {})
+  };
+  let resp = await fetch(`${SUPABASE_URL}${caminho}`, { ...opcoes, headers: cabecalhos });
+
+  // sessão expirada: tenta renovar uma vez e repete a chamada
+  if (resp.status === 401 && comLogin && sessao?.refresh_token) {
+    if (await renovarSessao()) {
+      cabecalhos.Authorization = `Bearer ${sessao.access_token}`;
+      resp = await fetch(`${SUPABASE_URL}${caminho}`, { ...opcoes, headers: cabecalhos });
+    }
+  }
+  return resp;
+}
+
+async function entrar(email, senha) {
+  const resp = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password: senha })
+  });
+  const dados = await resp.json();
+  if (!resp.ok) {
+    throw new Error(resp.status === 400
+      ? "E-mail ou senha incorretos."
+      : dados.msg || dados.error_description || `Falha no login (${resp.status}).`);
+  }
+  sessao = {
+    access_token: dados.access_token,
+    refresh_token: dados.refresh_token,
+    email: dados.user?.email || email
+  };
+  localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+}
+
+async function renovarSessao() {
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: sessao.refresh_token })
+    });
+    if (!resp.ok) return false;
+    const dados = await resp.json();
+    sessao = { ...sessao, access_token: dados.access_token, refresh_token: dados.refresh_token };
+    localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+    return true;
+  } catch { return false; }
+}
+
+function sair() {
+  sessao = null;
+  localStorage.removeItem(CHAVE_SESSAO);
+  document.getElementById("tela-lancamento").classList.add("oculto");
+  document.getElementById("tela-login").classList.remove("oculto");
+  recado("recado", "", true);
+}
+
+/* ---------- cadastro (unidades e parâmetros) ---------- */
+async function carregarCadastro() {
+  const [u, p] = await Promise.all([
+    api("/rest/v1/unidades?select=id,nome,tipo&ativo=is.true&order=nome", {}, false),
+    api("/rest/v1/parametros?select=id,nome,unidade_medida,aplica_a_tipo,ordem"
+        + "&ativo=is.true&order=ordem", {}, false)
+  ]);
+  if (!u.ok || !p.ok) throw new Error("Não foi possível carregar o cadastro de unidades.");
+  unidades = await u.json();
+  parametros = await p.json();
+}
+
+/* Um parâmetro pertence à unidade quando o tipo dela combina com
+   'aplica_a_tipo' — 'ETE' cobre 'ETE Industrial' e 'ETE Sanitária'. */
+const parametrosDa = unidade => parametros.filter(p => {
+  if (!p.aplica_a_tipo) return true;
+  const tipo = unidade.tipo || "";
+  return tipo.startsWith(p.aplica_a_tipo) || p.aplica_a_tipo.startsWith(tipo);
+});
+
+/* ---------- montagem do formulário ---------- */
+function montarSeletorUnidade() {
+  document.getElementById("unidade").innerHTML =
+    unidades.map(u => `<option value="${u.id}">${u.nome}</option>`).join("");
+}
+
+async function montarParametros() {
+  const unidade = unidades.find(u => String(u.id) === document.getElementById("unidade").value);
+  const data = document.getElementById("data").value;
+  const lista = parametrosDa(unidade);
+  const alvo = document.getElementById("parametros");
+
+  if (!lista.length) {
+    alvo.innerHTML = `<p class="aviso">Nenhum parâmetro cadastrado para esta unidade.</p>`;
+    return;
+  }
+
+  // valores já lançados nesta unidade + data, para permitir correção
+  let existentes = {};
+  if (data) {
+    const resp = await api(`/rest/v1/leituras?select=parametro_id,valor,observacao`
+      + `&unidade_id=eq.${unidade.id}&data=eq.${data}`);
+    if (resp.ok) for (const l of await resp.json()) existentes[l.parametro_id] = l;
+  }
+
+  alvo.innerHTML = lista.map(p => {
+    const ja = existentes[p.id];
+    const valor = ja && ja.valor !== null
+      ? String(ja.valor).replace(".", ",") : "";
+    return `
+      <div class="linha-param">
+        <div class="nome-param">
+          ${p.nome}${p.unidade_medida && p.unidade_medida !== "-"
+            ? `<span class="un">${p.unidade_medida}</span>` : ""}
+          ${ja ? '<span class="ja-lancado">já lançado — editar substitui o valor</span>' : ""}
+        </div>
+        <input type="text" inputmode="decimal" data-parametro="${p.id}"
+               value="${valor}" placeholder="—" aria-label="${p.nome}">
+      </div>`;
+  }).join("");
+
+  const obs = Object.values(existentes).find(l => l.observacao)?.observacao || "";
+  document.getElementById("observacao").value = obs;
+}
+
+/* ---------- gravação ---------- */
+async function salvar(ev) {
+  ev.preventDefault();
+  const botao = document.getElementById("btn-salvar");
+  const unidadeId = document.getElementById("unidade").value;
+  const data = document.getElementById("data").value;
+  const observacao = document.getElementById("observacao").value.trim() || null;
+
+  if (!data) { recado("recado", "Informe a data da medição.", false); return; }
+
+  const linhas = [];
+  for (const campo of document.querySelectorAll("[data-parametro]")) {
+    const bruto = campo.value.trim();
+    if (bruto === "") continue;
+    const valor = numeroBR(bruto);
+    if (Number.isNaN(valor)) {
+      recado("recado", `O valor "${bruto}" não é um número válido. `
+        + `Use vírgula para decimal, como 7,2.`, false);
+      campo.focus();
+      return;
+    }
+    linhas.push({
+      unidade_id: Number(unidadeId), parametro_id: Number(campo.dataset.parametro),
+      data, valor, observacao
+    });
+  }
+
+  if (!linhas.length) {
+    recado("recado", "Preencha ao menos um valor antes de salvar.", false);
+    return;
+  }
+
+  botao.disabled = true;
+  botao.textContent = "Salvando…";
+  try {
+    const resp = await api(
+      "/rest/v1/leituras?on_conflict=unidade_id,parametro_id,data",
+      {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify(linhas)
+      });
+    if (!resp.ok) {
+      const erro = await resp.text();
+      throw new Error(resp.status === 401
+        ? "Sua sessão expirou. Entre novamente."
+        : `O banco recusou o lançamento (${resp.status}). ${erro}`);
+    }
+    const [a, m, d] = data.split("-");
+    recado("recado", `${linhas.length} valor(es) salvos para ${d}/${m}/${a}. `
+      + `O painel já reflete o lançamento.`, true);
+    await montarParametros();
+  } catch (e) {
+    recado("recado", e.message, false);
+    if (/sessão expirou/i.test(e.message)) setTimeout(sair, 1800);
+  } finally {
+    botao.disabled = false;
+    botao.textContent = "Salvar lançamento";
+  }
+}
+
+/* ---------- entrada na tela de lançamento ---------- */
+async function abrirLancamento() {
+  document.getElementById("tela-login").classList.add("oculto");
+  document.getElementById("tela-lancamento").classList.remove("oculto");
+  document.getElementById("quem").textContent = sessao.email;
+  document.getElementById("data").value = hojeSaoPaulo();
+  document.getElementById("data").max = hojeSaoPaulo();
+  await carregarCadastro();
+  montarSeletorUnidade();
+  await montarParametros();
+}
+
+/* ---------- eventos ---------- */
+document.getElementById("form-login").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const botao = document.getElementById("btn-entrar");
+  botao.disabled = true; botao.textContent = "Entrando…";
+  recado("recado-login", "", true);
+  try {
+    await entrar(document.getElementById("email").value.trim(),
+                 document.getElementById("senha").value);
+    document.getElementById("senha").value = "";
+    await abrirLancamento();
+  } catch (e) {
+    recado("recado-login", e.message, false);
+  } finally {
+    botao.disabled = false; botao.textContent = "Entrar";
+  }
+});
+
+document.getElementById("btn-sair").addEventListener("click", sair);
+document.getElementById("unidade").addEventListener("change", montarParametros);
+document.getElementById("data").addEventListener("change", montarParametros);
+document.getElementById("form-lancamento").addEventListener("submit", salvar);
+
+/* ---------- início: reaproveita a sessão salva ---------- */
+(async function () {
+  const guardado = localStorage.getItem(CHAVE_SESSAO);
+  if (!guardado) return;
+  try {
+    sessao = JSON.parse(guardado);
+    if (await renovarSessao()) await abrirLancamento();
+    else sair();
+  } catch { sair(); }
+})();
+</script>
+</body>
+</html>

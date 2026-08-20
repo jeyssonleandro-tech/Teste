@@ -9,10 +9,13 @@ ETA e Represa), alimentado por dados no Supabase e publicado como HTML.
 
 | Caminho | O que é |
 |---|---|
-| `supabase/01_schema.sql` | Cria as tabelas `unidades`, `parametros`, `leituras_semanais`, `ocorrencias` e a view `vw_dashboard` |
+| `index.html` | O painel — somente leitura, visão semanal ou diária |
+| `lancamento.html` | Formulário de lançamento, com login por colaborador |
+| `supabase/01_schema.sql` | Cria as tabelas e a view |
 | `supabase/02_rls.sql` | Regras de acesso: leitura pública, escrita só autenticada |
-| `supabase/03_cadastro_inicial.sql` | Cadastro inicial das unidades e dos parâmetros (ajustar antes de rodar) |
-| `docs/guia-lancamento-supabase.md` | Guia de operação: como lançar os dados toda semana |
+| `supabase/03_cadastro_inicial.sql` | Cadastro inicial das unidades e dos parâmetros |
+| `supabase/04_migracao_diaria.sql` | Migra para lançamento diário e cria o login |
+| `docs/guia-lancamento-supabase.md` | Guia de operação |
 
 ### Modelo de dados
 
@@ -21,18 +24,27 @@ usa só os parâmetros que fazem sentido para ela, e um indicador novo é apenas
 uma linha nova em `parametros`:
 
 - `unidades` — cadastro de cada estação/represa
-- `parametros` — catálogo de indicadores (DQO, pH, Turbidez, Vazão...)
-- `leituras_semanais` — uma linha por unidade + parâmetro + semana
+- `parametros` — catálogo de indicadores, cada um com sua regra de agregação
+- `leituras` — uma linha por unidade + parâmetro + **dia**
+
+O registro é diário; a visão semanal é montada pelo banco na view
+`vw_dashboard`, somando, mediando ou pegando o último valor conforme a
+natureza de cada indicador.
+
+### Acesso
+
+| Quem | Como | Pode |
+|---|---|---|
+| Qualquer pessoa com o link | `index.html` | Ver o painel |
+| Colaborador | `lancamento.html` + login | Lançar e corrigir medições |
+| Supervisor | painel do Supabase | Tudo, inclusive apagar e criar logins |
 
 ### Próximos passos
 
-1. Rodar os scripts de `supabase/` no SQL Editor (ver guia)
-2. Cadastrar unidades e parâmetros
-3. Construir o `index.html` do dashboard
-4. Publicar via GitHub Pages
-
-Em standby para o futuro: formulário HTML de lançamento, para substituir o
-Table Editor na rotina semanal.
+1. Publicar via GitHub Pages (habilita o acesso por celular)
+2. Sinalização de fora de faixa nos cartões, quando houver os limites de
+   conformidade de cada parâmetro
+3. Vínculo com a planta baixa das unidades (campo `localizacao` reservado)
 
 ## ECC (Claude Code plugin)
 
