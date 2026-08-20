@@ -38,6 +38,12 @@ comment on column public.parametros.agregacao_extra is
 -- 3) Correções no que já existia
 -- -------------------------------------------------------------
 
+-- O grupo genérico 'ETE' deixa de existir: só há ETE Industrial e
+-- ETE Sanitária. O que valia para as duas passa a ser da Industrial.
+update public.parametros
+   set aplica_a_tipo = 'ETE Industrial'
+ where aplica_a_tipo = 'ETE';
+
 -- 'Vol Tratado' (ETA) e 'Volume tratado' (ETE) passam a ter o mesmo
 -- nome da nova lista. São os mesmos indicadores — renomear evita
 -- dois campos parecidos na tela de lançamento.
@@ -47,7 +53,7 @@ update public.parametros
 
 update public.parametros
    set nome = 'Volume Tratado', agregacao = 'soma', agregacao_extra = 'media'
- where nome = 'Volume tratado' and aplica_a_tipo = 'ETE';
+ where nome = 'Volume tratado' and aplica_a_tipo = 'ETE Industrial';
 
 -- Acidez do reator: nome, unidade e agregação corrigidos
 update public.parametros
