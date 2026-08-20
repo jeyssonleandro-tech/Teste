@@ -12,9 +12,27 @@
 
 -- -------------------------------------------------------------
 -- 1) Renomeia a tabela e a coluna
+--    Só renomeia o que ainda não foi renomeado, para o script poder
+--    ser rodado de novo sem quebrar no meio.
 -- -------------------------------------------------------------
-alter table public.leituras_semanais rename to leituras;
-alter table public.leituras rename column semana to data;
+do $$
+begin
+  if to_regclass('public.leituras_semanais') is not null
+     and to_regclass('public.leituras') is null then
+    alter table public.leituras_semanais rename to leituras;
+  end if;
+
+  if to_regclass('public.leituras') is null then
+    raise exception
+      'A tabela de leituras não existe. Rode antes o 01_schema.sql.';
+  end if;
+
+  if exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'leituras'
+               and column_name = 'semana') then
+    alter table public.leituras rename column semana to data;
+  end if;
+end $$;
 
 comment on table public.leituras is 'Uma linha por unidade + parâmetro + dia.';
 comment on column public.leituras.data is 'Dia da medição.';
