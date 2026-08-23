@@ -7,16 +7,17 @@
 <style>
   :root {
     color-scheme: light;
-    --surface:        #fcfcfb;
-    --plane:          #f9f9f7;
-    --ink:            #0b0b0b;
-    --ink-2:          #52514e;
-    --ink-muted:      #898781;
-    --grid:           #e1e0d9;
-    --axis:           #c3c2b7;
-    --border:         rgba(11,11,11,0.10);
-    --serie:          #2a78d6;
-    --serie-soft:     rgba(42,120,214,0.10);
+    --surface:    #fcfcfb;
+    --plane:      #f4f4f1;
+    --ink:        #0b0b0b;
+    --ink-2:      #52514e;
+    --ink-muted:  #898781;
+    --grid:       #e1e0d9;
+    --axis:       #c3c2b7;
+    --border:     rgba(11,11,11,0.10);
+    --serie:      #2a78d6;
+    --serie-soft: rgba(42,120,214,0.10);
+    --realce:     rgba(42,120,214,0.08);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -31,6 +32,7 @@
       --border:     rgba(255,255,255,0.10);
       --serie:      #3987e5;
       --serie-soft: rgba(57,135,229,0.14);
+      --realce:     rgba(57,135,229,0.12);
     }
   }
   :root[data-theme="dark"] {
@@ -45,207 +47,353 @@
     --border:     rgba(255,255,255,0.10);
     --serie:      #3987e5;
     --serie-soft: rgba(57,135,229,0.14);
+    --realce:     rgba(57,135,229,0.12);
   }
 
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--plane);
-    color: var(--ink);
+    margin: 0; background: var(--plane); color: var(--ink);
     font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-text-size-adjust: 100%;
   }
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 64px; }
+  .oculto { display: none !important; }
+  .so-leitor {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
 
-  header.top {
-    display: flex; flex-wrap: wrap; gap: 12px 20px;
-    align-items: baseline; justify-content: space-between;
-    margin-bottom: 4px;
+  /* ---------- tela de login ---------- */
+  .portao {
+    min-height: 100dvh; display: grid; place-items: center; padding: 24px 18px;
   }
-  h1 { font-size: 21px; margin: 0; letter-spacing: -0.01em; }
-  .sub { color: var(--ink-2); font-size: 13px; margin: 2px 0 20px; }
+  .portao form {
+    width: 100%; max-width: 360px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px; padding: 24px 22px 22px;
+  }
+  .portao h1 { font-size: 19px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .portao p.ajuda { color: var(--ink-2); font-size: 13px; margin: 0 0 20px; }
+  label { display: block; font-size: 13px; color: var(--ink-2); margin-bottom: 5px; }
+  input[type="email"], input[type="password"] {
+    width: 100%; font: inherit; font-size: 16px; padding: 11px 12px;
+    border: 1px solid var(--border); border-radius: 9px;
+    background: var(--plane); color: var(--ink); margin-bottom: 14px;
+  }
+  input:focus-visible, button:focus-visible {
+    outline: 2px solid var(--serie); outline-offset: 2px;
+  }
+  button.principal {
+    width: 100%; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer;
+    padding: 12px; border: 0; border-radius: 9px; background: var(--serie); color: #fff;
+  }
+  button.principal[disabled] { opacity: .55; cursor: progress; }
+  .recado {
+    font-size: 13px; border-radius: 8px; padding: 10px 12px; margin: 0 0 14px;
+    border: 1px solid var(--border); border-left: 3px solid var(--serie);
+    background: var(--plane); color: var(--ink-2);
+  }
+  .recado.ruim { border-left-color: #b4442e; }
 
-  .controls {
-    display: flex; flex-wrap: wrap; gap: 8px;
-    align-items: center; margin-bottom: 20px;
+  /* ---------- moldura do painel ---------- */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px 56px; }
+
+  header.barra {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--plane); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 0 10px; margin-bottom: 2px;
   }
-  .seg { display: flex; flex-wrap: wrap; gap: 4px; }
+  header.barra h1 {
+    font-size: 16px; margin: 0; letter-spacing: -0.01em; flex: 1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .acoes { display: flex; gap: 6px; flex: none; }
+
   button.chip {
-    font: inherit; font-size: 13px; cursor: pointer;
-    padding: 6px 12px; border-radius: 999px;
+    font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
+    padding: 7px 13px; border-radius: 999px; min-height: 36px;
     border: 1px solid var(--border); background: var(--surface); color: var(--ink-2);
   }
   button.chip:hover { border-color: var(--axis); }
   button.chip[aria-pressed="true"] {
     background: var(--serie); border-color: var(--serie); color: #fff; font-weight: 600;
   }
-  .spacer { flex: 1 1 20px; }
 
-  section.unidade { margin-bottom: 40px; }
-  .unidade-head {
-    display: flex; align-items: baseline; gap: 10px;
-    padding-bottom: 8px; margin-bottom: 14px;
+  /* abas de unidade — a navegação principal */
+  nav.abas {
+    display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+    padding: 12px 0 10px; margin: 0 -16px; padding-left: 16px; padding-right: 16px;
     border-bottom: 1px solid var(--border);
   }
-  h2 { font-size: 17px; margin: 0; }
-  .tag { font-size: 12px; color: var(--ink-muted); }
-
-  .cards {
-    display: grid; gap: 12px;
-    grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  nav.abas::-webkit-scrollbar { display: none; }
+  nav.abas button {
+    font: inherit; font-size: 14px; cursor: pointer; white-space: nowrap; flex: none;
+    padding: 8px 14px; min-height: 40px; border-radius: 9px;
+    border: 1px solid transparent; background: none; color: var(--ink-2);
   }
-  .card {
+  nav.abas button[aria-current="true"] {
+    background: var(--surface); border-color: var(--border);
+    color: var(--ink); font-weight: 600;
+  }
+
+  .filtros {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    padding: 12px 0; font-size: 13px;
+  }
+  .filtros .seg { display: flex; gap: 4px; }
+  .filtros #filtro-modo { margin-right: 10px; }
+  .filtros .divisor { flex: 1 1 0; min-width: 0; }
+  @media (max-width: 430px) {
+    button.chip { padding: 6px 11px; font-size: 12.5px; }
+    .filtros { gap: 5px; padding: 10px 0; }
+  }
+  .sub { color: var(--ink-2); font-size: 12.5px; margin: 0 0 12px; }
+
+  /* ---------- corpo: destaque + lista ---------- */
+  .unidade { display: grid; gap: 16px; align-items: start; }
+  @media (min-width: 920px) {
+    .unidade { grid-template-columns: minmax(0,1fr) 350px; }
+  }
+
+  .destaque {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px 14px 8px;
+    border-radius: 12px; padding: 16px 16px 10px; min-width: 0;
   }
-  .card h3 {
-    font-size: 13px; font-weight: 600; margin: 0 0 2px;
-    color: var(--ink-2); letter-spacing: 0.01em;
+  .destaque h2 { font-size: 15px; font-weight: 600; margin: 0; color: var(--ink-2); }
+  .destaque .valor {
+    font-size: 34px; line-height: 1.1; letter-spacing: -0.025em; margin-top: 2px;
+    font-variant-numeric: tabular-nums;
   }
-  .valor { font-size: 26px; line-height: 1.15; letter-spacing: -0.02em; }
-  .valor .un { font-size: 13px; color: var(--ink-muted); margin-left: 3px; letter-spacing: 0; }
-  .delta { font-size: 12px; color: var(--ink-2); margin-top: 2px; min-height: 18px; }
-  .delta .arrow { font-variant-numeric: tabular-nums; }
-  .semana-ref { font-size: 11px; color: var(--ink-muted); margin-top: 1px; }
-  .spark { margin-top: 8px; position: relative; }
-  .spark svg { display: block; width: 100%; height: 78px; overflow: visible; }
-  .sem-dado { color: var(--ink-muted); font-size: 13px; padding: 10px 0 14px; }
+  .destaque .valor .un {
+    font-size: 14px; color: var(--ink-muted); margin-left: 4px; letter-spacing: 0;
+  }
+  .destaque .delta { font-size: 13px; color: var(--ink-2); margin-top: 3px; }
+  .destaque .quando { font-size: 12px; color: var(--ink-muted); margin-top: 1px; }
+  .tela-grafico { margin-top: 14px; }
+  .tela-grafico svg { display: block; width: 100%; height: auto; }
+  .sem-dado { color: var(--ink-muted); font-size: 13px; padding: 24px 0; }
 
+  ul.lista {
+    list-style: none; margin: 0; padding: 4px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  }
+  ul.lista button {
+    width: 100%; font: inherit; cursor: pointer; text-align: left;
+    display: grid; grid-template-columns: minmax(0,1fr) 62px auto;
+    align-items: center; gap: 10px;
+    padding: 10px 11px; min-height: 52px;
+    border: 0; border-radius: 9px; background: none; color: var(--ink);
+  }
+  ul.lista button:hover { background: var(--realce); }
+  ul.lista button[aria-current="true"] { background: var(--realce); }
+  ul.lista li + li { border-top: 1px solid var(--grid); }
+  .item-nome { font-size: 13.5px; line-height: 1.3; }
+  .item-nome small { display: block; color: var(--ink-muted); font-size: 11.5px; }
+  .item-mini svg { display: block; width: 62px; height: 22px; overflow: visible; }
+  .item-num {
+    text-align: right; font-variant-numeric: tabular-nums; font-size: 15px;
+    white-space: nowrap;
+  }
+  .item-num small { display: block; font-size: 11px; color: var(--ink-2); font-weight: 400; }
+
+  /* ---------- tabela ---------- */
+  .tabela-wrap {
+    grid-column: 1 / -1; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px; overflow-x: auto;
+  }
   table {
     width: 100%; border-collapse: collapse; font-size: 13px;
     font-variant-numeric: tabular-nums;
   }
-  .tabela-wrap {
-    margin-top: 16px; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 10px;
-    overflow-x: auto;
+  th, td { padding: 9px 12px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child, tbody th {
+    text-align: left; position: sticky; left: 0; background: var(--surface);
   }
-  th, td { padding: 8px 12px; text-align: right; white-space: nowrap; }
-  th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); }
   thead th { color: var(--ink-2); font-weight: 600; border-bottom: 1px solid var(--grid); }
-  tbody tr + tr td { border-top: 1px solid var(--grid); }
+  tbody tr + tr td, tbody tr + tr th { border-top: 1px solid var(--grid); }
   td.vazio { color: var(--ink-muted); }
-  caption.oculto {
-    position: absolute; width: 1px; height: 1px;
-    overflow: hidden; clip-path: inset(50%); white-space: nowrap;
-  }
 
   #tooltip {
-    position: fixed; z-index: 20; pointer-events: none; opacity: 0;
+    position: fixed; z-index: 30; pointer-events: none; opacity: 0;
     transition: opacity .09s; background: var(--surface); color: var(--ink);
-    border: 1px solid var(--border); border-radius: 7px;
-    padding: 6px 9px; font-size: 12px; line-height: 1.35;
-    box-shadow: 0 3px 12px rgba(0,0,0,.14);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 10px; font-size: 12.5px; line-height: 1.35;
+    box-shadow: 0 4px 14px rgba(0,0,0,.16);
   }
   #tooltip b { font-variant-numeric: tabular-nums; }
 
   .aviso {
     background: var(--surface); border: 1px solid var(--border);
     border-left: 3px solid var(--serie);
-    border-radius: 8px; padding: 14px 16px; color: var(--ink-2); font-size: 14px;
+    border-radius: 10px; padding: 14px 16px; color: var(--ink-2); font-size: 14px;
   }
   footer.rodape {
-    margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--border);
+    margin-top: 32px; padding-top: 14px; border-top: 1px solid var(--border);
     color: var(--ink-muted); font-size: 12px;
   }
   @media print {
-    .controls, #tooltip { display: none; }
+    header.barra, nav.abas, .filtros, #tooltip, .acoes { display: none; }
     body { background: #fff; }
+    .unidade { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
+
+<!-- ============ TELA DE LOGIN ============ -->
+<div class="portao" id="tela-login">
+  <form id="form-login" autocomplete="on">
+    <h1>Painel das Estações de Tratamento</h1>
+    <p class="ajuda">Entre com o e-mail e a senha que o supervisor cadastrou.</p>
+    <div id="recado-login"></div>
+    <label for="email">E-mail</label>
+    <input type="email" id="email" name="email" autocomplete="username" required>
+    <label for="senha">Senha</label>
+    <input type="password" id="senha" name="senha" autocomplete="current-password" required>
+    <button class="principal" type="submit" id="btn-entrar">Entrar</button>
+  </form>
+</div>
+
+<!-- ============ PAINEL ============ -->
+<div id="tela-painel" class="oculto">
 <div class="wrap">
 
-  <header class="top">
-    <div>
-      <h1>Painel das Estações de Tratamento</h1>
-      <p class="sub" id="subtitulo">Carregando dados…</p>
+  <header class="barra">
+    <h1>Estações de Tratamento</h1>
+    <div class="acoes">
+      <button class="chip" id="btn-tema" type="button" title="Alternar claro/escuro">Tema</button>
+      <button class="chip" id="btn-sair" type="button">Sair</button>
     </div>
-    <button class="chip" id="btn-tema" type="button">Tema</button>
   </header>
 
-  <div class="controls" id="controles" hidden>
-    <div class="seg" id="filtro-unidade"></div>
-    <span class="spacer"></span>
+  <nav class="abas" id="abas-unidade" aria-label="Unidades"></nav>
+
+  <div class="filtros" id="filtros" hidden>
     <div class="seg" id="filtro-modo"></div>
     <div class="seg" id="filtro-periodo"></div>
-    <button class="chip" id="btn-tabela" type="button" aria-pressed="false">Ver tabelas</button>
+    <span class="divisor"></span>
+    <button class="chip" id="btn-tabela" type="button" aria-pressed="false">Ver tabela</button>
   </div>
 
+  <p class="sub" id="subtitulo"></p>
+
   <main id="conteudo">
-    <p class="aviso" id="estado">Conectando ao banco de dados…</p>
+    <p class="aviso" id="estado">Carregando os dados…</p>
   </main>
 
   <footer class="rodape">
-    Este painel é somente leitura — os valores vêm diretamente do banco e
-    refletem o último lançamento feito. Na visão semanal, cada indicador é
-    agregado conforme sua natureza: volumes e pluviometria somam os dias,
-    a régua linimétrica mostra o último valor, os demais são a média.
-    <a href="lancamento.html">Lançar medições</a>.
+    Dados lançados pela equipe de operação e agregados pelo banco.
+    <a href="lancamento.html">Ir para o lançamento</a>.
   </footer>
+</div>
 </div>
 
 <div id="tooltip" role="status" aria-live="polite"></div>
 
 <script>
 /* =============================================================
-   CONFIGURAÇÃO — os dois valores do projeto no Supabase.
-   (Project Settings → API). A chave abaixo é a "anon/public":
-   ela só consegue LER, conforme as regras de RLS do banco.
-   Nunca coloque aqui a chave "service_role".
+   CONFIGURAÇÃO — Project Settings → API no Supabase.
+   A chave abaixo é a "anon/public". Depois do script
+   06_acesso_autenticado.sql ela sozinha não lê mais nada:
+   serve só para o login. Nunca coloque aqui a "service_role".
    ============================================================= */
 const SUPABASE_URL = "https://hylrytsydjijrimwtpnv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5bHJ5dHN5ZGppanJpbXd0cG52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxNzA4ODcsImV4cCI6MjEwMjc0Njg4N30.5BpfaLg2vsEVmCK3GWaQRF1yInkijv7LQbB4CHPh60I";
 
-/* ---------- estado da tela ---------- */
-let LINHAS = [];            // leituras já normalizadas do banco
-let unidadeAtiva = "Todas";
-let modo = "semanal";       // "semanal" (agregado) ou "diario" (detalhe)
-let pontosVisiveis = 12;    // quantos períodos exibir; 0 = todos
+const CHAVE_SESSAO = "ete_sessao";   // a mesma do formulário de lançamento
+
+/* ---------- estado ---------- */
+let sessao = null;
+let LINHAS = [];
+let unidadeAtiva = null;
+let paramAtivo = null;          // parâmetro em destaque dentro da unidade
+let modo = "semanal";           // "semanal" (agregado) ou "diario" (detalhe)
+let pontosVisiveis = 12;
 let mostrarTabela = false;
 
 const PRESETS = {
-  semanal: [[8, "8 semanas"], [12, "12 semanas"], [26, "26 semanas"], [0, "Tudo"]],
+  semanal: [[8, "8 sem"], [12, "12 sem"], [26, "26 sem"], [0, "Tudo"]],
   diario:  [[14, "14 dias"], [30, "30 dias"], [90, "90 dias"], [0, "Tudo"]]
 };
 const rotuloPeriodo = () => modo === "semanal" ? "Semana de" : "Dia";
 
 /* ---------- utilidades ---------- */
-const fmtData = iso => {
-  const [a, m, d] = iso.split("-");
-  return `${d}/${m}/${a}`;
-};
-const fmtDataCurta = iso => {
-  const [, m, d] = iso.split("-");
-  return `${d}/${m}`;
-};
+const fmtData = iso => { const [a, m, d] = iso.split("-"); return `${d}/${m}/${a}`; };
+const fmtDataCurta = iso => { const [, m, d] = iso.split("-"); return `${d}/${m}`; };
 const fmtNum = v => {
   if (v === null || v === undefined) return "—";
   const n = Number(v);
   if (!isFinite(n)) return "—";
   const casas = Math.abs(n) >= 100 ? 0 : Math.abs(n) >= 10 ? 1 : 2;
-  return n.toLocaleString("pt-BR", {
-    minimumFractionDigits: 0, maximumFractionDigits: casas
-  });
+  return n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: casas });
 };
+const esc = t => String(t).replace(/[&<>"]/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* =============================================================
+   SESSÃO — o painel agora exige login. A chave anon não lê dados.
+   ============================================================= */
+async function entrar(email, senha) {
+  const resp = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password: senha })
+  });
+  const dados = await resp.json();
+  if (!resp.ok) {
+    throw new Error(resp.status === 400
+      ? "E-mail ou senha incorretos."
+      : dados.msg || dados.error_description || `Falha no login (${resp.status}).`);
+  }
+  sessao = {
+    access_token: dados.access_token,
+    refresh_token: dados.refresh_token,
+    email: dados.user?.email || email
+  };
+  localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+}
+
+async function renovarSessao() {
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: sessao.refresh_token })
+    });
+    if (!resp.ok) return false;
+    const dados = await resp.json();
+    sessao = { ...sessao, access_token: dados.access_token, refresh_token: dados.refresh_token };
+    localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+    return true;
+  } catch { return false; }
+}
+
+function sair() {
+  sessao = null;
+  localStorage.removeItem(CHAVE_SESSAO);
+  document.getElementById("tela-painel").classList.add("oculto");
+  document.getElementById("tela-login").classList.remove("oculto");
+}
 
 /* ---------- busca dos dados ----------
-   Duas views: a semanal já vem agregada pelo banco (soma, média ou último
-   valor, conforme o parâmetro); a diária traz o detalhe de cada dia.
-   As duas são normalizadas no mesmo formato, com o campo 'periodo'. */
+   Duas views: a semanal já vem agregada pelo banco (soma, média ou
+   último valor, conforme o parâmetro); a diária traz o detalhe.
+   As duas são normalizadas com o campo 'periodo'. */
 async function carregar(qual) {
   const view = qual === "semanal" ? "vw_dashboard" : "vw_leituras_diarias";
   const coluna = qual === "semanal" ? "semana" : "data";
-  const url = `${SUPABASE_URL}/rest/v1/${view}`
+  const caminho = `/rest/v1/${view}`
     + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,${coluna},valor`
     + `&order=${coluna}.asc`;
-  const resp = await fetch(url, {
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+
+  const chamar = () => fetch(`${SUPABASE_URL}${caminho}`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${sessao.access_token}` }
   });
-  if (!resp.ok) {
-    throw new Error(`O banco respondeu ${resp.status}. `
-      + `Verifique a URL, a chave anon e se as regras de leitura (RLS) foram aplicadas.`);
-  }
+
+  let resp = await chamar();
+  if (resp.status === 401 && sessao?.refresh_token && await renovarSessao()) resp = await chamar();
+  if (resp.status === 401) { sair(); throw new Error("Sessão expirada. Entre novamente."); }
+  if (!resp.ok) throw new Error(`O banco respondeu ${resp.status}.`);
+
   const linhas = await resp.json();
   return linhas.map(l => ({ ...l, periodo: l[coluna] }));
 }
@@ -255,10 +403,10 @@ function organizar(linhas) {
   const periodos = [...new Set(linhas.map(l => l.periodo))].sort();
   const corte = pontosVisiveis > 0 ? periodos.slice(-pontosVisiveis) : periodos;
   const janela = new Set(corte);
-  const dentro = linhas.filter(l => janela.has(l.periodo));
 
   const unidades = new Map();
-  for (const l of dentro) {
+  for (const l of linhas) {
+    if (!janela.has(l.periodo)) continue;
     if (!unidades.has(l.unidade)) {
       unidades.set(l.unidade, { nome: l.unidade, tipo: l.tipo_unidade, parametros: new Map() });
     }
@@ -277,103 +425,201 @@ function organizar(linhas) {
     u.listaParam = [...u.parametros.values()].sort(
       (a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, "pt-BR")
     );
-    for (const p of u.listaParam) p.pontos.sort((a, b) => a.periodo.localeCompare(b.periodo));
+    for (const p of u.listaParam) {
+      p.pontos.sort((a, b) => a.periodo.localeCompare(b.periodo));
+      p.validos = p.pontos.filter(x => x.valor !== null && isFinite(x.valor));
+    }
     u.periodos = corte.filter(s => u.listaParam.some(p => p.pontos.some(x => x.periodo === s)));
   }
   return { unidades: [...unidades.values()], periodos: corte };
 }
 
-/* ---------- gráfico de tendência (uma série, escala própria) ---------- */
-function grafico(pontos) {
-  const validos = pontos.filter(p => p.valor !== null && isFinite(p.valor));
-  if (validos.length === 0) return '<p class="sem-dado">Sem valores no período.</p>';
-  if (validos.length === 1) {
-    return `<p class="sem-dado">Apenas um período lançado — a tendência aparece a partir do segundo.</p>`;
+/* ---------- escala com marcas redondas ---------- */
+function escalaBonita(min, max, alvo = 4) {
+  if (min === max) { min -= Math.abs(min) * 0.05 + 1; max += Math.abs(max) * 0.05 + 1; }
+  const bruto = (max - min) / alvo;
+  const mag = Math.pow(10, Math.floor(Math.log10(bruto)));
+  const n = bruto / mag;
+  const passo = (n >= 5 ? 10 : n >= 2 ? 5 : n >= 1 ? 2 : 1) * mag;
+  const ini = Math.floor(min / passo) * passo;
+  const fim = Math.ceil(max / passo) * passo;
+  const marcas = [];
+  for (let v = ini; v <= fim + passo * 1e-9; v += passo) marcas.push(Number(v.toFixed(10)));
+  return { min: ini, max: fim, marcas };
+}
+
+/* ---------- gráfico grande: uma série, escala própria ---------- */
+function graficoGrande(p, largura) {
+  if (p.validos.length === 0) return '<p class="sem-dado">Sem valores no período.</p>';
+  if (p.validos.length === 1) {
+    return `<p class="sem-dado">Só um ${modo === "semanal" ? "semana lançada" : "dia lançado"} `
+      + `no período — a tendência aparece a partir do segundo.</p>`;
   }
 
-  const W = 260, H = 78, pad = { t: 8, r: 6, b: 16, l: 6 };
-  const vs = validos.map(p => p.valor);
+  const W = Math.max(280, largura);
+  const H = W < 520 ? 220 : 280;
+  const pad = { t: 12, r: 12, b: 30, l: 52 };
+  const vs = p.validos.map(d => d.valor);
+  const e = escalaBonita(Math.min(...vs), Math.max(...vs));
+
+  const x = i => pad.l + (i / (p.validos.length - 1)) * (W - pad.l - pad.r);
+  const y = v => pad.t + (1 - (v - e.min) / (e.max - e.min)) * (H - pad.t - pad.b);
+
+  const linha = p.validos.map((d, i) =>
+    `${i ? "L" : "M"}${x(i).toFixed(1)},${y(d.valor).toFixed(1)}`).join(" ");
+  const area = `${linha} L${x(p.validos.length - 1).toFixed(1)},${H - pad.b}`
+    + ` L${x(0).toFixed(1)},${H - pad.b} Z`;
+
+  const grades = e.marcas.map(v => `
+    <line x1="${pad.l}" y1="${y(v).toFixed(1)}" x2="${W - pad.r}" y2="${y(v).toFixed(1)}"
+          stroke="var(--grid)" stroke-width="1"/>
+    <text x="${pad.l - 8}" y="${(y(v) + 3.5).toFixed(1)}" font-size="11"
+          fill="var(--ink-muted)" text-anchor="end">${fmtNum(v)}</text>`).join("");
+
+  /* Quantos rótulos de data cabem sem colidir: ~62px cada. */
+  const cabem = Math.max(2, Math.floor((W - pad.l - pad.r) / 62));
+  const passoRot = Math.max(1, Math.ceil((p.validos.length - 1) / (cabem - 1)));
+  const datas = p.validos.map((d, i) => {
+    const ultimo = i === p.validos.length - 1;
+    if (i % passoRot !== 0 && !ultimo) return "";
+    const anc = i === 0 ? "start" : ultimo ? "end" : "middle";
+    return `<text x="${x(i).toFixed(1)}" y="${H - 10}" font-size="11"
+                  fill="var(--ink-muted)" text-anchor="${anc}">${fmtDataCurta(d.periodo)}</text>`;
+  }).join("");
+
+  /* Com muitos pontos as áreas de toque se sobreporiam e uma bloquearia
+     a outra: o raio acompanha o espaçamento, e as bolinhas somem quando
+     a série fica densa — a linha sozinha lê melhor. */
+  const espaco = (W - pad.l - pad.r) / (p.validos.length - 1);
+  const raio = Math.max(9, Math.min(16, espaco / 2));
+  const comBolinha = espaco >= 14;
+
+  const marcas = p.validos.map((d, i) => `
+    ${comBolinha ? `<circle cx="${x(i).toFixed(1)}" cy="${y(d.valor).toFixed(1)}" r="3.4"
+        fill="var(--serie)" stroke="var(--surface)" stroke-width="2"/>` : ""}
+    <circle class="alvo" cx="${x(i).toFixed(1)}" cy="${y(d.valor).toFixed(1)}"
+        r="${raio.toFixed(1)}" fill="transparent" tabindex="0"
+        data-periodo="${d.periodo}" data-valor="${d.valor}"/>`).join("");
+
+  return `<svg viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="${esc(p.nome)} — ${p.validos.length} períodos, de
+    ${fmtData(p.validos[0].periodo)} a ${fmtData(p.validos[p.validos.length - 1].periodo)}">
+    ${grades}
+    <path d="${area}" fill="var(--serie-soft)"/>
+    <path d="${linha}" fill="none" stroke="var(--serie)" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    ${datas}${marcas}
+  </svg>`;
+}
+
+/* ---------- mini-tendência da lista ---------- */
+function miniTendencia(p) {
+  if (p.validos.length < 2) return "";
+  const W = 62, H = 22, m = 3;
+  const vs = p.validos.map(d => d.valor);
   let min = Math.min(...vs), max = Math.max(...vs);
   if (min === max) { min -= 1; max += 1; }
-  const margem = (max - min) * 0.12;
-  min -= margem; max += margem;
-
-  const x = i => pad.l + (i / (validos.length - 1)) * (W - pad.l - pad.r);
-  const y = v => pad.t + (1 - (v - min) / (max - min)) * (H - pad.t - pad.b);
-
-  const linha = validos.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.valor).toFixed(1)}`).join(" ");
-  const area = `${linha} L${x(validos.length - 1).toFixed(1)},${H - pad.b} L${x(0).toFixed(1)},${H - pad.b} Z`;
-
-  /* Com muitos pontos as áreas de toque se sobreporiam e uma bloquearia a
-     outra: o raio acompanha o espaçamento, e as bolinhas somem quando a
-     série fica densa — a linha sozinha lê melhor. */
-  const espaco = (W - pad.l - pad.r) / (validos.length - 1);
-  const raioAlvo = Math.max(4, Math.min(11, espaco / 2));
-  const comBolinha = espaco >= 9;
-
-  const marcas = validos.map((p, i) => `
-    ${comBolinha ? `<circle cx="${x(i).toFixed(1)}" cy="${y(p.valor).toFixed(1)}" r="3.2"
-            fill="var(--serie)" stroke="var(--surface)" stroke-width="2"/>` : ""}
-    <circle class="alvo" cx="${x(i).toFixed(1)}" cy="${y(p.valor).toFixed(1)}"
-            r="${raioAlvo.toFixed(1)}"
-            fill="transparent" data-periodo="${p.periodo}" data-valor="${p.valor}"/>`).join("");
-
-  return `
-  <div class="spark">
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img"
-         aria-label="Tendência das últimas ${validos.length} semanas">
-      <line x1="${pad.l}" y1="${H - pad.b}" x2="${W - pad.r}" y2="${H - pad.b}"
-            stroke="var(--axis)" stroke-width="1"/>
-      <path d="${area}" fill="var(--serie-soft)" stroke="none"/>
-      <path d="${linha}" fill="none" stroke="var(--serie)" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round"/>
-      ${marcas}
-      <text x="${pad.l}" y="${H - 3}" font-size="9" fill="var(--ink-muted)">
-        ${fmtDataCurta(validos[0].periodo)}</text>
-      <text x="${W - pad.r}" y="${H - 3}" font-size="9" fill="var(--ink-muted)" text-anchor="end">
-        ${fmtDataCurta(validos[validos.length - 1].periodo)}</text>
-    </svg>
-  </div>`;
+  const d = p.validos.map((pt, i) =>
+    `${i ? "L" : "M"}${(m + i / (p.validos.length - 1) * (W - 2 * m)).toFixed(1)},`
+    + `${(m + (1 - (pt.valor - min) / (max - min)) * (H - 2 * m)).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><path d="${d}" fill="none"
+    stroke="var(--serie)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
-/* ---------- cartão de um parâmetro ---------- */
-function cartao(p) {
-  const validos = p.pontos.filter(x => x.valor !== null && isFinite(x.valor));
-  const ultimo = validos[validos.length - 1];
-  const penultimo = validos[validos.length - 2];
+/* ---------- variação em relação ao período anterior ---------- */
+function variacao(p) {
+  const n = p.validos.length;
+  if (n < 2) return { texto: n === 1 ? "primeiro registro" : "", curto: "" };
+  const atual = p.validos[n - 1].valor, antes = p.validos[n - 2].valor;
+  const dif = atual - antes;
+  const seta = dif > 0 ? "▲" : dif < 0 ? "▼" : "▬";
+  const pct = antes !== 0 ? `${dif > 0 ? "+" : ""}${(dif / Math.abs(antes) * 100).toFixed(1)}%` : "";
+  const anterior = modo === "semanal" ? "semana anterior" : "dia anterior";
+  return {
+    texto: `${seta} ${fmtNum(Math.abs(dif))}${pct ? ` (${pct})` : ""} vs. ${anterior}`,
+    curto: pct ? `${seta} ${pct}` : seta
+  };
+}
 
-  let delta = "";
-  if (ultimo && penultimo) {
-    const dif = ultimo.valor - penultimo.valor;
-    const seta = dif > 0 ? "▲" : dif < 0 ? "▼" : "▬";
-    const pct = penultimo.valor !== 0
-      ? ` (${dif > 0 ? "+" : ""}${(dif / Math.abs(penultimo.valor) * 100).toFixed(1)}%)`
-      : "";
-    const anterior = modo === "semanal" ? "semana anterior" : "dia anterior";
-    delta = `<span class="arrow">${seta}</span> ${fmtNum(Math.abs(dif))}${pct} vs. ${anterior}`;
-  } else if (ultimo) {
-    delta = modo === "semanal" ? "Primeira semana lançada" : "Primeiro dia lançado";
+/* ---------- montagem ---------- */
+function desenhar() {
+  const { unidades, periodos } = organizar(LINHAS);
+  const conteudo = document.getElementById("conteudo");
+
+  montarAbas(unidades.map(u => u.nome));
+
+  const u = unidades.find(x => x.nome === unidadeAtiva) || unidades[0];
+  if (!u) {
+    conteudo.innerHTML = `<p class="aviso">Nenhum lançamento no período selecionado.</p>`;
+    document.getElementById("subtitulo").textContent = "";
+    return;
   }
+  unidadeAtiva = u.nome;
 
-  return `
-  <article class="card">
-    <h3>${p.nome}</h3>
-    <div class="valor">${ultimo ? fmtNum(ultimo.valor) : "—"}${
-      ultimo && p.un && p.un !== "-" ? `<span class="un">${p.un}</span>` : ""}</div>
-    <div class="delta">${delta}</div>
-    <div class="semana-ref">${ultimo
-      ? `${rotuloPeriodo()} ${fmtData(ultimo.periodo)}` : "sem lançamento"}</div>
-    ${grafico(p.pontos)}
-  </article>`;
+  let p = u.listaParam.find(x => x.nome === paramAtivo);
+  if (!p) p = u.listaParam.find(x => x.validos.length) || u.listaParam[0];
+  paramAtivo = p.nome;
+
+  const ultimo = p.validos[p.validos.length - 1];
+  const v = variacao(p);
+  const unLegivel = p.un && p.un !== "-" ? p.un : "";
+
+  const itens = u.listaParam.map(item => {
+    const ult = item.validos[item.validos.length - 1];
+    const vi = variacao(item);
+    const un = item.un && item.un !== "-" ? item.un : "";
+    return `<li><button type="button" data-param="${esc(item.nome)}"
+        aria-current="${item.nome === p.nome}">
+      <span class="item-nome">${esc(item.nome)}${un ? `<small>${esc(un)}</small>` : ""}</span>
+      <span class="item-mini">${miniTendencia(item)}</span>
+      <span class="item-num">${ult ? fmtNum(ult.valor) : "—"}
+        ${vi.curto ? `<small>${vi.curto}</small>` : ""}</span>
+    </button></li>`;
+  }).join("");
+
+  conteudo.innerHTML = `
+    <div class="unidade">
+      <section class="destaque">
+        <h2>${esc(p.nome)}</h2>
+        <div class="valor">${ultimo ? fmtNum(ultimo.valor) : "—"}${
+          ultimo && unLegivel ? `<span class="un">${esc(unLegivel)}</span>` : ""}</div>
+        <div class="delta">${v.texto}</div>
+        <div class="quando">${ultimo
+          ? `${rotuloPeriodo()} ${fmtData(ultimo.periodo)}` : "sem lançamento no período"}</div>
+        <div class="tela-grafico" id="tela-grafico"></div>
+      </section>
+      <ul class="lista" id="lista-param" aria-label="Parâmetros de ${esc(u.nome)}">${itens}</ul>
+      ${mostrarTabela ? tabela(u) : ""}
+    </div>`;
+
+  desenharGrafico(p);
+
+  document.getElementById("lista-param").onclick = ev => {
+    const b = ev.target.closest("[data-param]"); if (!b) return;
+    paramAtivo = b.dataset.param;
+    desenhar();
+  };
+
+  const fim = periodos[periodos.length - 1];
+  document.getElementById("subtitulo").textContent =
+    `${u.listaParam.length} parâmetros · último lançamento em `
+    + `${fmtData(fim)} · ${periodos.length} ${modo === "semanal" ? "semanas" : "dias"} no período`;
 }
 
-/* ---------- tabela de histórico ---------- */
+/* O SVG é gerado no tamanho real do espaço disponível: o texto sai
+   nítido, sem esticar junto com o desenho. */
+function desenharGrafico(p) {
+  const alvo = document.getElementById("tela-grafico");
+  if (!alvo) return;
+  alvo.innerHTML = graficoGrande(p, Math.round(alvo.clientWidth) || 320);
+  ligarTooltip(p);
+}
+
 function tabela(u) {
   const periodos = [...u.periodos].reverse();
   if (!periodos.length) return "";
   const cab = u.listaParam.map(p =>
-    `<th scope="col">${p.nome}${p.un && p.un !== "-" ? ` <span class="tag">(${p.un})</span>` : ""}</th>`
-  ).join("");
+    `<th scope="col">${esc(p.nome)}${p.un && p.un !== "-" ? ` (${esc(p.un)})` : ""}</th>`).join("");
   const linhas = periodos.map(s => {
     const celulas = u.listaParam.map(p => {
       const pt = p.pontos.find(x => x.periodo === s);
@@ -383,132 +629,145 @@ function tabela(u) {
     return `<tr><th scope="row">${fmtData(s)}</th>${celulas}</tr>`;
   }).join("");
   return `<div class="tabela-wrap"><table>
-    <caption class="oculto">Histórico de ${u.nome}</caption>
+    <caption class="so-leitor">Histórico de ${esc(u.nome)}</caption>
     <thead><tr><th scope="col">${modo === "semanal" ? "Semana" : "Dia"}</th>${cab}</tr></thead>
     <tbody>${linhas}</tbody></table></div>`;
 }
 
-/* ---------- montagem da tela ---------- */
-function desenhar() {
-  const { unidades, periodos } = organizar(LINHAS);
-  const alvo = unidadeAtiva === "Todas"
-    ? unidades : unidades.filter(u => u.nome === unidadeAtiva);
-
-  const conteudo = document.getElementById("conteudo");
-  if (!alvo.length) {
-    conteudo.innerHTML = `<p class="aviso">Nenhum lançamento no período selecionado.</p>`;
-    return;
-  }
-
-  conteudo.innerHTML = alvo.map(u => `
-    <section class="unidade">
-      <div class="unidade-head">
-        <h2>${u.nome}</h2>${u.tipo && u.tipo !== u.nome ? `<span class="tag">${u.tipo}</span>` : ""}
-      </div>
-      <div class="cards">${u.listaParam.map(cartao).join("")}</div>
-      ${mostrarTabela ? tabela(u) : ""}
-    </section>`).join("");
-
-  const ultimo = periodos[periodos.length - 1];
-  const unidadeTempo = modo === "semanal" ? "semana(s)" : "dia(s)";
-  document.getElementById("subtitulo").textContent =
-    `Último lançamento: ${rotuloPeriodo().toLowerCase()} ${fmtData(ultimo)}`
-    + ` · ${periodos.length} ${unidadeTempo} no período`;
-
-  ligarTooltip();
-}
-
-/* ---------- tooltip nos pontos ---------- */
-function ligarTooltip() {
+/* ---------- tooltip ---------- */
+function ligarTooltip(p) {
   const tip = document.getElementById("tooltip");
-  document.querySelectorAll(".alvo").forEach(alvo => {
-    const mostrar = ev => {
+  const un = p.un && p.un !== "-" ? ` ${p.un}` : "";
+  const esconder = () => tip.style.opacity = "0";
+
+  document.querySelectorAll("#tela-grafico .alvo").forEach(alvo => {
+    const mostrar = () => {
       const r = alvo.getBoundingClientRect();
-      const nome = alvo.closest(".card").querySelector("h3").textContent;
-      tip.innerHTML = `${nome}<br>${rotuloPeriodo()} ${fmtData(alvo.dataset.periodo)}`
-        + `<br><b>${fmtNum(alvo.dataset.valor)}</b>`;
+      tip.innerHTML = `${esc(p.nome)}<br>${rotuloPeriodo()} ${fmtData(alvo.dataset.periodo)}`
+        + `<br><b>${fmtNum(alvo.dataset.valor)}${esc(un)}</b>`;
       tip.style.opacity = "1";
-      const x = Math.min(r.left + r.width / 2, window.innerWidth - 150);
-      tip.style.left = `${Math.max(8, x)}px`;
-      tip.style.top = `${Math.max(8, r.top - 8)}px`;
+      tip.style.left = `${Math.min(Math.max(60, r.left + r.width / 2), innerWidth - 60)}px`;
+      tip.style.top = `${Math.max(56, r.top - 8)}px`;
       tip.style.transform = "translate(-50%, -100%)";
     };
-    alvo.addEventListener("mouseenter", mostrar);
+    alvo.addEventListener("pointerenter", mostrar);
+    alvo.addEventListener("pointerdown", mostrar);
     alvo.addEventListener("focus", mostrar);
-    alvo.addEventListener("mouseleave", () => tip.style.opacity = "0");
-    alvo.addEventListener("blur", () => tip.style.opacity = "0");
-    alvo.setAttribute("tabindex", "0");
+    alvo.addEventListener("pointerleave", esconder);
+    alvo.addEventListener("blur", esconder);
   });
+  addEventListener("scroll", esconder, { passive: true, once: true });
 }
 
-/* ---------- filtros ---------- */
-function montarControles() {
-  const nomes = ["Todas", ...new Set(LINHAS.map(l => l.unidade))];
-  document.getElementById("filtro-unidade").innerHTML = nomes.map(n =>
-    `<button class="chip" type="button" data-unidade="${n}"
-       aria-pressed="${n === unidadeAtiva}">${n}</button>`).join("");
+/* ---------- controles ---------- */
+function montarAbas(nomes) {
+  const nav = document.getElementById("abas-unidade");
+  if (!unidadeAtiva) unidadeAtiva = nomes[0];
+  nav.innerHTML = nomes.map(n =>
+    `<button type="button" data-unidade="${esc(n)}"
+       aria-current="${n === unidadeAtiva}">${esc(n)}</button>`).join("");
+}
 
+function montarFiltros() {
   document.getElementById("filtro-modo").innerHTML =
     [["semanal", "Semanal"], ["diario", "Diário"]].map(([v, r]) =>
       `<button class="chip" type="button" data-modo="${v}"
          aria-pressed="${v === modo}">${r}</button>`).join("");
-
   document.getElementById("filtro-periodo").innerHTML = PRESETS[modo].map(([v, r]) =>
     `<button class="chip" type="button" data-periodo="${v}"
        aria-pressed="${v === pontosVisiveis}">${r}</button>`).join("");
-
-  document.getElementById("controles").hidden = false;
-
-  document.getElementById("filtro-unidade").onclick = ev => {
-    const b = ev.target.closest("[data-unidade]"); if (!b) return;
-    unidadeAtiva = b.dataset.unidade; montarControles(); desenhar();
-  };
-  document.getElementById("filtro-periodo").onclick = ev => {
-    const b = ev.target.closest("[data-periodo]"); if (!b) return;
-    pontosVisiveis = Number(b.dataset.periodo); montarControles(); desenhar();
-  };
-  document.getElementById("filtro-modo").onclick = async ev => {
-    const b = ev.target.closest("[data-modo]"); if (!b || b.dataset.modo === modo) return;
-    modo = b.dataset.modo;
-    pontosVisiveis = PRESETS[modo][1][0];   // padrão: a segunda faixa
-    LINHAS = await carregar(modo);
-    montarControles(); desenhar();
-  };
+  document.getElementById("filtros").hidden = false;
 }
+
+document.getElementById("abas-unidade").onclick = ev => {
+  const b = ev.target.closest("[data-unidade]"); if (!b) return;
+  if (b.dataset.unidade === unidadeAtiva) return;
+  unidadeAtiva = b.dataset.unidade;
+  paramAtivo = null;              // cada unidade abre no seu primeiro parâmetro
+  desenhar();
+};
+
+document.getElementById("filtro-periodo").onclick = ev => {
+  const b = ev.target.closest("[data-periodo]"); if (!b) return;
+  pontosVisiveis = Number(b.dataset.periodo);
+  montarFiltros(); desenhar();
+};
+
+document.getElementById("filtro-modo").onclick = async ev => {
+  const b = ev.target.closest("[data-modo]"); if (!b || b.dataset.modo === modo) return;
+  modo = b.dataset.modo;
+  pontosVisiveis = PRESETS[modo][1][0];
+  LINHAS = await carregar(modo);
+  montarFiltros(); desenhar();
+};
 
 document.getElementById("btn-tabela").onclick = ev => {
   mostrarTabela = !mostrarTabela;
   ev.currentTarget.setAttribute("aria-pressed", String(mostrarTabela));
-  ev.currentTarget.textContent = mostrarTabela ? "Ocultar tabelas" : "Ver tabelas";
+  ev.currentTarget.textContent = mostrarTabela ? "Ocultar tabela" : "Ver tabela";
   desenhar();
 };
 
 document.getElementById("btn-tema").onclick = () => {
-  const escuroAgora = document.documentElement.dataset.theme === "dark"
+  const escuro = document.documentElement.dataset.theme === "dark"
     || (!document.documentElement.dataset.theme
         && matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.dataset.theme = escuroAgora ? "light" : "dark";
+  document.documentElement.dataset.theme = escuro ? "light" : "dark";
+  desenhar();
 };
 
-/* ---------- início ---------- */
-(async function () {
+document.getElementById("btn-sair").onclick = sair;
+
+/* Redimensionar (girar o celular, por exemplo) refaz o gráfico no
+   tamanho novo, em vez de esticar o desenho antigo. */
+let temporizador;
+addEventListener("resize", () => {
+  clearTimeout(temporizador);
+  temporizador = setTimeout(() => { if (sessao && LINHAS.length) desenhar(); }, 180);
+});
+
+/* ---------- entrada ---------- */
+document.getElementById("form-login").onsubmit = async ev => {
+  ev.preventDefault();
+  const botao = document.getElementById("btn-entrar");
+  const recado = document.getElementById("recado-login");
+  botao.disabled = true; botao.textContent = "Entrando…";
+  recado.innerHTML = "";
+  try {
+    await entrar(document.getElementById("email").value.trim(),
+                 document.getElementById("senha").value);
+    await abrirPainel();
+  } catch (erro) {
+    recado.innerHTML = `<p class="recado ruim">${esc(erro.message)}</p>`;
+  } finally {
+    botao.disabled = false; botao.textContent = "Entrar";
+  }
+};
+
+async function abrirPainel() {
+  document.getElementById("tela-login").classList.add("oculto");
+  document.getElementById("tela-painel").classList.remove("oculto");
   const estado = document.getElementById("estado");
   try {
     LINHAS = await carregar(modo);
     if (!LINHAS.length) {
-      document.getElementById("subtitulo").textContent = "Nenhum dado lançado ainda";
-      estado.innerHTML = "A conexão com o banco funcionou, mas ainda não há leituras "
-        + "lançadas. Assim que a primeira medição for registrada pelo "
-        + '<a href="lancamento.html">formulário de lançamento</a>, '
-        + "ela aparece aqui automaticamente.";
+      estado.innerHTML = "A conexão funcionou, mas ainda não há leituras lançadas. "
+        + 'Assim que a primeira medição for registrada pelo '
+        + '<a href="lancamento.html">formulário de lançamento</a>, ela aparece aqui.';
       return;
     }
-    montarControles();
+    montarFiltros();
     desenhar();
   } catch (erro) {
-    document.getElementById("subtitulo").textContent = "Falha ao carregar";
     estado.textContent = `Não foi possível carregar os dados. ${erro.message}`;
   }
+}
+
+(function () {
+  const guardado = localStorage.getItem(CHAVE_SESSAO);
+  if (!guardado) return;
+  try { sessao = JSON.parse(guardado); } catch { return; }
+  if (sessao?.access_token) abrirPainel();
 })();
 </script>
 </body>

@@ -253,12 +253,14 @@ function sair() {
   recado("recado", "", true);
 }
 
-/* ---------- cadastro (unidades e parâmetros) ---------- */
+/* ---------- cadastro (unidades e parâmetros) ----------
+   Vai com o token do usuário: depois do 06_acesso_autenticado.sql a
+   chave anônima não lê mais nada, nem o cadastro. */
 async function carregarCadastro() {
   const [u, p] = await Promise.all([
-    api("/rest/v1/unidades?select=id,nome,tipo&ativo=is.true&order=nome", {}, false),
+    api("/rest/v1/unidades?select=id,nome,tipo&ativo=is.true&order=nome"),
     api("/rest/v1/parametros?select=id,nome,unidade_medida,aplica_a_tipo,ordem"
-        + "&ativo=is.true&order=ordem", {}, false)
+        + "&ativo=is.true&order=ordem")
   ]);
   if (!u.ok || !p.ok) throw new Error("Não foi possível carregar o cadastro de unidades.");
   unidades = await u.json();

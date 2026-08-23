@@ -9,13 +9,16 @@ ETA e Represa), alimentado por dados no Supabase e publicado como HTML.
 
 | Caminho | O que é |
 |---|---|
-| `index.html` | O painel — somente leitura, visão semanal ou diária |
+| `index.html` | O painel — leitura com login, uma unidade por vez |
 | `lancamento.html` | Formulário de lançamento, com login por colaborador |
 | `supabase/01_schema.sql` | Cria as tabelas e a view |
 | `supabase/02_rls.sql` | Regras de acesso: leitura pública, escrita só autenticada |
 | `supabase/03_cadastro_inicial.sql` | Cadastro inicial das unidades e dos parâmetros |
 | `supabase/04_migracao_diaria.sql` | Migra para lançamento diário e cria o login |
+| `supabase/05_parametros_v2.sql` | Amplia o cadastro e permite dupla agregação |
+| `supabase/06_acesso_autenticado.sql` | Fecha a leitura: sem login, nada aparece |
 | `docs/guia-lancamento-supabase.md` | Guia de operação |
+| `docs/publicacao-github-pages.md` | Como publicar o painel e liberar o celular |
 
 ### Modelo de dados
 
@@ -35,15 +38,20 @@ natureza de cada indicador.
 
 | Quem | Como | Pode |
 |---|---|---|
-| Qualquer pessoa com o link | `index.html` | Ver o painel |
+| Quem não tem login | — | Nada. O painel não mostra dado algum |
+| Visitante (superior, fornecedor) | `index.html` + login | Ver o painel |
 | Colaborador | `lancamento.html` + login | Lançar e corrigir medições |
 | Supervisor | painel do Supabase | Tudo, inclusive apagar e criar logins |
 
+O painel é publicado na internet, então a leitura passou a exigir
+autenticação: a chave `anon` embutida no HTML só serve para fazer login.
+Quem não tem usuário cadastrado não enxerga nada.
+
 ### Próximos passos
 
-1. Publicar via GitHub Pages (habilita o acesso por celular)
-2. Sinalização de fora de faixa nos cartões, quando houver os limites de
-   conformidade de cada parâmetro
+1. Sinalização de fora de faixa, quando houver os limites de conformidade
+   de cada parâmetro
+2. Índice de Água na ETA — falta a fórmula e os parâmetros complementares
 3. Vínculo com a planta baixa das unidades (campo `localizacao` reservado)
 
 ## ECC (Claude Code plugin)
