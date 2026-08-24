@@ -18,6 +18,8 @@
     --serie:      #2a78d6;
     --serie-soft: rgba(42,120,214,0.10);
     --realce:     rgba(42,120,214,0.08);
+    --alerta:     #b4442e;
+    --alerta-soft: rgba(180,68,46,0.10);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -33,6 +35,10 @@
       --serie:      #3987e5;
       --serie-soft: rgba(57,135,229,0.14);
       --realce:     rgba(57,135,229,0.12);
+      --alerta:     #e8735a;
+      --alerta-soft: rgba(232,115,90,0.16);
+      --alerta:     #e8735a;
+      --alerta-soft: rgba(232,115,90,0.16);
     }
   }
   :root[data-theme="dark"] {
@@ -48,6 +54,8 @@
     --serie:      #3987e5;
     --serie-soft: rgba(57,135,229,0.14);
     --realce:     rgba(57,135,229,0.12);
+    --alerta:     #e8735a;
+    --alerta-soft: rgba(232,115,90,0.16);
   }
 
   * { box-sizing: border-box; }
@@ -168,6 +176,13 @@
   }
   .destaque .delta { font-size: 13px; color: var(--ink-2); margin-top: 3px; }
   .destaque .quando { font-size: 12px; color: var(--ink-muted); margin-top: 1px; }
+  .faixa { font-size: 12px; color: var(--ink-muted); margin-top: 6px; }
+  .fora {
+    display: inline-block; font-size: 12px; font-weight: 600;
+    color: var(--alerta); background: var(--alerta-soft);
+    border-radius: 999px; padding: 2px 9px; margin-top: 6px;
+  }
+  .destaque .valor.fora-valor { color: var(--alerta); }
   .tela-grafico { margin-top: 14px; }
   .tela-grafico svg { display: block; width: 100%; height: auto; }
   .sem-dado { color: var(--ink-muted); font-size: 13px; padding: 24px 0; }
@@ -194,6 +209,11 @@
     white-space: nowrap;
   }
   .item-num small { display: block; font-size: 11px; color: var(--ink-2); font-weight: 400; }
+  .item-num.fora-valor { color: var(--alerta); }
+  .marca-alerta {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--alerta); margin-right: 6px; vertical-align: 1px;
+  }
 
   /* ---------- tabela ---------- */
   .tabela-wrap {
@@ -326,8 +346,46 @@ const fmtNum = v => {
   const casas = Math.abs(n) >= 100 ? 0 : Math.abs(n) >= 10 ? 1 : 2;
   return n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: casas });
 };
+const num = v => (v === null || v === undefined || v === "") ? null : Number(v);
 const esc = t => String(t).replace(/[&<>"]/g, c =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* ---------- limites de conformidade ----------
+   Um limite diário comparado ao total da semana acusaria desvio
+   sempre. Nesses casos (limBase 'diario') a pergunta muda: em vez
+   de olhar o número exibido, olha-se o pior dia do período. */
+const temLimite = p => p.limInf !== null || p.limSup !== null;
+const limitePorDia = p => modo === "semanal" && p.limBase === "diario";
+
+function avaliar(p, ponto) {
+  if (!ponto || ponto.valor === null || !temLimite(p)) return null;
+  const porDia = limitePorDia(p);
+  const alto  = porDia && ponto.maxDia !== null ? ponto.maxDia : ponto.valor;
+  const baixo = porDia && ponto.minDia !== null ? ponto.minDia : ponto.valor;
+  if (p.limSup !== null && alto  > p.limSup) return { lado: "acima",  porDia };
+  if (p.limInf !== null && baixo < p.limInf) return { lado: "abaixo", porDia };
+  return null;
+}
+
+function textoFaixa(p) {
+  if (!temLimite(p)) return "";
+  const un = p.un && p.un !== "-" ? ` ${p.un}` : "";
+  const porDia = limitePorDia(p) ? ", por dia" : "";
+  if (p.limInf !== null && p.limSup !== null)
+    return `Faixa: ${fmtNum(p.limInf)} a ${fmtNum(p.limSup)}${un}${porDia}`;
+  if (p.limSup !== null) return `Limite: até ${fmtNum(p.limSup)}${un}${porDia}`;
+  return `Limite: a partir de ${fmtNum(p.limInf)}${un}${porDia}`;
+}
+
+function textoAlerta(p, a) {
+  const alvo = a.lado === "acima" ? p.limSup : p.limInf;
+  const un = p.un && p.un !== "-" ? ` ${p.un}` : "";
+  const seta = a.lado === "acima" ? "▲" : "▼";
+  const prep = a.lado === "acima" ? "acima de" : "abaixo de";
+  return a.porDia
+    ? `${seta} algum dia ${prep} ${fmtNum(alvo)}${un}`
+    : `${seta} ${prep} ${fmtNum(alvo)}${un}`;
+}
 
 /* =============================================================
    SESSÃO — o painel agora exige login. A chave anon não lê dados.
@@ -379,10 +437,17 @@ function sair() {
    último valor, conforme o parâmetro); a diária traz o detalhe.
    As duas são normalizadas com o campo 'periodo'. */
 async function carregar(qual) {
-  const view = qual === "semanal" ? "vw_dashboard" : "vw_leituras_diarias";
-  const coluna = qual === "semanal" ? "semana" : "data";
+  const semanal = qual === "semanal";
+  const view = semanal ? "vw_dashboard" : "vw_leituras_diarias";
+  const coluna = semanal ? "semana" : "data";
+  /* Na visão semanal vêm também os extremos de cada semana: são eles
+     que respondem "algum dia saiu da faixa?" para os parâmetros cujo
+     limite é diário. */
+  const extras = semanal
+    ? ",valor_min_dia,valor_max_dia,limite_inferior,limite_superior,limite_base"
+    : ",limite_inferior,limite_superior";
   const caminho = `/rest/v1/${view}`
-    + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,${coluna},valor`
+    + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,${coluna},valor${extras}`
     + `&order=${coluna}.asc`;
 
   const chamar = () => fetch(`${SUPABASE_URL}${caminho}`, {
@@ -414,11 +479,18 @@ function organizar(linhas) {
     if (!u.parametros.has(l.parametro)) {
       u.parametros.set(l.parametro, {
         nome: l.parametro, un: l.unidade_medida || "",
-        ordem: l.ordem_parametro ?? 0, pontos: []
+        ordem: l.ordem_parametro ?? 0,
+        limInf: num(l.limite_inferior),
+        limSup: num(l.limite_superior),
+        limBase: l.limite_base || "periodo",
+        pontos: []
       });
     }
     u.parametros.get(l.parametro).pontos.push({
-      periodo: l.periodo, valor: l.valor === null ? null : Number(l.valor)
+      periodo: l.periodo,
+      valor: l.valor === null ? null : Number(l.valor),
+      minDia: num(l.valor_min_dia),
+      maxDia: num(l.valor_max_dia)
     });
   }
   for (const u of unidades.values()) {
@@ -460,7 +532,13 @@ function graficoGrande(p, largura) {
   const H = W < 520 ? 220 : 280;
   const pad = { t: 12, r: 12, b: 30, l: 52 };
   const vs = p.validos.map(d => d.valor);
-  const e = escalaBonita(Math.min(...vs), Math.max(...vs));
+
+  /* As linhas de limite só entram quando valem para o número
+     desenhado. Um teto diário sobre uma soma semanal seria uma
+     linha rasteira sem significado. */
+  const refs = limitePorDia(p) ? []
+    : [p.limInf, p.limSup].filter(v => v !== null);
+  const e = escalaBonita(Math.min(...vs, ...refs), Math.max(...vs, ...refs));
 
   const x = i => pad.l + (i / (p.validos.length - 1)) * (W - pad.l - pad.r);
   const y = v => pad.t + (1 - (v - e.min) / (e.max - e.min)) * (H - pad.t - pad.b);
@@ -475,6 +553,12 @@ function graficoGrande(p, largura) {
           stroke="var(--grid)" stroke-width="1"/>
     <text x="${pad.l - 8}" y="${(y(v) + 3.5).toFixed(1)}" font-size="11"
           fill="var(--ink-muted)" text-anchor="end">${fmtNum(v)}</text>`).join("");
+
+  const linhasLimite = refs.map(v => `
+    <line x1="${pad.l}" y1="${y(v).toFixed(1)}" x2="${W - pad.r}" y2="${y(v).toFixed(1)}"
+          stroke="var(--alerta)" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <text x="${pad.l + 5}" y="${(y(v) - 5).toFixed(1)}" font-size="10.5"
+          fill="var(--alerta)">limite ${fmtNum(v)}</text>`).join("");
 
   /* Quantos rótulos de data cabem sem colidir: ~62px cada. */
   const cabem = Math.max(2, Math.floor((W - pad.l - pad.r) / 62));
@@ -504,7 +588,7 @@ function graficoGrande(p, largura) {
   return `<svg viewBox="0 0 ${W} ${H}" role="img"
     aria-label="${esc(p.nome)} — ${p.validos.length} períodos, de
     ${fmtData(p.validos[0].periodo)} a ${fmtData(p.validos[p.validos.length - 1].periodo)}">
-    ${grades}
+    ${grades}${linhasLimite}
     <path d="${area}" fill="var(--serie-soft)"/>
     <path d="${linha}" fill="none" stroke="var(--serie)" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round"/>
@@ -562,17 +646,21 @@ function desenhar() {
 
   const ultimo = p.validos[p.validos.length - 1];
   const v = variacao(p);
+  const alerta = avaliar(p, ultimo);
   const unLegivel = p.un && p.un !== "-" ? p.un : "";
 
   const itens = u.listaParam.map(item => {
     const ult = item.validos[item.validos.length - 1];
     const vi = variacao(item);
+    const al = avaliar(item, ult);
     const un = item.un && item.un !== "-" ? item.un : "";
     return `<li><button type="button" data-param="${esc(item.nome)}"
-        aria-current="${item.nome === p.nome}">
-      <span class="item-nome">${esc(item.nome)}${un ? `<small>${esc(un)}</small>` : ""}</span>
+        aria-current="${item.nome === p.nome}"
+        ${al ? `title="${esc(textoAlerta(item, al))}"` : ""}>
+      <span class="item-nome">${al ? '<span class="marca-alerta"></span>' : ""}${
+        esc(item.nome)}${un ? `<small>${esc(un)}</small>` : ""}</span>
       <span class="item-mini">${miniTendencia(item)}</span>
-      <span class="item-num">${ult ? fmtNum(ult.valor) : "—"}
+      <span class="item-num${al ? " fora-valor" : ""}">${ult ? fmtNum(ult.valor) : "—"}
         ${vi.curto ? `<small>${vi.curto}</small>` : ""}</span>
     </button></li>`;
   }).join("");
@@ -581,11 +669,13 @@ function desenhar() {
     <div class="unidade">
       <section class="destaque">
         <h2>${esc(p.nome)}</h2>
-        <div class="valor">${ultimo ? fmtNum(ultimo.valor) : "—"}${
+        <div class="valor${alerta ? " fora-valor" : ""}">${ultimo ? fmtNum(ultimo.valor) : "—"}${
           ultimo && unLegivel ? `<span class="un">${esc(unLegivel)}</span>` : ""}</div>
         <div class="delta">${v.texto}</div>
         <div class="quando">${ultimo
           ? `${rotuloPeriodo()} ${fmtData(ultimo.periodo)}` : "sem lançamento no período"}</div>
+        ${alerta ? `<div class="fora">${esc(textoAlerta(p, alerta))}</div>`
+                 : temLimite(p) ? `<div class="faixa">${esc(textoFaixa(p))}</div>` : ""}
         <div class="tela-grafico" id="tela-grafico"></div>
       </section>
       <ul class="lista" id="lista-param" aria-label="Parâmetros de ${esc(u.nome)}">${itens}</ul>

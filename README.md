@@ -17,6 +17,7 @@ ETA e Represa), alimentado por dados no Supabase e publicado como HTML.
 | `supabase/04_migracao_diaria.sql` | Migra para lançamento diário e cria o login |
 | `supabase/05_parametros_v2.sql` | Amplia o cadastro e permite dupla agregação |
 | `supabase/06_acesso_autenticado.sql` | Fecha a leitura: sem login, nada aparece |
+| `supabase/07_limites.sql` | Limites de conformidade e sinalização de desvio |
 | `docs/guia-lancamento-supabase.md` | Guia de operação |
 | `docs/publicacao-github-pages.md` | Como publicar o painel e liberar o celular |
 
@@ -47,10 +48,20 @@ O painel é publicado na internet, então a leitura passou a exigir
 autenticação: a chave `anon` embutida no HTML só serve para fazer login.
 Quem não tem usuário cadastrado não enxerga nada.
 
+### Limites de conformidade
+
+Cada parâmetro pode ter limite inferior e/ou superior. O painel marca o que
+saiu da faixa e desenha as linhas de limite no gráfico.
+
+A coluna `limite_base` resolve um caso que daria falso alarme: as águas por
+produto têm teto **diário** (m³/d), mas são somadas na semana. Com
+`limite_base = 'diario'`, a pergunta na visão semanal passa a ser "algum dia
+do período estourou?" em vez de comparar a soma de 7 dias com o teto de 1.
+
 ### Próximos passos
 
-1. Sinalização de fora de faixa, quando houver os limites de conformidade
-   de cada parâmetro
+1. Separar papéis leitor × lançador — hoje todo usuário autenticado pode
+   gravar
 2. Índice de Água na ETA — falta a fórmula e os parâmetros complementares
 3. Vínculo com a planta baixa das unidades (campo `localizacao` reservado)
 
