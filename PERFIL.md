@@ -73,6 +73,29 @@
   algo precisar ficar fora de uma conversa específica, ele mesmo vai avisar
   na hora — não é preciso adivinhar limites.
 
+## Perfil como (futuro) empreendedor
+
+- Ainda **sem área/setor definido** para o negócio — está no momento de
+  estudar a modalidade de franquia antes de escolher.
+- O que atrai na franquia especificamente: **risco menor de quebrar**. Ele
+  se define como alguém que não lida bem com fracasso e, podendo escolher,
+  prefere segurança a risco — comprar um modelo já validado reduz a
+  variável "ideia não testada".
+- A dificuldade com o fracasso trava mais **na hora de decidir** (medo de
+  escolher errado, hesitação para começar) do que depois, ao lidar com um
+  resultado ruim já em curso. Ou seja: o ponto de maior atrito é a largada,
+  não a travessia.
+  - **Implicação prática:** o maior valor que o Claude pode agregar aqui não
+    é "suporte emocional pós-fracasso", e sim ajudar a **reduzir incerteza
+    antes da decisão** — dados, comparação estruturada de opções, riscos
+    mapeados — para destravar a largada.
+- Definição de sucesso para o negócio (em suas palavras, é amplo e não cabe
+  em uma frase, mas os elementos centrais são):
+  - Ter algo **100% seu**.
+  - **Solidez** e lucro **sustentado** ao longo do tempo (não só um pico de
+    resultado).
+  - Construir um **legado**.
+
 ## Vida pessoal (contexto, não só trabalho)
 
 - Está retomando estudos de **gestão financeira e investimentos** (já
