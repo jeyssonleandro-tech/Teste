@@ -1,0 +1,95 @@
+# Perfil do usuário
+
+> Documento vivo, construído a partir de uma entrevista conduzida pelo Claude.
+> Objetivo: dar contexto real sobre quem é o usuário, como pensa, fala e
+> trabalha, para que qualquer sessão futura já parta desse conhecimento em
+> vez de reconstruí-lo do zero. Atualizado conforme a entrevista avança.
+
+## Quem é
+
+- Engenheiro químico, formado pela UFRRJ em 2018.
+- Há 12 anos numa multinacional de alimentos e bebidas (fabricante de
+  refrigerantes, mundialmente conhecida). Trajetória interna:
+  - 2 anos como estagiário
+  - 2 anos como assistente administrativo, com um engenheiro ambiental
+  - 2 anos como supervisor de produção
+  - 3 anos como analista de melhoria contínua
+  - 3 anos como supervisor de qualidade (cargo atual)
+- Hoje supervisiona as estações de tratamento de efluentes e água, com 12
+  colaboradores sob sua gestão (técnicos químicos, operadores de barragem,
+  analistas e estagiários).
+- **Objetivo de médio prazo: empreender.** A carreira corporativa é vista
+  como aprendizado (gestão de pessoas, processos, qualidade) a ser
+  capitalizado no próprio negócio, não como destino final — isso deve
+  orientar como o Claude o ajuda: sempre com um olho no que serve para essa
+  transição.
+  - Ideia inicial (pode mudar): começar pequeno com a aquisição de uma
+    franquia.
+
+## Como pensa e decide
+
+- Tende a agir por **instinto**, e está conscientemente tentando mudar isso
+  porque reconhece que o instinto tem lhe prejudicado.
+  - Exemplo profissional: advertiu verbalmente um colaborador por instinto;
+    depois, olhando os dados do turno, viu que o erro não era exclusivo
+    dele — havia responsabilizado só uma pessoa por um problema coletivo.
+  - Exemplo pessoal: nos relacionamentos amorosos, decisões por instinto
+    tendem a ser falhas — ele se identifica como desconfiado e inseguro, o
+    que atrapalha quando age sem parar para pensar.
+- Tem autocrítica forte: volta aos dados/fatos depois de agir e reconhece
+  quando errou o alvo.
+- **Implicação prática para o Claude:** quando fizer sentido, vale jogar de
+  volta um contraponto tipo "você já olhou os dados antes de decidir isso?"
+  — funcionar como um freio de mão saudável, não como bloqueio.
+
+## Como se comunica / quer ser respondido
+
+- Prefere feedback e comunicação **diretos e objetivos**, mesmo que doa —
+  sem suavizar ou dar voltas.
+- **Direto não é raso.** Ele é um "eterno curioso": quando pergunta sobre um
+  assunto (ex.: franquias), quer contexto de verdade — origem, evolução
+  histórica, métodos, como começar, quem são os pioneiros/referências etc.
+  Superficialidade nas entregas o incomoda genuinamente.
+  - Resumo: tom direto e sem enrolação, mas conteúdo completo e bem
+    fundamentado. Não confundir objetividade de forma com resposta rasa.
+- Ainda está "aprendendo a perguntar melhor", mas o apetite por aprender é
+  constante — vale aproveitar isso e ir além do que foi literalmente
+  perguntado quando adicionar valor.
+
+## Como quer trabalhar com o Claude
+
+- **Modo proativo confirmado.** Prefere que o Claude traga sugestões,
+  conexões e contexto por conta própria, em vez de esperar ser
+  explicitamente acionado. Exemplos que ele validou:
+  - Trazer novidades relevantes sobre franquias (legislação, setores em
+    alta, cases).
+  - Ao montar planos de estudo (ex. gestão financeira), sugerir ordem,
+    pré-requisitos e lacunas.
+  - Conectar aprendizados do trabalho atual (ETE/qualidade) com o futuro
+    negócio.
+  - Contrapor decisões tomadas por instinto com uma pergunta sobre dados,
+    quando pertinente.
+- **Sem temas proibidos por padrão.** Não há assunto vetado de antemão; se
+  algo precisar ficar fora de uma conversa específica, ele mesmo vai avisar
+  na hora — não é preciso adivinhar limites.
+
+## Vida pessoal (contexto, não só trabalho)
+
+- Está retomando estudos de **gestão financeira e investimentos** (já
+  estudou no passado, quer voltar e aprofundar) — ligado diretamente ao
+  objetivo de empreender.
+- **Namorada é a prioridade número um** hoje; ele pensa ativamente em formas
+  diferentes de agradá-la.
+- Hobby: **desenho realista**.
+
+## Idioma e fuso (já definidos no CLAUDE.md do projeto)
+
+- Respostas sempre em português do Brasil (pt-BR).
+- Horários sempre no fuso de São Paulo (America/Sao_Paulo, UTC-3),
+  convertendo de outras fontes quando necessário.
+
+---
+
+*Este arquivo é atualizado à medida que a entrevista continua. Cada nova
+seção deve ser incorporada organicamente, sem reescrever o que já foi
+validado.*
