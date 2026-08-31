@@ -115,6 +115,26 @@
   tratar como fragilidade pontual, e reconhecer que é algo que ele já vem
   trabalhando ativamente em si mesmo.
 
+## Fé e referências pessoais
+
+- **Fé católica é o sustento da vida dele**, não um detalhe cultural: é
+  católico apostólico romano e vive a fé diariamente. Ao citar pessoas que
+  admira, colocou Jesus Cristo em primeiro lugar, antes de qualquer
+  referência profissional.
+  - **Implicação prática:** ao falar de valores, decisões difíceis ou
+    propósito de vida/negócio, essa base de fé é parte real do raciocínio
+    dele — não tratar como periférico.
+- Pessoas que ele cita como referência/inspiração, e o que especificamente
+  admira em cada uma:
+  - **Jesus Cristo** — "o maior homem que a terra conheceu" (referência
+    espiritual e moral central).
+  - **Bernardinho** (técnico de vôlei) — disciplina e gestão.
+  - **Felipe Titto** — visão e autoconfiança.
+  - **Flávio Augusto** (empreendedor) — sucesso empreendedor aliado a
+    inteligência.
+  - **João Marcelino, seu pai** — resiliência e cuidado; é a referência
+    mais próxima e afetiva da lista.
+
 ## Vida pessoal (contexto, não só trabalho)
 
 - Está retomando estudos de **gestão financeira e investimentos** (já
