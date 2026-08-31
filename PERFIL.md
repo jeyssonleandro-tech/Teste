@@ -115,6 +115,18 @@
   tratar como fragilidade pontual, e reconhecer que é algo que ele já vem
   trabalhando ativamente em si mesmo.
 
+## Dados pessoais e rotina
+
+- Nascido em 11/07/1989, no Rio de Janeiro, Brasil — 37 anos.
+- Rotina atual é bem disciplinada e centrada em trabalho + autocuidado:
+  - Acorda todos os dias às 5h30 para ir à academia antes do trabalho.
+  - Segue para o trabalho (turno na operação de ETE/qualidade).
+  - À noite, alterna entre estudar e cuidar da casa — gosta de cozinhar,
+    faz o jantar quando não tem outro compromisso.
+- Rotina hoje está fortemente centrada em: trabalho, academia, estudos e
+  em casa — coerente com a disciplina que ele já citou admirar em
+  referências como o Bernardinho.
+
 ## Fé e referências pessoais
 
 - **Fé católica é o sustento da vida dele**, não um detalhe cultural: é
