@@ -96,6 +96,25 @@
     resultado).
   - Construir um **legado**.
 
+## Autoimagem e relacionamentos
+
+- A desconfiança e insegurança que ele identifica em si nos relacionamentos
+  amorosos **não vêm de algo externo** (não é fruto de uma traição ou
+  decepção específica) — vêm de uma autoimagem construída ao longo da vida:
+  carregou por muito tempo o estigma de ser "feio e desinteressante",
+  originado de comparações e de ter sido gordo. Isso o freou bastante.
+- Consequência prática: a insegurança se manifesta como medo de que
+  "qualquer pessoa possa roubar o que tenho" num relacionamento — ou seja,
+  o medo não é sobre desconfiar do parceiro, é sobre não confiar no próprio
+  valor.
+- Hoje essa insegurança ainda existe, mas ele considera que já lida com
+  ela de forma mais controlada do que antes — é um processo em andamento,
+  não algo resolvido nem algo que o paralisa como antes.
+- **Implicação prática para o Claude:** ao tocar em temas de autoestima,
+  relacionamento ou comparação social, ser sensível a essa origem — não
+  tratar como fragilidade pontual, e reconhecer que é algo que ele já vem
+  trabalhando ativamente em si mesmo.
+
 ## Vida pessoal (contexto, não só trabalho)
 
 - Está retomando estudos de **gestão financeira e investimentos** (já
