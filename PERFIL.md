@@ -5,6 +5,10 @@
 > trabalha, para que qualquer sessão futura já parta desse conhecimento em
 > vez de reconstruí-lo do zero. Atualizado conforme a entrevista avança.
 
+## Síntese em 3 palavras (na própria definição dele)
+
+**Resiliente. Esforçado. Sonhador.**
+
 ## Quem é
 
 - Engenheiro químico, formado pela UFRRJ em 2018.
