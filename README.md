@@ -1,5 +1,36 @@
 # Teste
 
+## Remotion
+
+Este repositório foi inicializado com o [Remotion](https://www.remotion.dev)
+via `create-video` (template `blank`, com TypeScript e TailwindCSS).
+
+**Instalar dependências**
+
+```console
+npm i
+```
+
+**Preview (Remotion Studio)**
+
+```console
+npm run dev
+```
+
+**Renderizar vídeo**
+
+```console
+npx remotion render
+```
+
+**Atualizar o Remotion**
+
+```console
+npm run upgrade
+```
+
+O código-fonte das composições fica em `src/` (`src/Root.tsx`, `src/Composition.tsx`).
+
 ## ECC (Claude Code plugin)
 
 Este repositório já vem com o plugin [ECC](https://github.com/affaan-m/ECC)
