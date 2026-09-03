@@ -226,7 +226,51 @@ Settings → Authentication → SMTP.
 
 ---
 
-## 7. Em aberto
+## 7. Ajustes finais no frontend
+
+Feitos depois de o supervisor olhar o painel pronto no computador.
+
+| Pedido | O que foi feito |
+|---|---|
+| Título "Dashboard Estações de tratamento" | Na página e na aba do navegador |
+| Faixa com mais margem | Altura e recuos laterais aumentados |
+| Logo sem fundo branco, compondo a faixa | A placa branca saiu: a logo fica sobre o fundo da página, à esquerda, e o bloco vermelho ao lado, até a borda da coluna |
+| Abas de unidade centralizadas | `justify-content: safe center` |
+| Botão Mensal | `10_visao_mensal.sql` + terceiro modo no painel |
+
+### A proporção da logo obrigou a empilhar no celular
+
+A logo é 1875×318 — proporção de quase 6:1. Lado a lado com o título numa
+tela de 390px, ela consumia a largura toda e o título ficava truncado em
+"Das...". Abaixo de 820px as duas partes empilham: logo em cima, faixa
+vermelha ocupando a largura toda embaixo, título em duas linhas. Entre 820
+e 1080px a logo encolhe pelo mesmo motivo — cada pixel de altura custa seis
+de largura ao bloco vermelho.
+
+O `safe` do `justify-content` resolve um problema clássico: centralizar um
+contêiner rolável esconderia os primeiros itens fora da área alcançável
+quando as unidades não coubessem na tela.
+
+### O mensal exigiu rever a regra do limite diário
+
+A condição olhava `modo === "semanal"`. No mensal, sem ajuste, o painel
+compararia o teto de 1.600 m³/dia com a soma de 30 dias — desvio garantido
+toda vez. Passou a valer em qualquer visão agregada.
+
+Os rótulos no modo mensal viraram `MM/AAAA`. A coluna do banco guarda o dia
+1 do mês; exibir `01/10/2026` induziria a ler como uma data específica.
+
+### Sobre os dados retroativos
+
+O formulário aceita data passada sem restrição. Duas recomendações
+registradas: lançar **dia a dia**, porque semanal e mensal são calculados a
+partir dos dias — um valor mensal fechado num único dia estraga a média e
+os extremos; e conferir a visão mensal depois de subir, porque é onde erro
+de data salta à vista.
+
+---
+
+## 8. Em aberto
 
 | Item | Esperando |
 |---|---|
