@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Painel das Estações de Tratamento</title>
+<title>Dashboard Estações de tratamento</title>
 <style>
   :root {
     color-scheme: light;
@@ -131,32 +131,52 @@
   /* ---------- moldura do painel ---------- */
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px 56px; }
 
+  /* A faixa é composta por duas partes: a logo sobre o fundo da página,
+     à esquerda, e o bloco vermelho ao lado, indo até a borda direita. */
   header.barra {
     position: sticky; top: 0; z-index: 10;
+    background: var(--plane);
+    display: flex; align-items: stretch; gap: 18px;
+    margin: 0 -16px; padding: 12px 0 12px 16px;
+  }
+  .faixa-titulo {
+    flex: 1 1 auto; min-width: 0;
     background: var(--marca); color: var(--marca-ink);
     display: flex; align-items: center; gap: 12px;
-    margin: 0 -16px; padding: 10px 16px;
+    padding: 18px 18px 18px 22px;
   }
   header.barra h1 {
-    font-size: 16px; margin: 0; letter-spacing: -0.01em; flex: 1;
+    font-size: 18px; margin: 0; letter-spacing: -0.01em; flex: 1;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  /* A logo vem sobre uma placa branca: as versões coloridas da marca
-     desapareceriam sobre o vermelho da própria faixa. */
   img.logo {
-    height: 30px; width: auto; flex: none; display: block;
-    background: #fff; border-radius: 5px; padding: 4px 8px;
+    height: 42px; width: auto; flex: none; display: block; align-self: center;
   }
-  /* display:block venceria o [hidden] do navegador: sem esta linha a
-     placa branca vazia apareceria enquanto não houver logo. */
+  /* Entre 820 e 1080 a logo encolhe para o título não ser truncado:
+     ela tem proporção 6:1, então cada pixel de altura custa seis de
+     largura à faixa vermelha. */
+  @media (max-width: 1080px) { img.logo { height: 34px; } }
+  /* display:block venceria o [hidden] do navegador: sem esta linha o
+     espaço vazio da logo continuaria ocupando lugar. */
   img.logo[hidden] { display: none; }
-  @media (max-width: 430px) { img.logo { height: 24px; padding: 3px 6px; } }
+  /* A logo tem proporção 6:1 — larga. Lado a lado numa tela estreita ela
+     esmaga o título até sobrar "Das...". Aí as duas partes empilham: a
+     logo em cima, a faixa vermelha ocupando a largura toda embaixo. */
+  @media (max-width: 820px) {
+    header.barra {
+      flex-direction: column; align-items: stretch; gap: 9px;
+      padding: 11px 16px;
+    }
+    img.logo { height: 30px; align-self: flex-start; }
+    .faixa-titulo { margin: 0 -16px; padding: 13px 16px; }
+    header.barra h1 { font-size: 15px; white-space: normal; line-height: 1.25; }
+  }
   .acoes { display: flex; gap: 6px; flex: none; }
-  header.barra button.chip {
+  .faixa-titulo button.chip {
     background: rgba(255,255,255,0.14); color: var(--marca-ink);
     border-color: rgba(255,255,255,0.40);
   }
-  header.barra button.chip:hover { background: rgba(255,255,255,0.26); }
+  .faixa-titulo button.chip:hover { background: rgba(255,255,255,0.26); }
 
   button.chip {
     font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
@@ -172,6 +192,10 @@
   /* abas de unidade — a navegação principal */
   nav.abas {
     display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+    /* 'safe' evita o problema clássico: com o conteúdo maior que a tela,
+       centralizar esconderia os primeiros itens fora da área rolável. */
+    justify-content: center;
+    justify-content: safe center;
     padding: 12px 0 10px; margin: 0 -16px; padding-left: 16px; padding-right: 16px;
     border-bottom: 1px solid var(--border);
   }
@@ -312,7 +336,7 @@
 <!-- ============ TELA DE LOGIN ============ -->
 <div class="portao" id="tela-login">
   <form id="form-login" autocomplete="on">
-    <h1>Painel das Estações de Tratamento</h1>
+    <h1>Dashboard Estações de tratamento</h1>
     <p class="ajuda">Entre com o e-mail e a senha que o supervisor cadastrou.</p>
     <div id="recado-login"></div>
     <label for="email">E-mail</label>
@@ -329,10 +353,12 @@
 
   <header class="barra">
     <img class="logo" id="logo-empresa" alt="" hidden>
-    <h1>Estações de Tratamento</h1>
-    <div class="acoes">
-      <button class="chip" id="btn-tema" type="button" title="Alternar claro/escuro">Tema</button>
-      <button class="chip" id="btn-sair" type="button">Sair</button>
+    <div class="faixa-titulo">
+      <h1>Dashboard Estações de tratamento</h1>
+      <div class="acoes">
+        <button class="chip" id="btn-tema" type="button" title="Alternar claro/escuro">Tema</button>
+        <button class="chip" id="btn-sair" type="button">Sair</button>
+      </div>
     </div>
   </header>
 
@@ -382,19 +408,40 @@ let sessao = null;
 let LINHAS = [];
 let unidadeAtiva = null;
 let paramAtivo = null;          // parâmetro em destaque dentro da unidade
-let modo = "semanal";           // "semanal" (agregado) ou "diario" (detalhe)
+let modo = "semanal";           // "diario" | "semanal" | "mensal"
 let pontosVisiveis = 12;
 let mostrarTabela = false;
 
 const PRESETS = {
+  diario:  [[14, "14 dias"], [30, "30 dias"], [90, "90 dias"], [0, "Tudo"]],
   semanal: [[8, "8 sem"], [12, "12 sem"], [26, "26 sem"], [0, "Tudo"]],
-  diario:  [[14, "14 dias"], [30, "30 dias"], [90, "90 dias"], [0, "Tudo"]]
+  mensal:  [[6, "6 meses"], [12, "12 meses"], [24, "24 meses"], [0, "Tudo"]]
 };
-const rotuloPeriodo = () => modo === "semanal" ? "Semana de" : "Dia";
+const VIEWS = {
+  diario:  { view: "vw_leituras_diarias", coluna: "data" },
+  semanal: { view: "vw_dashboard",        coluna: "semana" },
+  mensal:  { view: "vw_dashboard_mensal", coluna: "mes" }
+};
+const rotuloPeriodo = () =>
+  modo === "mensal" ? "Mês de" : modo === "semanal" ? "Semana de" : "Dia";
+const nomePeriodos = () =>
+  modo === "mensal" ? "meses" : modo === "semanal" ? "semanas" : "dias";
+const periodoAnterior = () =>
+  modo === "mensal" ? "mês anterior" : modo === "semanal" ? "semana anterior" : "dia anterior";
 
 /* ---------- utilidades ---------- */
 const fmtData = iso => { const [a, m, d] = iso.split("-"); return `${d}/${m}/${a}`; };
 const fmtDataCurta = iso => { const [, m, d] = iso.split("-"); return `${d}/${m}`; };
+/* No modo mensal a coluna traz o dia 1 do mês; mostrar "01/08" induziria
+   a ler como um dia específico. */
+const rotularPeriodo = iso => {
+  const [a, m] = iso.split("-");
+  return modo === "mensal" ? `${m}/${a}` : fmtData(iso);
+};
+const rotularCurto = iso => {
+  const [a, m] = iso.split("-");
+  return modo === "mensal" ? `${m}/${a.slice(2)}` : fmtDataCurta(iso);
+};
 const fmtNum = v => {
   if (v === null || v === undefined) return "—";
   const n = Number(v);
@@ -411,7 +458,7 @@ const esc = t => String(t).replace(/[&<>"]/g, c =>
    sempre. Nesses casos (limBase 'diario') a pergunta muda: em vez
    de olhar o número exibido, olha-se o pior dia do período. */
 const temLimite = p => p.limInf !== null || p.limSup !== null;
-const limitePorDia = p => modo === "semanal" && p.limBase === "diario";
+const limitePorDia = p => modo !== "diario" && p.limBase === "diario";
 
 /* A linha de limite só some quando ela não teria onde pousar: um teto
    diário sobre uma SOMA semanal fica rasteiro e sem sentido. Já num
@@ -419,7 +466,7 @@ const limitePorDia = p => modo === "semanal" && p.limBase === "diario";
    está na mesma escala do limite, e a linha continua valendo mesmo
    com o alarme passando a olhar o pior dia. */
 const limiteDesenhavel = p =>
-  !(modo === "semanal" && p.limBase === "diario" && p.agreg === "soma");
+  !(modo !== "diario" && p.limBase === "diario" && p.agreg === "soma");
 
 function avaliar(p, ponto) {
   if (!ponto || ponto.valor === null || !temLimite(p)) return null;
@@ -549,13 +596,12 @@ function sair() {
    último valor, conforme o parâmetro); a diária traz o detalhe.
    As duas são normalizadas com o campo 'periodo'. */
 async function carregar(qual) {
-  const semanal = qual === "semanal";
-  const view = semanal ? "vw_dashboard" : "vw_leituras_diarias";
-  const coluna = semanal ? "semana" : "data";
-  /* Na visão semanal vêm também os extremos de cada semana: são eles
+  const { view, coluna } = VIEWS[qual];
+  const agregado = qual !== "diario";
+  /* Nas visões agregadas vêm também os extremos do período: são eles
      que respondem "algum dia saiu da faixa?" para os parâmetros cujo
      limite é diário. */
-  const extras = semanal
+  const extras = agregado
     ? ",agregacao,valor_min_dia,valor_max_dia,limite_inferior,limite_superior,limite_base"
     : ",limite_inferior,limite_superior";
   const caminho = `/rest/v1/${view}`
@@ -681,7 +727,7 @@ function graficoGrande(p, largura) {
     if (i % passoRot !== 0 && !ultimo) return "";
     const anc = i === 0 ? "start" : ultimo ? "end" : "middle";
     return `<text x="${x(i).toFixed(1)}" y="${H - 10}" font-size="11"
-                  fill="var(--ink-muted)" text-anchor="${anc}">${fmtDataCurta(d.periodo)}</text>`;
+                  fill="var(--ink-muted)" text-anchor="${anc}">${rotularCurto(d.periodo)}</text>`;
   }).join("");
 
   /* Com muitos pontos as áreas de toque se sobreporiam e uma bloquearia
@@ -709,7 +755,7 @@ function graficoGrande(p, largura) {
 
   return `<svg viewBox="0 0 ${W} ${H}" role="img"
     aria-label="${esc(p.nome)} — ${p.validos.length} períodos, de
-    ${fmtData(p.validos[0].periodo)} a ${fmtData(p.validos[p.validos.length - 1].periodo)}">
+    ${rotularPeriodo(p.validos[0].periodo)} a ${rotularPeriodo(p.validos[p.validos.length - 1].periodo)}">
     ${grades}${linhasLimite}
     <path d="${area}" fill="var(--serie-soft)"/>
     <path d="${linha}" fill="none" stroke="var(--serie)" stroke-width="2.2"
@@ -740,7 +786,7 @@ function variacao(p) {
   const dif = atual - antes;
   const seta = dif > 0 ? "▲" : dif < 0 ? "▼" : "▬";
   const pct = antes !== 0 ? `${dif > 0 ? "+" : ""}${(dif / Math.abs(antes) * 100).toFixed(1)}%` : "";
-  const anterior = modo === "semanal" ? "semana anterior" : "dia anterior";
+  const anterior = periodoAnterior();
   return {
     texto: `${seta} ${fmtNum(Math.abs(dif))}${pct ? ` (${pct})` : ""} vs. ${anterior}`,
     curto: pct ? `${seta} ${pct}` : seta
@@ -799,7 +845,7 @@ function desenhar() {
           ultimo && unLegivel ? `<span class="un">${esc(unLegivel)}</span>` : ""}</div>
         <div class="delta">${v.texto}</div>
         <div class="quando">${ultimo
-          ? `${rotuloPeriodo()} ${fmtData(ultimo.periodo)}` : "sem lançamento no período"}</div>
+          ? `${rotuloPeriodo()} ${rotularPeriodo(ultimo.periodo)}` : "sem lançamento no período"}</div>
         ${alerta ? `<div class="tarja ${classeEstado(alerta)}">${
                       esc(textoEstado(p, alerta))}</div>
                     <div class="faixa">${esc(textoFaixa(p))}</div>` : ""}
@@ -820,7 +866,7 @@ function desenhar() {
   const fim = periodos[periodos.length - 1];
   document.getElementById("subtitulo").textContent =
     `${u.listaParam.length} parâmetros · último lançamento em `
-    + `${fmtData(fim)} · ${periodos.length} ${modo === "semanal" ? "semanas" : "dias"} no período`;
+    + `${rotularPeriodo(fim)} · ${periodos.length} ${nomePeriodos()} no período`;
 }
 
 /* O SVG é gerado no tamanho real do espaço disponível: o texto sai
@@ -843,11 +889,12 @@ function tabela(u) {
       const v = pt && pt.valor !== null ? fmtNum(pt.valor) : "—";
       return `<td class="${v === "—" ? "vazio" : ""}">${v}</td>`;
     }).join("");
-    return `<tr><th scope="row">${fmtData(s)}</th>${celulas}</tr>`;
+    return `<tr><th scope="row">${rotularPeriodo(s)}</th>${celulas}</tr>`;
   }).join("");
   return `<div class="tabela-wrap"><table>
     <caption class="so-leitor">Histórico de ${esc(u.nome)}</caption>
-    <thead><tr><th scope="col">${modo === "semanal" ? "Semana" : "Dia"}</th>${cab}</tr></thead>
+    <thead><tr><th scope="col">${
+        modo === "mensal" ? "Mês" : modo === "semanal" ? "Semana" : "Dia"}</th>${cab}</tr></thead>
     <tbody>${linhas}</tbody></table></div>`;
 }
 
@@ -860,7 +907,7 @@ function ligarTooltip(p) {
   document.querySelectorAll("#tela-grafico .alvo").forEach(alvo => {
     const mostrar = () => {
       const r = alvo.getBoundingClientRect();
-      tip.innerHTML = `${esc(p.nome)}<br>${rotuloPeriodo()} ${fmtData(alvo.dataset.periodo)}`
+      tip.innerHTML = `${esc(p.nome)}<br>${rotuloPeriodo()} ${rotularPeriodo(alvo.dataset.periodo)}`
         + `<br><b>${fmtNum(alvo.dataset.valor)}${esc(un)}</b>`;
       tip.style.opacity = "1";
       tip.style.left = `${Math.min(Math.max(60, r.left + r.width / 2), innerWidth - 60)}px`;
@@ -887,7 +934,7 @@ function montarAbas(nomes) {
 
 function montarFiltros() {
   document.getElementById("filtro-modo").innerHTML =
-    [["semanal", "Semanal"], ["diario", "Diário"]].map(([v, r]) =>
+    [["diario", "Diário"], ["semanal", "Semanal"], ["mensal", "Mensal"]].map(([v, r]) =>
       `<button class="chip" type="button" data-modo="${v}"
          aria-pressed="${v === modo}">${r}</button>`).join("");
   document.getElementById("filtro-periodo").innerHTML = PRESETS[modo].map(([v, r]) =>

@@ -9,7 +9,7 @@ ETA e Represa), alimentado por dados no Supabase e publicado como HTML.
 
 | Caminho | O que é |
 |---|---|
-| `index.html` | O painel — leitura com login, uma unidade por vez |
+| `index.html` | O painel — leitura com login, visão diária, semanal ou mensal |
 | `lancamento.html` | Formulário de lançamento, com login por colaborador |
 | `supabase/01_schema.sql` | Cria as tabelas e a view |
 | `supabase/02_rls.sql` | Regras de acesso: leitura pública, escrita só autenticada |
@@ -19,6 +19,8 @@ ETA e Represa), alimentado por dados no Supabase e publicado como HTML.
 | `supabase/06_acesso_autenticado.sql` | Fecha a leitura: sem login, nada aparece |
 | `supabase/07_limites.sql` | Limites de conformidade e sinalização de desvio |
 | `supabase/08_ajustes_limites.sql` | Cloro Semi em ppm e alarme diário na ETE Industrial |
+| `supabase/09_excluir_usuario.sql` | Permite excluir usuário sem perder as leituras |
+| `supabase/10_visao_mensal.sql` | Visão mensal, por mês de calendário |
 | `docs/guia-lancamento-supabase.md` | Guia de operação |
 | `docs/publicacao-github-pages.md` | Como publicar o painel e liberar o celular |
 
