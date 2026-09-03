@@ -225,8 +225,16 @@ async function entrar(email, senha) {
       .toLowerCase();
     if (motivo.includes("not confirmed") || motivo.includes("email_not_confirmed")) {
       throw new Error("Este usuário existe, mas o e-mail não foi confirmado. "
-        + "O supervisor precisa recriá-lo com a opção \"Auto Confirm User\" marcada, "
-        + "ou confirmá-lo em Authentication → Users.");
+        + "O supervisor precisa confirmá-lo em Authentication → Users.");
+    }
+    if (motivo.includes("provider_disabled") || motivo.includes("logins are disabled")
+        || motivo.includes("signups not allowed")) {
+      throw new Error("O login por e-mail está desligado no Supabase. "
+        + "Em Authentication → Providers → Email, o provedor precisa estar LIGADO; "
+        + "o que fica desligado é só o \"Enable Sign Up\".");
+    }
+    if (motivo.includes("banned") || motivo.includes("user_banned")) {
+      throw new Error("Este usuário está suspenso no Supabase.");
     }
     if (resp.status === 400) throw new Error("E-mail ou senha incorretos.");
     if (resp.status === 422) throw new Error("E-mail em formato inválido.");
