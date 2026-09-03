@@ -270,7 +270,51 @@ de data salta à vista.
 
 ---
 
-## 8. Em aberto
+## 8. Redesenho: sete críticas respondidas
+
+O supervisor pediu um olhar crítico sobre o visual, com vista a apresentar
+o painel ao seu superior, e deu liberdade sobre as cores — "dei uma base,
+não uma obrigação".
+
+| # | O que estava datado | O que passou a ser |
+|---|---|---|
+| 1 | Oito pílulas idênticas misturando três tipos de controle | Interruptor de três posições + menu suspenso para a janela de tempo + botão discreto para a tabela |
+| 2 | Tudo cartão com a mesma borda, raio e fundo | O gráfico respira sobre o fundo; só a tabela mantém moldura |
+| 3 | Tipografia do navegador, um tamanho para tudo | Barlow em duas larguras + IBM Plex Mono para unidades e eixos |
+| 4 | Bloco vermelho atravessando o topo | Filete sob o cabeçalho |
+| 5 | Unidades como pílulas soltas | Abas com sublinhado + nome da unidade encabeçando o conteúdo |
+| 6 | Divisória entre todas as linhas da lista | Espaço; mini-tendências com a referência do limite |
+| 7 | Nada dizia por onde começar | Resumo: "7 parâmetros · 3 fora de faixa · 12 semanas até …" |
+
+### Decisões que valem registro
+
+**Neutros com viés quente.** Um cinza morto ao lado de um vermelho
+saturado denuncia que as duas coisas não foram escolhidas juntas. Os
+neutros passaram a puxar para o vermelho da marca. Todos os pares foram
+medidos: mínimo 4,5:1 para texto, 3:1 para marcas gráficas.
+
+**Fontes embutidas no arquivo.** Decisão de engenharia, não de estética. O
+painel roda como arquivo solto no computador da empresa, cuja rede bloqueia
+domínios — o `github.io` já está barrado. Se as fontes viessem do Google
+Fonts, cairiam para a fonte do sistema justamente na máquina onde o painel
+seria apresentado, e todo o desenho tipográfico desapareceria. Subconjunto
+latino, 117 KB de woff2, arquivo final em 228 KB. Pesado para uma página
+web, irrelevante para um arquivo aberto do disco.
+
+O teste pegou isso: a suíte acusou `ERR_CONNECTION_RESET` ao buscar o
+Google Fonts, o que revelou a dependência antes de ela chegar ao usuário.
+
+**Margem condicional no gráfico.** A margem direita existe para os rótulos
+de limite. Em parâmetro sem limite ela virava espaço morto e encolhia o
+desenho sem motivo — passou a depender da existência dos limites.
+
+**O título ganha a própria linha abaixo de 560px.** Logo, título e ações
+não cabem juntos numa tela estreita, e quem cedia era o título, truncado em
+"Dashboa…".
+
+---
+
+## 9. Em aberto
 
 | Item | Esperando |
 |---|---|
