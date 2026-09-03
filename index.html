@@ -7,55 +7,82 @@
 <style>
   :root {
     color-scheme: light;
-    --surface:    #fcfcfb;
-    --plane:      #f4f4f1;
-    --ink:        #0b0b0b;
-    --ink-2:      #52514e;
-    --ink-muted:  #898781;
-    --grid:       #e1e0d9;
-    --axis:       #c3c2b7;
-    --border:     rgba(11,11,11,0.10);
-    --serie:      #2a78d6;
-    --serie-soft: rgba(42,120,214,0.10);
-    --realce:     rgba(42,120,214,0.08);
-    --alerta:     #b4442e;
-    --alerta-soft: rgba(180,68,46,0.10);
+    /* Paleta institucional. Os tons derivados (discreto, grade, eixo)
+       foram escolhidos a partir dos códigos oficiais e verificados no
+       contraste — o mínimo é 4,5:1 para texto e 3:1 para marcas. */
+    --plane:       #E7E6E6;   /* fundo claro, oficial */
+    --surface:     #FFFFFF;
+    --ink:         #0A0A0A;   /* título de gráfico, oficial */
+    --ink-2:       #595959;   /* secundária, oficial */
+    --ink-muted:   #616161;   /* derivado — 4,5:1 no pior fundo */
+    --grid:        #CFCECE;
+    --axis:        #B4B3B3;
+    --border:      rgba(10,10,10,0.16);
+    --marca:       #C00000;   /* fundo de título, oficial */
+    --marca-ink:   #FFFFFF;
+    --realce:      rgba(10,10,10,0.055);   /* seleção: neutra, para
+                                              não ser lida como alerta */
+    /* A série usa o cinza secundário: o vermelho fica reservado para
+       o que saiu da faixa, senão o alerta se perde dentro do gráfico. */
+    --serie:       #595959;
+    --serie-soft:  rgba(89,89,89,0.12);
+    --chip:        #595959;
+    --chip-ink:    #FFFFFF;
+    --ok:          #017304;   /* o verde oficial, escurecido: o #01BF06
+                                 dá 1,99:1 no fundo claro e some da tela */
+    --ok-soft:     rgba(1,115,4,0.10);
+    --alerta:      #C00000;   /* negativa, oficial */
+    --alerta-soft: rgba(192,0,0,0.10);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --surface:    #1a1a19;
-      --plane:      #0d0d0d;
-      --ink:        #ffffff;
-      --ink-2:      #c3c2b7;
-      --ink-muted:  #898781;
-      --grid:       #2c2c2a;
-      --axis:       #383835;
-      --border:     rgba(255,255,255,0.10);
-      --serie:      #3987e5;
-      --serie-soft: rgba(57,135,229,0.14);
-      --realce:     rgba(57,135,229,0.12);
-      --alerta:     #e8735a;
-      --alerta-soft: rgba(232,115,90,0.16);
-      --alerta:     #e8735a;
-      --alerta-soft: rgba(232,115,90,0.16);
+      /* A lista oficial não traz cores para fundo escuro: estas mantêm as
+         mesmas matizes, clareadas até passarem no contraste. */
+      --plane:       #141413;
+      --surface:     #1F1F1E;
+      --ink:         #FFFFFF;
+      --ink-2:       #C5C5C5;
+      --ink-muted:   #949494;
+      --grid:        #333332;
+      --axis:        #454544;
+      --border:      rgba(255,255,255,0.13);
+      --marca:       #C00000;   /* a faixa do topo não muda com o tema */
+      --marca-ink:   #FFFFFF;
+      --realce:      rgba(255,255,255,0.07);
+      --serie:       #A8A8A8;
+      --serie-soft:  rgba(168,168,168,0.15);
+      --chip:        #E7E6E6;
+      --chip-ink:    #0A0A0A;
+      --ok:          #01BF06;   /* aqui o verde oficial funciona: 7,4:1 */
+      --ok-soft:     rgba(1,191,6,0.15);
+      --alerta:      #F05353;   /* o #C00000 não tem contraste no escuro */
+      --alerta-soft: rgba(240,83,83,0.16);
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --surface:    #1a1a19;
-    --plane:      #0d0d0d;
-    --ink:        #ffffff;
-    --ink-2:      #c3c2b7;
-    --ink-muted:  #898781;
-    --grid:       #2c2c2a;
-    --axis:       #383835;
-    --border:     rgba(255,255,255,0.10);
-    --serie:      #3987e5;
-    --serie-soft: rgba(57,135,229,0.14);
-    --realce:     rgba(57,135,229,0.12);
-    --alerta:     #e8735a;
-    --alerta-soft: rgba(232,115,90,0.16);
+    /* A lista oficial não traz cores para fundo escuro: estas mantêm as
+       mesmas matizes, clareadas até passarem no contraste. */
+    --plane:       #141413;
+    --surface:     #1F1F1E;
+    --ink:         #FFFFFF;
+    --ink-2:       #C5C5C5;
+    --ink-muted:   #949494;
+    --grid:        #333332;
+    --axis:        #454544;
+    --border:      rgba(255,255,255,0.13);
+    --marca:       #C00000;   /* a faixa do topo não muda com o tema */
+    --marca-ink:   #FFFFFF;
+    --realce:      rgba(255,255,255,0.07);
+    --serie:       #A8A8A8;
+    --serie-soft:  rgba(168,168,168,0.15);
+    --chip:        #E7E6E6;
+    --chip-ink:    #0A0A0A;
+    --ok:          #01BF06;   /* aqui o verde oficial funciona: 7,4:1 */
+    --ok-soft:     rgba(1,191,6,0.15);
+    --alerta:      #F05353;   /* o #C00000 não tem contraste no escuro */
+    --alerta-soft: rgba(240,83,83,0.16);
   }
 
   * { box-sizing: border-box; }
@@ -106,15 +133,30 @@
 
   header.barra {
     position: sticky; top: 0; z-index: 10;
-    background: var(--plane); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 0 10px; margin-bottom: 2px;
+    background: var(--marca); color: var(--marca-ink);
+    display: flex; align-items: center; gap: 12px;
+    margin: 0 -16px; padding: 10px 16px;
   }
   header.barra h1 {
     font-size: 16px; margin: 0; letter-spacing: -0.01em; flex: 1;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  /* A logo vem sobre uma placa branca: as versões coloridas da marca
+     desapareceriam sobre o vermelho da própria faixa. */
+  img.logo {
+    height: 30px; width: auto; flex: none; display: block;
+    background: #fff; border-radius: 5px; padding: 4px 8px;
+  }
+  /* display:block venceria o [hidden] do navegador: sem esta linha a
+     placa branca vazia apareceria enquanto não houver logo. */
+  img.logo[hidden] { display: none; }
+  @media (max-width: 430px) { img.logo { height: 24px; padding: 3px 6px; } }
   .acoes { display: flex; gap: 6px; flex: none; }
+  header.barra button.chip {
+    background: rgba(255,255,255,0.14); color: var(--marca-ink);
+    border-color: rgba(255,255,255,0.40);
+  }
+  header.barra button.chip:hover { background: rgba(255,255,255,0.26); }
 
   button.chip {
     font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
@@ -123,7 +165,8 @@
   }
   button.chip:hover { border-color: var(--axis); }
   button.chip[aria-pressed="true"] {
-    background: var(--serie); border-color: var(--serie); color: #fff; font-weight: 600;
+    background: var(--chip); border-color: var(--chip);
+    color: var(--chip-ink); font-weight: 600;
   }
 
   /* abas de unidade — a navegação principal */
@@ -177,12 +220,14 @@
   .destaque .delta { font-size: 13px; color: var(--ink-2); margin-top: 3px; }
   .destaque .quando { font-size: 12px; color: var(--ink-muted); margin-top: 1px; }
   .faixa { font-size: 12px; color: var(--ink-muted); margin-top: 6px; }
-  .fora {
+  .tarja {
     display: inline-block; font-size: 12px; font-weight: 600;
-    color: var(--alerta); background: var(--alerta-soft);
     border-radius: 999px; padding: 2px 9px; margin-top: 6px;
   }
+  .tarja.fora  { color: var(--alerta); background: var(--alerta-soft); }
+  .tarja.ok    { color: var(--ok);     background: var(--ok-soft); }
   .destaque .valor.fora-valor { color: var(--alerta); }
+  .destaque .valor.ok-valor   { color: var(--ok); }
   .tela-grafico { margin-top: 14px; }
   .tela-grafico svg { display: block; width: 100%; height: auto; }
   .sem-dado { color: var(--ink-muted); font-size: 13px; padding: 24px 0; }
@@ -210,10 +255,15 @@
   }
   .item-num small { display: block; font-size: 11px; color: var(--ink-2); font-weight: 400; }
   .item-num.fora-valor { color: var(--alerta); }
-  .marca-alerta {
-    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--alerta); margin-right: 6px; vertical-align: 1px;
+  .item-num.ok-valor   { color: var(--ok); }
+  /* Cor sozinha não serve: cerca de 8% dos homens não distingue
+     vermelho de verde. Cada estado tem também o seu símbolo. */
+  .sinal {
+    display: inline-block; width: 13px; margin-right: 5px;
+    font-size: 11px; font-weight: 700; text-align: center;
   }
+  .sinal.fora { color: var(--alerta); }
+  .sinal.ok   { color: var(--ok); }
 
   /* ---------- tabela ---------- */
   .tabela-wrap {
@@ -278,6 +328,7 @@
 <div class="wrap">
 
   <header class="barra">
+    <img class="logo" id="logo-empresa" alt="" hidden>
     <h1>Estações de Tratamento</h1>
     <div class="acoes">
       <button class="chip" id="btn-tema" type="button" title="Alternar claro/escuro">Tema</button>
@@ -321,6 +372,11 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const CHAVE_SESSAO = "ete_sessao";   // a mesma do formulário de lançamento
 
+/* Logo da empresa, embutida como texto (data URI). Embutir em vez de
+   apontar para um arquivo é o que permite copiar este HTML para qualquer
+   pasta sem a imagem sumir. Vazio = a faixa fica só com o título. */
+const LOGO_EMPRESA = "";
+
 /* ---------- estado ---------- */
 let sessao = null;
 let LINHAS = [];
@@ -362,10 +418,16 @@ function avaliar(p, ponto) {
   const porDia = limitePorDia(p);
   const alto  = porDia && ponto.maxDia !== null ? ponto.maxDia : ponto.valor;
   const baixo = porDia && ponto.minDia !== null ? ponto.minDia : ponto.valor;
-  if (p.limSup !== null && alto  > p.limSup) return { lado: "acima",  porDia };
-  if (p.limInf !== null && baixo < p.limInf) return { lado: "abaixo", porDia };
-  return null;
+  if (p.limSup !== null && alto  > p.limSup) return { estado: "acima",  porDia };
+  if (p.limInf !== null && baixo < p.limInf) return { estado: "abaixo", porDia };
+  return { estado: "dentro", porDia };
 }
+
+/* Três estados, e o terceiro importa: sem limite cadastrado não é o
+   mesmo que conforme. Pintar de verde o que ninguém verificou seria
+   afirmar uma coisa que o dado não diz. */
+const SIMBOLO = { dentro: "✓", acima: "▲", abaixo: "▼" };
+const classeEstado = a => !a ? "" : a.estado === "dentro" ? "ok" : "fora";
 
 function textoFaixa(p) {
   if (!temLimite(p)) return "";
@@ -377,14 +439,17 @@ function textoFaixa(p) {
   return `Limite: a partir de ${fmtNum(p.limInf)}${un}${porDia}`;
 }
 
-function textoAlerta(p, a) {
-  const alvo = a.lado === "acima" ? p.limSup : p.limInf;
+function textoEstado(p, a) {
+  if (a.estado === "dentro") {
+    return a.porDia ? "✓ todos os dias dentro do limite" : "✓ dentro do limite";
+  }
+  const acima = a.estado === "acima";
+  const alvo = acima ? p.limSup : p.limInf;
   const un = p.un && p.un !== "-" ? ` ${p.un}` : "";
-  const seta = a.lado === "acima" ? "▲" : "▼";
-  const prep = a.lado === "acima" ? "acima de" : "abaixo de";
+  const prep = acima ? "acima de" : "abaixo de";
   return a.porDia
-    ? `${seta} algum dia ${prep} ${fmtNum(alvo)}${un}`
-    : `${seta} ${prep} ${fmtNum(alvo)}${un}`;
+    ? `${SIMBOLO[a.estado]} algum dia ${prep} ${fmtNum(alvo)}${un}`
+    : `${SIMBOLO[a.estado]} ${prep} ${fmtNum(alvo)}${un}`;
 }
 
 /* =============================================================
@@ -578,12 +643,21 @@ function graficoGrande(p, largura) {
   const raio = Math.max(9, Math.min(16, espaco / 2));
   const comBolinha = espaco >= 14;
 
-  const marcas = p.validos.map((d, i) => `
-    ${comBolinha ? `<circle cx="${x(i).toFixed(1)}" cy="${y(d.valor).toFixed(1)}" r="3.4"
-        fill="var(--serie)" stroke="var(--surface)" stroke-width="2"/>` : ""}
+  /* Cada ponto é avaliado: os que saíram da faixa aparecem em vermelho,
+     e não só o último. Assim a semana ruim de dois meses atrás continua
+     visível no gráfico. */
+  const marcas = p.validos.map((d, i) => {
+    const a = avaliar(p, d);
+    const cor = a && a.estado !== "dentro" ? "var(--alerta)" : "var(--serie)";
+    const raioPonto = a && a.estado !== "dentro" ? 4.2 : 3.4;
+    return `
+    ${comBolinha || (a && a.estado !== "dentro")
+      ? `<circle cx="${x(i).toFixed(1)}" cy="${y(d.valor).toFixed(1)}" r="${raioPonto}"
+        fill="${cor}" stroke="var(--surface)" stroke-width="2"/>` : ""}
     <circle class="alvo" cx="${x(i).toFixed(1)}" cy="${y(d.valor).toFixed(1)}"
         r="${raio.toFixed(1)}" fill="transparent" tabindex="0"
-        data-periodo="${d.periodo}" data-valor="${d.valor}"/>`).join("");
+        data-periodo="${d.periodo}" data-valor="${d.valor}"/>`;
+  }).join("");
 
   return `<svg viewBox="0 0 ${W} ${H}" role="img"
     aria-label="${esc(p.nome)} — ${p.validos.length} períodos, de
@@ -653,14 +727,17 @@ function desenhar() {
     const ult = item.validos[item.validos.length - 1];
     const vi = variacao(item);
     const al = avaliar(item, ult);
+    const cl = classeEstado(al);
     const un = item.un && item.un !== "-" ? item.un : "";
     return `<li><button type="button" data-param="${esc(item.nome)}"
         aria-current="${item.nome === p.nome}"
-        ${al ? `title="${esc(textoAlerta(item, al))}"` : ""}>
-      <span class="item-nome">${al ? '<span class="marca-alerta"></span>' : ""}${
+        ${al ? `title="${esc(textoEstado(item, al))}"` : ""}>
+      <span class="item-nome">${al
+        ? `<span class="sinal ${cl}" aria-hidden="true">${SIMBOLO[al.estado]}</span>`
+        : '<span class="sinal" aria-hidden="true"></span>'}${
         esc(item.nome)}${un ? `<small>${esc(un)}</small>` : ""}</span>
       <span class="item-mini">${miniTendencia(item)}</span>
-      <span class="item-num${al ? " fora-valor" : ""}">${ult ? fmtNum(ult.valor) : "—"}
+      <span class="item-num${cl ? " " + cl + "-valor" : ""}">${ult ? fmtNum(ult.valor) : "—"}
         ${vi.curto ? `<small>${vi.curto}</small>` : ""}</span>
     </button></li>`;
   }).join("");
@@ -669,13 +746,15 @@ function desenhar() {
     <div class="unidade">
       <section class="destaque">
         <h2>${esc(p.nome)}</h2>
-        <div class="valor${alerta ? " fora-valor" : ""}">${ultimo ? fmtNum(ultimo.valor) : "—"}${
+        <div class="valor${alerta ? " " + classeEstado(alerta) + "-valor" : ""}">${
+          ultimo ? fmtNum(ultimo.valor) : "—"}${
           ultimo && unLegivel ? `<span class="un">${esc(unLegivel)}</span>` : ""}</div>
         <div class="delta">${v.texto}</div>
         <div class="quando">${ultimo
           ? `${rotuloPeriodo()} ${fmtData(ultimo.periodo)}` : "sem lançamento no período"}</div>
-        ${alerta ? `<div class="fora">${esc(textoAlerta(p, alerta))}</div>`
-                 : temLimite(p) ? `<div class="faixa">${esc(textoFaixa(p))}</div>` : ""}
+        ${alerta ? `<div class="tarja ${classeEstado(alerta)}">${
+                      esc(textoEstado(p, alerta))}</div>
+                    <div class="faixa">${esc(textoFaixa(p))}</div>` : ""}
         <div class="tela-grafico" id="tela-grafico"></div>
       </section>
       <ul class="lista" id="lista-param" aria-label="Parâmetros de ${esc(u.nome)}">${itens}</ul>
@@ -837,6 +916,12 @@ document.getElementById("form-login").onsubmit = async ev => {
 async function abrirPainel() {
   document.getElementById("tela-login").classList.add("oculto");
   document.getElementById("tela-painel").classList.remove("oculto");
+  if (LOGO_EMPRESA) {
+    const img = document.getElementById("logo-empresa");
+    img.src = LOGO_EMPRESA;
+    img.alt = "Logo da empresa";
+    img.hidden = false;
+  }
   const estado = document.getElementById("estado");
   try {
     LINHAS = await carregar(modo);
