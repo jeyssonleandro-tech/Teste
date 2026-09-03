@@ -9,7 +9,7 @@ ETA e Represa), alimentado por dados no Supabase e publicado como HTML.
 
 | Caminho | O que é |
 |---|---|
-| `index.html` | O painel — leitura com login, visão diária, semanal ou mensal |
+| `index.html` | O painel — leitura com login, visão diária, semanal ou mensal. Fontes e logo embutidas: roda como arquivo solto, sem buscar nada na internet |
 | `lancamento.html` | Formulário de lançamento, com login por colaborador |
 | `supabase/01_schema.sql` | Cria as tabelas e a view |
 | `supabase/02_rls.sql` | Regras de acesso: leitura pública, escrita só autenticada |
