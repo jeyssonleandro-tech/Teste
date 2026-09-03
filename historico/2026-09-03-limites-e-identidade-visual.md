@@ -140,7 +140,59 @@ para o supervisor revisar antes de validar.
 
 ---
 
-## 5. Em aberto
+## 6. O login que não entrava
+
+Depois de tudo pronto, o supervisor não conseguia mais entrar. Foram
+levantadas quatro causas prováveis — provedor de e-mail desligado, usuário
+não confirmado, senha errada, sessão travada no navegador.
+
+**Nenhuma era.** O diagnóstico veio de uma consulta em `auth.users`:
+
+```sql
+select email,
+       case when encrypted_password is null then 'SEM SENHA' else 'tem senha' end as senha,
+       case when email_confirmed_at is null then 'NÃO CONFIRMADO' else 'confirmado' end as confirmacao,
+       last_sign_in_at
+  from auth.users where deleted_at is null;
+```
+
+Duas coisas apareceram de uma vez:
+
+1. Os dois usuários estavam íntegros — com senha, confirmados, ativos.
+2. Havia um **login bem-sucedido de hoje**, doze minutos antes. Isso
+   provava que o provedor estava ligado e derrubava a suspeita principal.
+
+A causa era o e-mail cadastrado: `jeysson.leandro@gmail.com`, **com ponto**.
+O supervisor digitava sem. O Gmail trata os dois como a mesma caixa; o
+Supabase não — para ele é comparação de texto puro.
+
+**Lição para o cadastro da equipe:** mandar a cada colaborador o e-mail
+exato, copiado e colado. Ponto, maiúscula ou espaço no fim geram chamado.
+
+### Correções que o episódio gerou
+
+| Problema | Correção |
+|---|---|
+| Qualquer 400 do Supabase virava "E-mail ou senha incorretos", mandando procurar senha quando a causa era outra | As telas passaram a nomear cada caso: não confirmado, provedor desligado, usuário suspenso, excesso de tentativas, e-mail malformado |
+| `leituras.registrado_por` referenciava `auth.users` sem `ON DELETE`, então excluir um usuário que já lançou dados era impossível — o Supabase mostrava só "Database error deleting user" | `09_excluir_usuario.sql`: passou a `ON DELETE SET NULL`. A leitura fica, o rastro some |
+
+A recuperação de senha por e-mail não funcionou: o serviço embutido do
+plano gratuito tem limite baixo e a mensagem não chegou. O caminho que
+funciona é definir a senha direto no banco:
+
+```sql
+update auth.users
+   set encrypted_password = extensions.crypt('nova senha', extensions.gen_salt('bf')),
+       email_confirmed_at = coalesce(email_confirmed_at, now())
+ where email = '...';
+```
+
+Para a equipe usar isso de verdade, vale configurar um SMTP próprio em
+Settings → Authentication → SMTP.
+
+---
+
+## 7. Em aberto
 
 | Item | Esperando |
 |---|---|
@@ -150,3 +202,4 @@ para o supervisor revisar antes de validar.
 | Índice de Água (L/L, ETA, calculado) | Parâmetros complementares e a fórmula |
 | Branch padrão do repositório | Ainda aponta para `claude/install-ecc-skill-7qjzir`; trocar para `main` |
 | Vínculo com a planta baixa | — |
+| SMTP próprio para recuperação de senha | Servidor de e-mail da empresa |
