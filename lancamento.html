@@ -218,9 +218,21 @@ async function entrar(email, senha) {
   });
   const dados = await resp.json();
   if (!resp.ok) {
-    throw new Error(resp.status === 400
-      ? "E-mail ou senha incorretos."
-      : dados.msg || dados.error_description || `Falha no login (${resp.status}).`);
+    /* O Supabase devolve 400 tanto para senha errada quanto para usuário
+       não confirmado. Colapsar os dois em "senha incorreta" manda a pessoa
+       procurar o problema no lugar errado. */
+    const motivo = `${dados.error_code || ""} ${dados.msg || ""} ${dados.error_description || ""}`
+      .toLowerCase();
+    if (motivo.includes("not confirmed") || motivo.includes("email_not_confirmed")) {
+      throw new Error("Este usuário existe, mas o e-mail não foi confirmado. "
+        + "O supervisor precisa recriá-lo com a opção \"Auto Confirm User\" marcada, "
+        + "ou confirmá-lo em Authentication → Users.");
+    }
+    if (resp.status === 400) throw new Error("E-mail ou senha incorretos.");
+    if (resp.status === 422) throw new Error("E-mail em formato inválido.");
+    if (resp.status === 429) throw new Error("Muitas tentativas seguidas. Espere um minuto.");
+    throw new Error(dados.msg || dados.error_description
+      || `Falha no login (${resp.status}). Verifique a conexão com a internet.`);
   }
   sessao = {
     access_token: dados.access_token,
