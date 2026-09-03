@@ -18,6 +18,7 @@ ETA e Represa), alimentado por dados no Supabase e publicado como HTML.
 | `supabase/05_parametros_v2.sql` | Amplia o cadastro e permite dupla agregação |
 | `supabase/06_acesso_autenticado.sql` | Fecha a leitura: sem login, nada aparece |
 | `supabase/07_limites.sql` | Limites de conformidade e sinalização de desvio |
+| `supabase/08_ajustes_limites.sql` | Cloro Semi em ppm e alarme diário na ETE Industrial |
 | `docs/guia-lancamento-supabase.md` | Guia de operação |
 | `docs/publicacao-github-pages.md` | Como publicar o painel e liberar o celular |
 
