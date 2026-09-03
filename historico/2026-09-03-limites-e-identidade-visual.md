@@ -162,12 +162,45 @@ Duas coisas apareceram de uma vez:
 2. Havia um **login bem-sucedido de hoje**, doze minutos antes. Isso
    provava que o provedor estava ligado e derrubava a suspeita principal.
 
-A causa era o e-mail cadastrado: `jeysson.leandro@gmail.com`, **com ponto**.
-O supervisor digitava sem. O Gmail trata os dois como a mesma caixa; o
-Supabase não — para ele é comparação de texto puro.
+Levantou-se então a hipótese do e-mail cadastrado com ponto
+(`jeysson.leandro@gmail.com`) contra o digitado sem ponto — o Gmail trata
+os dois como a mesma caixa, o Supabase não. **Também não era.**
 
-**Lição para o cadastro da equipe:** mandar a cada colaborador o e-mail
-exato, copiado e colado. Ponto, maiúscula ou espaço no fim geram chamado.
+A causa apareceu com uma pergunta do supervisor: *"fiz a configuração pelo
+PC do trabalho e estou mexendo pelo celular, será que tem relação?"*
+
+Tinha. O mesmo arquivo entrava no PC e não no celular, o que descartava as
+credenciais e apontava para o ambiente.
+
+### A causa real: `localStorage` recusado em `file://`
+
+O painel estava sendo aberto no celular **como arquivo**, não pelo endereço
+da internet. O iOS trata páginas `file://` como origem sem identidade e
+recusa o acesso ao `localStorage` — que é onde a sessão é guardada.
+
+A sequência era esta:
+
+1. O Supabase aceitava a senha e devolvia o token
+2. A linha seguinte tentava gravar a sessão
+3. O navegador lançava `SecurityError`
+4. O `catch` do formulário tratava isso como falha de credencial
+
+A pessoa entrava e era expulsa no mesmo instante, com a mensagem errada na
+tela. No PC não aparecia porque o Chrome de computador permite gravar em
+`file://`.
+
+**A correção:** lembrar a sessão virou conveniência opcional. As três
+operações passaram por `guardarSessao` / `lerSessao` / `esquecerSessao`,
+que engolem a recusa. Sem memória o login funciona igual — só não sobrevive
+ao recarregar, e o painel diz isso em vez de fingir erro de senha. Vale
+também para aba privada e navegador com cookies bloqueados.
+
+**Princípio que ficou:** uma conveniência não pode derrubar a função
+principal. Guardar sessão é conforto; entrar é o produto.
+
+**Para o dia a dia:** no celular, abrir pelo endereço da internet, onde a
+sessão fica guardada. O arquivo continua sendo a saída no computador da
+empresa, onde o `github.io` está bloqueado.
 
 ### Correções que o episódio gerou
 
@@ -175,6 +208,7 @@ exato, copiado e colado. Ponto, maiúscula ou espaço no fim geram chamado.
 |---|---|
 | Qualquer 400 do Supabase virava "E-mail ou senha incorretos", mandando procurar senha quando a causa era outra | As telas passaram a nomear cada caso: não confirmado, provedor desligado, usuário suspenso, excesso de tentativas, e-mail malformado |
 | `leituras.registrado_por` referenciava `auth.users` sem `ON DELETE`, então excluir um usuário que já lançou dados era impossível — o Supabase mostrava só "Database error deleting user" | `09_excluir_usuario.sql`: passou a `ON DELETE SET NULL`. A leitura fica, o rastro some |
+| Recusa do `localStorage` derrubava o login inteiro | Armazenamento isolado em funções que engolem a falha |
 
 A recuperação de senha por e-mail não funcionou: o serviço embutido do
 plano gratuito tem limite baixo e a mensagem não chegou. O caminho que
