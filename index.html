@@ -463,6 +463,25 @@ function textoEstado(p, a) {
 /* =============================================================
    SESSÃO — o painel agora exige login. A chave anon não lê dados.
    ============================================================= */
+/* ---------- guarda da sessão ----------
+   O navegador pode recusar o localStorage: acontece em página aberta
+   como arquivo (file://) no iOS, em aba privada e com cookies de site
+   bloqueados. Lembrar a sessão é conveniência; entrar é a função. Se a
+   gravação falhar, o login segue — só não sobrevive ao recarregar. */
+let avisoSemMemoria = false;
+
+function guardarSessao() {
+  try { localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao)); }
+  catch { avisoSemMemoria = true; }
+}
+function lerSessao() {
+  try { return JSON.parse(localStorage.getItem(CHAVE_SESSAO) || "null"); }
+  catch { return null; }
+}
+function esquecerSessao() {
+  try { localStorage.removeItem(CHAVE_SESSAO); } catch { /* nada a limpar */ }
+}
+
 async function entrar(email, senha) {
   const resp = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
     method: "POST",
@@ -500,7 +519,7 @@ async function entrar(email, senha) {
     refresh_token: dados.refresh_token,
     email: dados.user?.email || email
   };
-  localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+  guardarSessao();
 }
 
 async function renovarSessao() {
@@ -513,14 +532,14 @@ async function renovarSessao() {
     if (!resp.ok) return false;
     const dados = await resp.json();
     sessao = { ...sessao, access_token: dados.access_token, refresh_token: dados.refresh_token };
-    localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+    guardarSessao();
     return true;
   } catch { return false; }
 }
 
 function sair() {
   sessao = null;
-  localStorage.removeItem(CHAVE_SESSAO);
+  esquecerSessao();
   document.getElementById("tela-painel").classList.add("oculto");
   document.getElementById("tela-login").classList.remove("oculto");
 }
@@ -945,6 +964,12 @@ document.getElementById("form-login").onsubmit = async ev => {
 async function abrirPainel() {
   document.getElementById("tela-login").classList.add("oculto");
   document.getElementById("tela-painel").classList.remove("oculto");
+  if (avisoSemMemoria) {
+    document.getElementById("recado-login").innerHTML =
+      '<p class="recado">Este navegador não deixa guardar a sessão — você entrou, '
+      + 'mas terá de fazer login de novo ao recarregar. Acontece ao abrir o painel '
+      + 'como arquivo no celular; pelo endereço na internet não acontece.</p>';
+  }
   if (LOGO_EMPRESA) {
     const img = document.getElementById("logo-empresa");
     img.src = LOGO_EMPRESA;
@@ -968,9 +993,7 @@ async function abrirPainel() {
 }
 
 (function () {
-  const guardado = localStorage.getItem(CHAVE_SESSAO);
-  if (!guardado) return;
-  try { sessao = JSON.parse(guardado); } catch { return; }
+  sessao = lerSessao();
   if (sessao?.access_token) abrirPainel();
 })();
 </script>
