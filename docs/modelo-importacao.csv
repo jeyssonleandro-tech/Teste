@@ -1,8 +1,9 @@
-data,unidade,parametro,valor,observacao
-2026-08-03,ETA,Volume Tratado,708,
-2026-08-03,ETA,Turbidez,6.36,
-2026-08-03,ETA,Cloro Semi,2.71,
-2026-08-03,ETE Industrial,pH Equalizado,6.8,
-2026-08-03,Represa,Régua linimétrica,8.42,
-2026-08-04,ETA,Volume Tratado,715,
-2026-08-04,ETA,Turbidez,6.1,
+data,unidade,parametro,valor,observacao,turno
+2026-08-03,ETA,Volume Tratado,708,,
+2026-08-03,ETA,Turbidez,6.36,,
+2026-08-03,ETA,Cloro Semi,2.71,,
+2026-08-03,ETE Industrial,pH Equalizado,6.8,,1
+2026-08-03,ETE Industrial,pH Equalizado,7.1,,2
+2026-08-03,Represa,Régua linimétrica,8.42,,
+2026-08-04,ETA,Volume Tratado,715,,
+2026-08-04,ETA,Turbidez,6.1,,

@@ -16,7 +16,15 @@ estes nomes exatos na primeira linha:
 | 2026-08-03 | ETA | Turbidez | 6.36 | |
 | 2026-08-03 | ETE Industrial | pH Equalizado | 6.8 | |
 
-A quinta coluna, `observacao`, é opcional — pode ficar vazia.
+As colunas `observacao` e `turno` são opcionais.
+
+**Turno** só vale para ETE Industrial e ETE Sanitária: `1` para 06h–18h,
+`2` para 18h–06h. Em branco, numa dessas unidades, entra como 1º turno.
+Nas outras unidades a coluna é ignorada.
+
+E vale a regra da virada: a medição pertence ao dia em que o **turno
+começou**. Uma leitura das 2h da manhã do dia 5, do turno que entrou às
+19h do dia 4, é lançada como dia 4.
 
 **Por que uma linha por medição e não uma coluna por parâmetro:** é o
 formato que o banco usa. Cada unidade tem parâmetros diferentes; uma

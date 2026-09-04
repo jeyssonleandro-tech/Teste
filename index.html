@@ -78,6 +78,9 @@
     --brand:    #C00000;
     --serie:    #57504E;
     --serie-fill: rgba(87,80,78,0.09);
+    /* Segunda série (2º turno): distante do cinza da primeira e do
+       vermelho de desvio, para as três coisas não se confundirem. */
+    --serie-2:  #00658F;
     --ok:       #12730F;
     --ok-soft:  rgba(18,115,15,0.10);
     --alerta:   #C00000;
@@ -98,6 +101,7 @@
       --brand:    #D42B2B;
       --serie:    #A9A1A0;
       --serie-fill: rgba(169,161,160,0.12);
+      --serie-2:  #5CC0F0;
       --ok:       #3FC93F;
       --ok-soft:  rgba(63,201,63,0.13);
       --alerta:   #F0625F;
@@ -118,6 +122,7 @@
     --brand:    #D42B2B;
     --serie:    #A9A1A0;
     --serie-fill: rgba(169,161,160,0.12);
+    --serie-2:  #5CC0F0;
     --ok:       #3FC93F;
     --ok-soft:  rgba(63,201,63,0.13);
     --alerta:   #F0625F;
@@ -316,6 +321,13 @@
   .selo.ok   { color: var(--ok);     background: var(--ok-soft); }
   .meta { font-size: 13.5px; color: var(--ink-2); }
   .meta .faixa { color: var(--ink-3); }
+  /* Duas séries pedem legenda; uma série não. */
+  .legenda {
+    display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 18px;
+    font-size: 13px; color: var(--ink-2);
+  }
+  .legenda span { display: inline-flex; align-items: center; gap: 7px; }
+  .legenda i { width: 14px; height: 3px; border-radius: 2px; flex: none; }
   .tela-grafico { margin-top: 22px; }
   .tela-grafico svg { display: block; width: 100%; height: auto; }
   .sem-dado { color: var(--ink-3); font-size: 14px; padding: 40px 0; }
@@ -476,6 +488,7 @@
           </button>
           <div class="menu-painel" id="painel-periodo" role="menu" hidden></div>
         </div>
+        <button class="quieto" id="btn-turno" type="button" aria-pressed="false" hidden>Por turno</button>
         <button class="quieto" id="btn-tabela" type="button" aria-pressed="false">Ver tabela</button>
       </div>
     </div>
@@ -518,6 +531,11 @@ let paramAtivo = null;
 let modo = "semanal";           // "diario" | "semanal" | "mensal"
 let pontosVisiveis = 12;
 let mostrarTabela = false;
+let porTurno = false;
+let UNIDADES_TURNO = new Set();   // unidades que trabalham por turno
+let LINHAS_TURNO = [];            // série separada por turno, do modo atual
+const NOME_TURNO = { 1: "1º turno · 06h–18h", 2: "2º turno · 18h–06h" };
+const COR_TURNO  = { 1: "var(--serie)", 2: "var(--serie-2)" };
 
 const PRESETS = {
   diario:  [[14, "14 dias"], [30, "30 dias"], [90, "90 dias"], [0, "Todo o histórico"]],
@@ -564,6 +582,11 @@ const esc = t => String(t).replace(/[&<>"]/g, c =>
    Um limite diário comparado ao total do período acusaria desvio
    sempre. Nesses casos (limBase 'diario') a pergunta muda: em vez
    de olhar o número exibido, olha-se o pior dia. */
+/* Onde há turno, o extremo comparado é o do turno, não o do dia — e o
+   texto precisa dizer isso, senão o operador procura o dia errado. */
+let unidadeTemTurno = false;
+const grao = () => unidadeTemTurno ? "turno" : "dia";
+
 const temLimite = p => p.limInf !== null || p.limSup !== null;
 const limitePorDia = p => modo !== "diario" && p.limBase === "diario";
 /* A linha de limite só some quando não teria onde pousar: um teto
@@ -591,7 +614,7 @@ const classeEstado = a => !a ? "" : a.estado === "dentro" ? "ok" : "fora";
 function textoFaixa(p) {
   if (!temLimite(p)) return "";
   const un = p.un && p.un !== "-" ? ` ${p.un}` : "";
-  const porDia = limitePorDia(p) ? ", por dia" : "";
+  const porDia = limitePorDia(p) ? `, por ${grao()}` : "";
   if (p.limInf !== null && p.limSup !== null)
     return `Faixa ${fmtNum(p.limInf)} a ${fmtNum(p.limSup)}${un}${porDia}`;
   if (p.limSup !== null) return `Limite até ${fmtNum(p.limSup)}${un}${porDia}`;
@@ -600,14 +623,16 @@ function textoFaixa(p) {
 
 function textoEstado(p, a) {
   if (a.estado === "dentro") {
-    return a.porDia ? "✓ todos os dias dentro do limite" : "✓ dentro do limite";
+    return a.porDia
+      ? `✓ todos os ${grao() === "turno" ? "turnos" : "dias"} dentro do limite`
+      : "✓ dentro do limite";
   }
   const acima = a.estado === "acima";
   const alvo = acima ? p.limSup : p.limInf;
   const un = p.un && p.un !== "-" ? ` ${p.un}` : "";
   const prep = acima ? "acima de" : "abaixo de";
   return a.porDia
-    ? `${SIMBOLO[a.estado]} algum dia ${prep} ${fmtNum(alvo)}${un}`
+    ? `${SIMBOLO[a.estado]} algum ${grao()} ${prep} ${fmtNum(alvo)}${un}`
     : `${SIMBOLO[a.estado]} ${prep} ${fmtNum(alvo)}${un}`;
 }
 
@@ -695,6 +720,18 @@ function sair() {
   document.getElementById("tela-login").classList.remove("oculto");
 }
 
+/* ---------- consulta ao banco, com renovação de sessão ---------- */
+async function consultar(caminho) {
+  const chamar = () => fetch(`${SUPABASE_URL}${caminho}`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${sessao.access_token}` }
+  });
+  let resp = await chamar();
+  if (resp.status === 401 && sessao?.refresh_token && await renovarSessao()) resp = await chamar();
+  if (resp.status === 401) { sair(); throw new Error("Sessão expirada. Entre novamente."); }
+  if (!resp.ok) throw new Error(`O banco respondeu ${resp.status}.`);
+  return resp.json();
+}
+
 /* ---------- busca dos dados ---------- */
 async function carregar(qual) {
   const { view, coluna } = VIEWS[qual];
@@ -709,17 +746,16 @@ async function carregar(qual) {
     + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,${coluna},valor${extras}`
     + `&order=${coluna}.asc`;
 
-  const chamar = () => fetch(`${SUPABASE_URL}${caminho}`, {
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${sessao.access_token}` }
-  });
-
-  let resp = await chamar();
-  if (resp.status === 401 && sessao?.refresh_token && await renovarSessao()) resp = await chamar();
-  if (resp.status === 401) { sair(); throw new Error("Sessão expirada. Entre novamente."); }
-  if (!resp.ok) throw new Error(`O banco respondeu ${resp.status}.`);
-
-  const linhas = await resp.json();
+  const linhas = await consultar(caminho);
   return linhas.map(l => ({ ...l, periodo: l[coluna] }));
+}
+
+/* Série separada por turno, do modo atual. Só existe para as unidades
+   que trabalham por turno — o banco já filtra. */
+async function carregarTurnos(qual) {
+  return consultar(`/rest/v1/vw_turnos`
+    + `?select=unidade,parametro,turno,periodo,valor`
+    + `&granularidade=eq.${qual}&order=periodo.asc`);
 }
 
 /* ---------- organização em unidade → parâmetro → série ---------- */
@@ -781,9 +817,18 @@ function escalaBonita(min, max, alvo = 4) {
 }
 
 /* ---------- gráfico principal ---------- */
-function graficoGrande(p, largura) {
-  if (p.validos.length === 0) return '<p class="sem-dado">Sem valores no período.</p>';
-  if (p.validos.length === 1) {
+/* series: [{ nome, cor, pontos }]. Uma série desenha área e colore os
+   pontos fora da faixa; duas séries dispensam a área — dois preenchimentos
+   sobrepostos embaralham a leitura — e mantêm cada linha na sua cor, senão
+   o vermelho de desvio apagaria a distinção entre os turnos. */
+function graficoGrande(p, largura, series) {
+  series = series || [{ nome: null, cor: "var(--serie)", pontos: p.validos }];
+  const uma = series.length === 1;
+  const todos = series.flatMap(s => s.pontos);
+  const periodos = [...new Set(todos.map(d => d.periodo))].sort();
+
+  if (todos.length === 0) return '<p class="sem-dado">Sem valores no período.</p>';
+  if (periodos.length === 1) {
     return `<p class="sem-dado">Um único ${modo === "mensal" ? "mês lançado"
       : modo === "semanal" ? "semana lançada" : "dia lançado"} no período — `
       + `a tendência aparece a partir do segundo.</p>`;
@@ -791,7 +836,7 @@ function graficoGrande(p, largura) {
 
   const W = Math.max(280, largura);
   const H = W < 560 ? 250 : W < 900 ? 300 : 340;
-  const vs = p.validos.map(d => d.valor);
+  const vs = todos.map(d => d.valor);
   const refs = limiteDesenhavel(p)
     ? [p.limInf, p.limSup].filter(v => v !== null) : [];
   /* A margem direita existe para os rótulos de limite. Sem limites ela
@@ -799,13 +844,31 @@ function graficoGrande(p, largura) {
   const pad = { t: 18, r: refs.length ? 78 : 16, b: 34, l: 58 };
   const e = escalaBonita(Math.min(...vs, ...refs), Math.max(...vs, ...refs));
 
-  const x = i => pad.l + (i / (p.validos.length - 1)) * (W - pad.l - pad.r);
+  const ordem = new Map(periodos.map((per, i) => [per, i]));
+  const x = i => pad.l + (i / (periodos.length - 1)) * (W - pad.l - pad.r);
   const y = v => pad.t + (1 - (v - e.min) / (e.max - e.min)) * (H - pad.t - pad.b);
 
-  const linha = p.validos.map((d, i) =>
-    `${i ? "L" : "M"}${x(i).toFixed(1)},${y(d.valor).toFixed(1)}`).join(" ");
-  const area = `${linha} L${x(p.validos.length - 1).toFixed(1)},${H - pad.b}`
-    + ` L${x(0).toFixed(1)},${H - pad.b} Z`;
+  /* Um turno pode não ter lançamento num período: a linha corta ali em
+     vez de atravessar o vazio como se houvesse medição. */
+  const caminho = pontos => {
+    let d = "", anterior = -2;
+    for (const pt of pontos) {
+      const i = ordem.get(pt.periodo);
+      d += `${i === anterior + 1 ? "L" : "M"}${x(i).toFixed(1)},${y(pt.valor).toFixed(1)} `;
+      anterior = i;
+    }
+    return d.trim();
+  };
+
+  const traçados = series.map(s => {
+    const d = caminho(s.pontos);
+    const area = uma && s.pontos.length
+      ? `<path d="${d} L${x(ordem.get(s.pontos[s.pontos.length - 1].periodo)).toFixed(1)},${H - pad.b}`
+        + ` L${x(ordem.get(s.pontos[0].periodo)).toFixed(1)},${H - pad.b} Z"
+              fill="var(--serie-fill)" stroke="none"/>` : "";
+    return `${area}<path d="${d}" fill="none" stroke="${s.cor}" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round"/>`;
+  }).join("");
 
   const grades = e.marcas.map(v => `
     <line x1="${pad.l}" y1="${y(v).toFixed(1)}" x2="${W - pad.r}" y2="${y(v).toFixed(1)}"
@@ -827,28 +890,29 @@ function graficoGrande(p, largura) {
           letter-spacing="1">LIMITE</text>` : "";
 
   const cabem = Math.max(2, Math.floor((W - pad.l - pad.r) / 74));
-  const passoRot = Math.max(1, Math.ceil((p.validos.length - 1) / (cabem - 1)));
-  const datas = p.validos.map((d, i) => {
-    const ultimo = i === p.validos.length - 1;
+  const passoRot = Math.max(1, Math.ceil((periodos.length - 1) / (cabem - 1)));
+  const datas = periodos.map((per, i) => {
+    const ultimo = i === periodos.length - 1;
     if (i % passoRot !== 0 && !ultimo) return "";
     const anc = i === 0 ? "start" : ultimo ? "end" : "middle";
     return `<text x="${x(i).toFixed(1)}" y="${H - 11}" font-size="11.5"
                   font-family="IBM Plex Mono, monospace" fill="var(--ink-3)"
-                  text-anchor="${anc}">${rotularCurto(d.periodo)}</text>`;
+                  text-anchor="${anc}">${rotularCurto(per)}</text>`;
   }).join("");
 
   /* Com muitos pontos as áreas de toque se sobreporiam e uma bloquearia
      a outra: o raio acompanha o espaçamento, e as bolinhas somem quando
      a série fica densa — a linha sozinha lê melhor. */
-  const espaco = (W - pad.l - pad.r) / (p.validos.length - 1);
-  const raio = Math.max(9, Math.min(17, espaco / 2));
-  const comBolinha = espaco >= 16;
+  const espaco = (W - pad.l - pad.r) / (periodos.length - 1);
+  const raio = Math.max(9, Math.min(17, espaco / 2)) / (uma ? 1 : 1.6);
+  const comBolinha = espaco >= (uma ? 16 : 26);
 
-  const marcas = p.validos.map((d, i) => {
-    const a = avaliar(p, d);
+  const marcas = series.map(s => s.pontos.map((d, j) => {
+    const i = ordem.get(d.periodo);
+    const a = uma ? avaliar(p, d) : null;
     const desviou = a && a.estado !== "dentro";
-    const ultimo = i === p.validos.length - 1;
-    const cor = desviou ? "var(--alerta)" : "var(--serie)";
+    const ultimo = uma && j === s.pontos.length - 1;
+    const cor = desviou ? "var(--alerta)" : s.cor;
     const r = desviou ? 4.4 : ultimo ? 4.6 : 3.4;
     return `
     ${comBolinha || desviou || ultimo
@@ -856,17 +920,18 @@ function graficoGrande(p, largura) {
         fill="${cor}" stroke="var(--ground)" stroke-width="2.4"/>` : ""}
     <circle class="alvo" cx="${x(i).toFixed(1)}" cy="${y(d.valor).toFixed(1)}"
         r="${raio.toFixed(1)}" fill="transparent" tabindex="0"
-        data-periodo="${d.periodo}" data-valor="${d.valor}"/>`;
-  }).join("");
+        data-periodo="${d.periodo}" data-valor="${d.valor}"
+        ${s.nome ? `data-serie="${esc(s.nome)}"` : ""}/>`;
+  }).join("")).join("");
 
-  return `<svg viewBox="0 0 ${W} ${H}" role="img"
-    aria-label="${esc(p.nome)} — ${p.validos.length} períodos, de
-    ${rotularPeriodo(p.validos[0].periodo)} a ${rotularPeriodo(p.validos[p.validos.length - 1].periodo)}">
+  const legenda = uma ? "" : `<div class="legenda">${series.map(s =>
+    `<span><i style="background:${s.cor}"></i>${esc(s.nome)}</span>`).join("")}</div>`;
+
+  return `${legenda}<svg viewBox="0 0 ${W} ${H}" role="img"
+    aria-label="${esc(p.nome)} — ${periodos.length} períodos, de
+    ${rotularPeriodo(periodos[0])} a ${rotularPeriodo(periodos[periodos.length - 1])}">
     ${grades}${linhasLimite}${rotuloLimite}
-    <path d="${area}" fill="var(--serie-fill)"/>
-    <path d="${linha}" fill="none" stroke="var(--serie)" stroke-width="2.4"
-          stroke-linecap="round" stroke-linejoin="round"/>
-    ${datas}${marcas}
+    ${traçados}${datas}${marcas}
   </svg>`;
 }
 
@@ -921,6 +986,16 @@ function desenhar() {
   }
   unidadeAtiva = u.nome;
   document.getElementById("barra-unidade").hidden = false;
+
+  /* O botão só existe onde há turno; ao sair dessa unidade, a
+     comparação se desliga sozinha em vez de ficar ligada sem efeito. */
+  const temTurno = UNIDADES_TURNO.has(u.nome);
+  unidadeTemTurno = temTurno;
+  const btnTurno = document.getElementById("btn-turno");
+  btnTurno.hidden = !temTurno;
+  if (!temTurno && porTurno) porTurno = false;
+  btnTurno.setAttribute("aria-pressed", String(porTurno));
+  btnTurno.textContent = porTurno ? "Consolidado" : "Por turno";
 
   let p = u.listaParam.find(x => x.nome === paramAtivo);
   if (!p) p = u.listaParam.find(x => x.validos.length) || u.listaParam[0];
@@ -989,7 +1064,7 @@ function desenhar() {
     </aside>
     ${mostrarTabela ? tabela(u) : ""}`;
 
-  desenharGrafico(p);
+  desenharGrafico(p, u);
 
   document.getElementById("lista-param").onclick = ev => {
     const b = ev.target.closest("[data-param]"); if (!b) return;
@@ -1000,10 +1075,25 @@ function desenhar() {
 
 /* O SVG é gerado no tamanho real do espaço disponível: o texto sai
    nítido, sem esticar junto com o desenho. */
-function desenharGrafico(p) {
+function desenharGrafico(p, u) {
   const alvo = document.getElementById("tela-grafico");
   if (!alvo) return;
-  alvo.innerHTML = graficoGrande(p, Math.round(alvo.clientWidth) || 320);
+
+  let series = null;
+  if (porTurno && UNIDADES_TURNO.has(u.nome)) {
+    series = [1, 2].map(t => ({
+      nome: NOME_TURNO[t],
+      cor: COR_TURNO[t],
+      pontos: LINHAS_TURNO
+        .filter(l => l.unidade === u.nome && l.parametro === p.nome
+                  && Number(l.turno) === t && l.valor !== null)
+        .map(l => ({ periodo: l.periodo, valor: Number(l.valor) }))
+        .sort((a, b) => a.periodo.localeCompare(b.periodo))
+    })).filter(s => s.pontos.length);
+    if (!series.length) series = null;
+  }
+
+  alvo.innerHTML = graficoGrande(p, Math.round(alvo.clientWidth) || 320, series);
   ligarTooltip(p);
 }
 
@@ -1037,7 +1127,8 @@ function ligarTooltip(p) {
     const mostrar = () => {
       const r = alvo.getBoundingClientRect();
       tip.innerHTML = `<span class="tt-nome">${rotuloPeriodo()} ${
-        rotularPeriodo(alvo.dataset.periodo)}</span><br>`
+        rotularPeriodo(alvo.dataset.periodo)}${
+        alvo.dataset.serie ? `<br>${esc(alvo.dataset.serie)}` : ""}</span><br>`
         + `<b>${fmtNum(alvo.dataset.valor)}</b>${esc(un)}`;
       tip.style.opacity = "1";
       tip.style.left = `${Math.min(Math.max(70, r.left + r.width / 2), innerWidth - 70)}px`;
@@ -1114,7 +1205,17 @@ document.getElementById("filtro-modo").onclick = async ev => {
   modo = b.dataset.modo;
   pontosVisiveis = PRESETS[modo][1][0];
   LINHAS = await carregar(modo);
+  LINHAS_TURNO = porTurno ? await carregarTurnos(modo) : [];
   montarControles(); desenhar();
+};
+
+document.getElementById("btn-turno").onclick = async ev => {
+  porTurno = !porTurno;
+  if (porTurno && !LINHAS_TURNO.length) {
+    ev.currentTarget.textContent = "Carregando…";
+    LINHAS_TURNO = await carregarTurnos(modo);
+  }
+  desenhar();
 };
 
 document.getElementById("btn-tabela").onclick = ev => {
@@ -1177,6 +1278,14 @@ async function abrirPainel() {
   }
   const estado = document.getElementById("estado");
   try {
+    /* Consulta acessória: se falhar — a coluna usa_turno ainda não existe,
+       ou a rede oscilou — o painel segue sem a comparação por turno. Um
+       recurso opcional não pode derrubar a tela inteira. */
+    try {
+      const comTurno = await consultar("/rest/v1/unidades?select=nome&usa_turno=is.true");
+      UNIDADES_TURNO = new Set(comTurno.map(u => u.nome));
+    } catch { UNIDADES_TURNO = new Set(); }
+
     LINHAS = await carregar(modo);
     if (!LINHAS.length) {
       estado.innerHTML = "A conexão funcionou, mas ainda não há leituras lançadas. "

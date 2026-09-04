@@ -48,6 +48,10 @@
   }
   input:focus, select:focus { outline: 2px solid var(--acao); outline-offset: 1px; border-color: var(--acao); }
   .campo { margin-bottom: 16px; }
+  .dica {
+    margin: 6px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--ink-2);
+  }
+  .dica:empty { display: none; }
   .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 480px) { .dupla { grid-template-columns: 1fr; } }
 
@@ -134,6 +138,15 @@
       </div>
     </div>
 
+    <div class="campo oculto" id="campo-turno" style="margin-top:4px">
+      <label for="turno">Turno</label>
+      <select id="turno">
+        <option value="1">1º turno — 06h às 18h</option>
+        <option value="2">2º turno — 18h às 06h</option>
+      </select>
+      <p class="dica" id="dica-turno"></p>
+    </div>
+
     <form id="form-lancamento">
       <div id="parametros"></div>
 
@@ -177,6 +190,28 @@ const hojeSaoPaulo = () =>
   new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"
   }).format(new Date());
+
+/* Turno 1: 06h-18h. Turno 2: 18h-06h.
+   A medição pertence ao dia em que o TURNO COMEÇOU — uma leitura das 2h
+   da manhã, feita no turno que entrou às 19h de ontem, é de ONTEM. Sem
+   isso a meia-noite partiria o turno em dois dias no gráfico. */
+const horaSaoPaulo = () => Number(new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "America/Sao_Paulo", hour: "2-digit", hour12: false
+}).format(new Date()));
+
+const turnoAgora = () => (horaSaoPaulo() >= 6 && horaSaoPaulo() < 18) ? 1 : 2;
+
+const ontemSaoPaulo = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"
+  }).format(d);
+};
+
+/* O dia em que o turno escolhido começou, para quem lança de madrugada. */
+const dataDoTurno = turno =>
+  (turno === 2 && horaSaoPaulo() < 6) ? ontemSaoPaulo() : hojeSaoPaulo();
 
 const numeroBR = txt => {
   const limpo = String(txt).trim().replace(/\./g, "").replace(",", ".");
@@ -297,7 +332,7 @@ function sair() {
    chave anônima não lê mais nada, nem o cadastro. */
 async function carregarCadastro() {
   const [u, p] = await Promise.all([
-    api("/rest/v1/unidades?select=id,nome,tipo&ativo=is.true&order=nome"),
+    api("/rest/v1/unidades?select=id,nome,tipo,usa_turno&ativo=is.true&order=nome"),
     api("/rest/v1/parametros?select=id,nome,unidade_medida,aplica_a_tipo,ordem"
         + "&ativo=is.true&order=ordem")
   ]);
@@ -320,6 +355,35 @@ function montarSeletorUnidade() {
     unidades.map(u => `<option value="${u.id}">${u.nome}</option>`).join("");
 }
 
+/* O turno é característica da unidade: quem opera a ETA não vê o campo. */
+function ajustarTurno(unidade, sugerir) {
+  const campo = document.getElementById("campo-turno");
+  const usa = !!(unidade && unidade.usa_turno);
+  campo.classList.toggle("oculto", !usa);
+  if (!usa) return;
+
+  if (sugerir) {
+    const t = turnoAgora();
+    document.getElementById("turno").value = String(t);
+    document.getElementById("data").value = dataDoTurno(t);
+  }
+  atualizarDicaTurno();
+}
+
+function atualizarDicaTurno() {
+  const t = Number(document.getElementById("turno").value);
+  const alvo = document.getElementById("dica-turno");
+  alvo.textContent = t === 2
+    ? "O 2º turno vira o dia. Lance sempre com a data em que o turno COMEÇOU — "
+      + "a medição das 2h da manhã pertence ao dia anterior."
+    : "";
+}
+
+const turnoAtual = () => {
+  const unidade = unidades.find(u => String(u.id) === document.getElementById("unidade").value);
+  return unidade && unidade.usa_turno ? Number(document.getElementById("turno").value) : null;
+};
+
 async function montarParametros() {
   const unidade = unidades.find(u => String(u.id) === document.getElementById("unidade").value);
   const data = document.getElementById("data").value;
@@ -334,8 +398,10 @@ async function montarParametros() {
   // valores já lançados nesta unidade + data, para permitir correção
   let existentes = {};
   if (data) {
+    const turno = turnoAtual();
     const resp = await api(`/rest/v1/leituras?select=parametro_id,valor,observacao`
-      + `&unidade_id=eq.${unidade.id}&data=eq.${data}`);
+      + `&unidade_id=eq.${unidade.id}&data=eq.${data}`
+      + (turno === null ? "&turno=is.null" : `&turno=eq.${turno}`));
     if (resp.ok) for (const l of await resp.json()) existentes[l.parametro_id] = l;
   }
 
@@ -382,7 +448,7 @@ async function salvar(ev) {
     }
     linhas.push({
       unidade_id: Number(unidadeId), parametro_id: Number(campo.dataset.parametro),
-      data, valor, observacao
+      data, turno: turnoAtual(), valor, observacao
     });
   }
 
@@ -395,7 +461,7 @@ async function salvar(ev) {
   botao.textContent = "Salvando…";
   try {
     const resp = await api(
-      "/rest/v1/leituras?on_conflict=unidade_id,parametro_id,data",
+      "/rest/v1/leituras?on_conflict=unidade_id,parametro_id,data,turno",
       {
         method: "POST",
         headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
@@ -427,6 +493,7 @@ async function abrirLancamento() {
   document.getElementById("quem").textContent = sessao.email;
   document.getElementById("data").value = hojeSaoPaulo();
   document.getElementById("data").max = hojeSaoPaulo();
+  ajustarTurno(unidades.find(u => String(u.id) === document.getElementById("unidade").value), true);
   await carregarCadastro();
   montarSeletorUnidade();
   await montarParametros();
@@ -451,7 +518,15 @@ document.getElementById("form-login").addEventListener("submit", async ev => {
 });
 
 document.getElementById("btn-sair").addEventListener("click", sair);
-document.getElementById("unidade").addEventListener("change", montarParametros);
+document.getElementById("unidade").addEventListener("change", () => {
+  const u = unidades.find(x => String(x.id) === document.getElementById("unidade").value);
+  ajustarTurno(u, true);
+  montarParametros();
+});
+document.getElementById("turno").addEventListener("change", () => {
+  atualizarDicaTurno();
+  montarParametros();
+});
 document.getElementById("data").addEventListener("change", montarParametros);
 document.getElementById("form-lancamento").addEventListener("submit", salvar);
 
