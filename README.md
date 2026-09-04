@@ -23,6 +23,7 @@ ETA e Represa), alimentado por dados no Supabase e publicado como HTML.
 | `supabase/10_visao_mensal.sql` | Visão mensal, por mês de calendário |
 | `supabase/11_importacao_em_lote.sql` | Importação de leituras por planilha |
 | `supabase/12_turnos.sql` | Lançamento por turno nas duas ETEs |
+| `supabase/13_ete_sanitaria.sql` | Novos parâmetros da ETE Sanitária e periodicidade |
 | `docs/guia-lancamento-supabase.md` | Guia de operação |
 | `docs/publicacao-github-pages.md` | Como publicar o painel e liberar o celular |
 | `docs/importacao-em-lote.md` | Subir histórico por planilha |

@@ -488,7 +488,7 @@
           </button>
           <div class="menu-painel" id="painel-periodo" role="menu" hidden></div>
         </div>
-        <button class="quieto" id="btn-turno" type="button" aria-pressed="false" hidden>Por turno</button>
+        <div class="segmentado" id="filtro-turno" hidden></div>
         <button class="quieto" id="btn-tabela" type="button" aria-pressed="false">Ver tabela</button>
       </div>
     </div>
@@ -531,11 +531,13 @@ let paramAtivo = null;
 let modo = "semanal";           // "diario" | "semanal" | "mensal"
 let pontosVisiveis = 12;
 let mostrarTabela = false;
-let porTurno = false;
+/* 0 = consolidado do dia; 1 ou 2 = aquele turno isolado. Uma linha no
+   gráfico em qualquer caso — o botão troca QUAL série se vê, em vez de
+   sobrepor as duas. */
+let turnoVisto = 0;
 let UNIDADES_TURNO = new Set();   // unidades que trabalham por turno
-let LINHAS_TURNO = [];            // série separada por turno, do modo atual
+let LINHAS_TURNO = [];            // série por turno, do modo atual
 const NOME_TURNO = { 1: "1º turno · 06h–18h", 2: "2º turno · 18h–06h" };
-const COR_TURNO  = { 1: "var(--serie)", 2: "var(--serie-2)" };
 
 const PRESETS = {
   diario:  [[14, "14 dias"], [30, "30 dias"], [90, "90 dias"], [0, "Todo o histórico"]],
@@ -754,7 +756,9 @@ async function carregar(qual) {
    que trabalham por turno — o banco já filtra. */
 async function carregarTurnos(qual) {
   return consultar(`/rest/v1/vw_turnos`
-    + `?select=unidade,parametro,turno,periodo,valor`
+    + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,`
+    + `agregacao,turno,periodo,valor,valor_min_dia,valor_max_dia,`
+    + `limite_inferior,limite_superior,limite_base`
     + `&granularidade=eq.${qual}&order=periodo.asc`);
 }
 
@@ -973,12 +977,21 @@ function variacao(p) {
 
 /* ---------- montagem ---------- */
 function desenhar() {
-  const { unidades, periodos } = organizar(LINHAS);
+  /* As abas saem sempre do consolidado: filtrar por turno esconderia a
+     ETA e a Represa, que não têm turno, do menu de unidades. */
+  const base = organizar(LINHAS);
   const conteudo = document.getElementById("conteudo");
 
-  montarAbas(unidades.map(u => u.nome));
+  montarAbas(base.unidades.map(x => x.nome));
 
-  const u = unidades.find(x => x.nome === unidadeAtiva) || unidades[0];
+  const vista = turnoVisto
+    ? organizar(LINHAS_TURNO.filter(l => Number(l.turno) === turnoVisto))
+    : base;
+  const { periodos } = vista.unidades.length ? vista : base;
+
+  const u = vista.unidades.find(x => x.nome === unidadeAtiva)
+         || base.unidades.find(x => x.nome === unidadeAtiva)
+         || base.unidades[0];
   if (!u) {
     conteudo.innerHTML = `<p class="aviso">Nenhum lançamento no período selecionado.</p>`;
     document.getElementById("barra-unidade").hidden = true;
@@ -991,11 +1004,13 @@ function desenhar() {
      comparação se desliga sozinha em vez de ficar ligada sem efeito. */
   const temTurno = UNIDADES_TURNO.has(u.nome);
   unidadeTemTurno = temTurno;
-  const btnTurno = document.getElementById("btn-turno");
-  btnTurno.hidden = !temTurno;
-  if (!temTurno && porTurno) porTurno = false;
-  btnTurno.setAttribute("aria-pressed", String(porTurno));
-  btnTurno.textContent = porTurno ? "Consolidado" : "Por turno";
+  const seletor = document.getElementById("filtro-turno");
+  seletor.hidden = !temTurno;
+  if (!temTurno && turnoVisto) turnoVisto = 0;
+  seletor.innerHTML = [[0, "Consolidado"], [1, "1º turno"], [2, "2º turno"]]
+    .map(([v, r]) => `<button type="button" data-turno="${v}"
+       title="${v ? esc(NOME_TURNO[v]) : "Os dois turnos somados pela regra do parâmetro"}"
+       aria-pressed="${v === turnoVisto}">${r}</button>`).join("");
 
   let p = u.listaParam.find(x => x.nome === paramAtivo);
   if (!p) p = u.listaParam.find(x => x.validos.length) || u.listaParam[0];
@@ -1044,7 +1059,7 @@ function desenhar() {
 
   conteudo.innerHTML = `
     <section class="destaque">
-      <span class="rotulo">Em destaque</span>
+      <span class="rotulo">${turnoVisto ? esc(NOME_TURNO[turnoVisto]) : "Em destaque"}</span>
       <h3>${esc(p.nome)}</h3>
       <div class="valor numero${alerta ? " " + classeEstado(alerta) : ""}">
         <span>${ultimo ? fmtNum(ultimo.valor) : "—"}</span>${
@@ -1064,7 +1079,7 @@ function desenhar() {
     </aside>
     ${mostrarTabela ? tabela(u) : ""}`;
 
-  desenharGrafico(p, u);
+  desenharGrafico(p);
 
   document.getElementById("lista-param").onclick = ev => {
     const b = ev.target.closest("[data-param]"); if (!b) return;
@@ -1075,25 +1090,10 @@ function desenhar() {
 
 /* O SVG é gerado no tamanho real do espaço disponível: o texto sai
    nítido, sem esticar junto com o desenho. */
-function desenharGrafico(p, u) {
+function desenharGrafico(p) {
   const alvo = document.getElementById("tela-grafico");
   if (!alvo) return;
-
-  let series = null;
-  if (porTurno && UNIDADES_TURNO.has(u.nome)) {
-    series = [1, 2].map(t => ({
-      nome: NOME_TURNO[t],
-      cor: COR_TURNO[t],
-      pontos: LINHAS_TURNO
-        .filter(l => l.unidade === u.nome && l.parametro === p.nome
-                  && Number(l.turno) === t && l.valor !== null)
-        .map(l => ({ periodo: l.periodo, valor: Number(l.valor) }))
-        .sort((a, b) => a.periodo.localeCompare(b.periodo))
-    })).filter(s => s.pontos.length);
-    if (!series.length) series = null;
-  }
-
-  alvo.innerHTML = graficoGrande(p, Math.round(alvo.clientWidth) || 320, series);
+  alvo.innerHTML = graficoGrande(p, Math.round(alvo.clientWidth) || 320);
   ligarTooltip(p);
 }
 
@@ -1205,16 +1205,19 @@ document.getElementById("filtro-modo").onclick = async ev => {
   modo = b.dataset.modo;
   pontosVisiveis = PRESETS[modo][1][0];
   LINHAS = await carregar(modo);
-  LINHAS_TURNO = porTurno ? await carregarTurnos(modo) : [];
+  LINHAS_TURNO = turnoVisto ? await carregarTurnos(modo) : [];
   montarControles(); desenhar();
 };
 
-document.getElementById("btn-turno").onclick = async ev => {
-  porTurno = !porTurno;
-  if (porTurno && !LINHAS_TURNO.length) {
-    ev.currentTarget.textContent = "Carregando…";
+document.getElementById("filtro-turno").onclick = async ev => {
+  const b = ev.target.closest("[data-turno]"); if (!b) return;
+  const novo = Number(b.dataset.turno);
+  if (novo === turnoVisto) return;
+  if (novo && !LINHAS_TURNO.length) {
+    b.textContent = "…";
     LINHAS_TURNO = await carregarTurnos(modo);
   }
+  turnoVisto = novo;
   desenhar();
 };
 

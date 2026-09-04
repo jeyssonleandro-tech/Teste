@@ -77,6 +77,13 @@
   .ja-lancado {
     font-size: 11px; color: var(--ink-muted); display: block; margin-top: 1px;
   }
+  /* Avisa que aquele campo não é de todo dia — sem isso o operador
+     acha que esqueceu de preencher. */
+  .cadencia {
+    display: inline-block; margin-left: 8px; font-size: 11.5px;
+    color: var(--ink-2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 1px 8px; vertical-align: 1px;
+  }
 
   .aviso {
     background: var(--aviso-bg); border-radius: 8px;
@@ -333,7 +340,7 @@ function sair() {
 async function carregarCadastro() {
   const [u, p] = await Promise.all([
     api("/rest/v1/unidades?select=id,nome,tipo,usa_turno&ativo=is.true&order=nome"),
-    api("/rest/v1/parametros?select=id,nome,unidade_medida,aplica_a_tipo,ordem"
+    api("/rest/v1/parametros?select=id,nome,unidade_medida,aplica_a_tipo,ordem,periodicidade"
         + "&ativo=is.true&order=ordem")
   ]);
   if (!u.ok || !p.ok) throw new Error("Não foi possível carregar o cadastro de unidades.");
@@ -414,6 +421,8 @@ async function montarParametros() {
         <div class="nome-param">
           ${p.nome}${p.unidade_medida && p.unidade_medida !== "-"
             ? `<span class="un">${p.unidade_medida}</span>` : ""}
+          ${p.periodicidade === "semanal"
+            ? '<span class="cadencia">lançamento semanal</span>' : ""}
           ${ja ? '<span class="ja-lancado">já lançado — editar substitui o valor</span>' : ""}
         </div>
         <input type="text" inputmode="decimal" data-parametro="${p.id}"
