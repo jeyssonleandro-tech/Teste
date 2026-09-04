@@ -338,14 +338,25 @@ function sair() {
    Vai com o token do usuário: depois do 06_acesso_autenticado.sql a
    chave anônima não lê mais nada, nem o cadastro. */
 async function carregarCadastro() {
+  const CAMPOS = "id,nome,unidade_medida,aplica_a_tipo,ordem,periodicidade";
   const [u, p] = await Promise.all([
     api("/rest/v1/unidades?select=id,nome,tipo,usa_turno&ativo=is.true&order=nome"),
-    api("/rest/v1/parametros?select=id,nome,unidade_medida,aplica_a_tipo,ordem,periodicidade"
-        + "&ativo=is.true&order=ordem")
+    // 'calculado' só existe depois do 14_indice_agua.sql; se o banco ainda
+    // não tiver a coluna, o formulário volta a listar tudo em vez de morrer.
+    api(`/rest/v1/parametros?select=${CAMPOS},calculado`
+        + "&ativo=is.true&calculado=is.false&order=ordem")
   ]);
-  if (!u.ok || !p.ok) throw new Error("Não foi possível carregar o cadastro de unidades.");
+  if (!u.ok) throw new Error("Não foi possível carregar o cadastro de unidades.");
   unidades = await u.json();
-  parametros = await p.json();
+
+  if (p.ok) {
+    parametros = await p.json();
+  } else {
+    const antigo = await api(`/rest/v1/parametros?select=${CAMPOS}`
+                             + "&ativo=is.true&order=ordem");
+    if (!antigo.ok) throw new Error("Não foi possível carregar o cadastro de parâmetros.");
+    parametros = await antigo.json();
+  }
 }
 
 /* Um parâmetro pertence à unidade quando o tipo dela combina com

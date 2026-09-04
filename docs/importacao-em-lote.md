@@ -117,6 +117,11 @@ truncate public.importacao_leituras;
   o motivo e um exemplo do que estava escrito.
 - **Aceita os dois formatos de data e de número** que saem do Excel
   brasileiro e do Planilhas Google.
+- **Insumo oculto também se importa.** `Caminhão Pipa` (ETA) entra pela
+  planilha como qualquer outro parâmetro, mesmo não aparecendo no painel —
+  ele alimenta o Índice de Água.
+- **Parâmetro calculado não se importa.** `Índice de Água` é conta, não
+  medição: o banco o recusa se ele aparecer na planilha.
 
 ---
 
