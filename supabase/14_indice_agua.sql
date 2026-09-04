@@ -1,18 +1,27 @@
 -- =============================================================
--- Índice de Água — parâmetro calculado, com insumos ocultos
+-- Índices de Água — parâmetros calculados, com insumos ocultos
 -- Rodar UMA VEZ, depois do 13_ete_sanitaria.sql.
+-- Idempotente: rodar de novo corrige o cadastro e recria as views.
 --
--- Fórmula acordada:
---     Índice = (Volume Tratado + Caminhão Pipa) / (Volume de produção × 5,678)
+-- Duas fórmulas acordadas:
 --
---   • Volume Tratado  — ETA, m3, já cadastrado
---   • Caminhão Pipa   — ETA, m3, NOVO e oculto no dashboard
---   • Volume de produção — Produção, CXU, já cadastrado
+--   Índice de Água (sem cervejaria)
+--     = (Volume Tratado + Caminhão Pipa) / (Volume de produção × 5,678)
+--
+--   Índice de Água Cervejaria
+--     = Água Cervejaria / (Volume de produção L5 × 5,678)
+--
+-- Insumos:
+--   • Volume Tratado        — ETA, m3, já cadastrado, visível
+--   • Água Cervejaria       — ETA, m3, já cadastrado, visível
+--   • Caminhão Pipa         — ETA, m3, NOVO, oculto no dashboard
+--   • Volume de produção    — Produção, CXU, já cadastrado, visível
+--   • Volume de produção L5 — Produção, CXU, NOVO, oculto no dashboard
 --   • 5,678 — litros por caixa unitária (CXU)
 --
 -- Conversão: o numerador está em m3 e o denominador vira litros, então
 -- o numerador é multiplicado por 1000. Sem isso o índice sairia mil
--- vezes menor (0,003 em vez de 3,0 L/L). Os dois fatores estão isolados
+-- vezes menor (0,001 em vez de 1,3 L/L). Os dois fatores estão isolados
 -- na view abaixo — se algum dia mudarem, mexe-se num lugar só.
 --
 -- Razão não se agrega por média: o índice da semana é a soma da água do
@@ -48,7 +57,7 @@ alter table public.parametros
   check (agregacao in ('media', 'soma', 'ultimo', 'razao'));
 
 -- -------------------------------------------------------------
--- 2) Os dois parâmetros
+-- 2) Os quatro parâmetros — dois índices e dois insumos ocultos
 -- -------------------------------------------------------------
 --
 --    Teto do índice: 1,33 L/L. limite_base fica em 'periodo' — o valor
@@ -58,8 +67,10 @@ alter table public.parametros
 insert into public.parametros
   (nome, unidade_medida, aplica_a_tipo, ordem, agregacao,
    exibir_no_painel, calculado, limite_superior) values
-  ('Índice de Água', 'L/L', 'ETA',  5, 'razao', true,  true,  1.33),
-  ('Caminhão Pipa',  'm3',  'ETA', 90, 'soma',  false, false, null)
+  ('Índice de Água',           'L/L', 'ETA',       5, 'razao', true,  true,  1.33),
+  ('Índice de Água Cervejaria','L/L', 'ETA',       6, 'razao', true,  true,  null),
+  ('Caminhão Pipa',            'm3',  'ETA',      90, 'soma',  false, false, null),
+  ('Volume de produção L5',    'CXU', 'Produção', 20, 'soma',  false, false, null)
 on conflict (nome, aplica_a_tipo) do update
    set unidade_medida   = excluded.unidade_medida,
        ordem            = excluded.ordem,
@@ -84,41 +95,66 @@ with insumos as (
     l.data,
     sum(l.valor) filter (
       where u.tipo = 'ETA' and p.nome in ('Volume Tratado', 'Caminhão Pipa')
-    ) as agua_m3,
+    ) as agua_total_m3,
+    sum(l.valor) filter (
+      where u.tipo = 'ETA' and p.nome = 'Água Cervejaria'
+    ) as agua_cervejaria_m3,
     sum(l.valor) filter (
       where p.nome = 'Volume de produção'
-    ) as producao_cxu
+    ) as producao_cxu,
+    sum(l.valor) filter (
+      where p.nome = 'Volume de produção L5'
+    ) as producao_l5_cxu
   from public.leituras l
   join public.unidades   u on u.id = l.unidade_id
   join public.parametros p on p.id = l.parametro_id
   where u.ativo and p.ativo and l.valor is not null
   group by l.data
 ),
-periodos as (
-  select 'diario' as granularidade, data as periodo, agua_m3, producao_cxu
+-- Cada índice vira um par (água, produção) do dia. Um índice novo é
+-- mais uma linha aqui — o resto da view não muda.
+por_dia as (
+  select 'Índice de Água'::text as parametro, data,
+         agua_total_m3 as agua_m3, producao_cxu as producao_cxu
     from insumos
   union all
-  select 'semanal', date_trunc('week', data)::date,
-         sum(agua_m3), sum(producao_cxu)
-    from insumos group by date_trunc('week', data)
+  select 'Índice de Água Cervejaria', data,
+         agua_cervejaria_m3, producao_l5_cxu
+    from insumos
+),
+-- Só entram os dias com os dois lados lançados. Um dia com água mas
+-- sem produção somaria água ao numerador da semana sem somar nada ao
+-- denominador, e inflaria o índice do período inteiro por causa de um
+-- lançamento em falta. Melhor a semana pesar menos dias e estar certa.
+validos as (
+  select * from por_dia
+   where agua_m3 is not null and coalesce(producao_cxu, 0) > 0
+),
+periodos as (
+  select 'diario'::text as granularidade, parametro, data as periodo,
+         agua_m3, producao_cxu
+    from validos
   union all
-  select 'mensal', date_trunc('month', data)::date,
+  select 'semanal', parametro, date_trunc('week', data)::date,
          sum(agua_m3), sum(producao_cxu)
-    from insumos group by date_trunc('month', data)
+    from validos group by parametro, date_trunc('week', data)
+  union all
+  select 'mensal', parametro, date_trunc('month', data)::date,
+         sum(agua_m3), sum(producao_cxu)
+    from validos group by parametro, date_trunc('month', data)
 )
 select
   granularidade,
+  parametro,
   periodo,
   round((agua_m3 * 1000) / (producao_cxu * 5.678), 3) as valor,
   agua_m3,
   producao_cxu
-from periodos
-where agua_m3 is not null
-  and coalesce(producao_cxu, 0) > 0;
+from periodos;
 
 comment on view public.vw_indice_agua is
-  'Índice de Água por dia, semana e mês. Cada período divide a soma da '
-  'água pela soma da produção — razão nunca se agrega por média.';
+  'Os índices de água por dia, semana e mês. Cada período divide a soma '
+  'da água pela soma da produção — razão nunca se agrega por média.';
 
 -- -------------------------------------------------------------
 -- 4) As views do dashboard passam a respeitar exibir_no_painel
@@ -169,20 +205,20 @@ select unidade, tipo_unidade, usa_turno, parametro, unidade_medida, ordem_parame
        limite_inferior, limite_superior, limite_base
 from por_dia
 union all
--- o índice do dia entra pela porta da ETA, com os limites do cadastro
+-- os índices do dia entram pela porta da ETA, com os limites do cadastro
 select u.nome, u.tipo, u.usa_turno, p.nome, p.unidade_medida, p.ordem,
        p.agregacao, i.periodo, i.valor,
        i.valor, i.valor, 1,
        p.limite_inferior, p.limite_superior, p.limite_base
   from public.vw_indice_agua i
-  cross join public.parametros p
+  join public.parametros p
+    on p.nome = i.parametro and p.aplica_a_tipo = 'ETA' and p.ativo and p.calculado
   join public.unidades u on u.tipo = 'ETA' and u.ativo
- where i.granularidade = 'diario'
-   and p.nome = 'Índice de Água' and p.aplica_a_tipo = 'ETA' and p.ativo;
+ where i.granularidade = 'diario';
 
 comment on view public.vw_leituras_diarias is
   'Um número por dia: os turnos já consolidados pela regra do parâmetro. '
-  'Inclui o Índice de Água e exclui os insumos ocultos.';
+  'Inclui os índices de água e exclui os insumos ocultos.';
 
 -- 4.2) Semana
 create view public.vw_dashboard
@@ -232,15 +268,15 @@ select unidade, tipo_unidade,
 from agregado
 where agregacao_extra is not null
 union all
--- índice da semana: recalculado do zero, não é média dos dias
+-- índices da semana: recalculados do zero, não são média dos dias
 select u.nome, u.tipo, p.nome, p.unidade_medida, p.ordem,
        p.agregacao, i.periodo, i.valor, i.valor, i.valor,
        p.limite_inferior, p.limite_superior, p.limite_base
   from public.vw_indice_agua i
-  cross join public.parametros p
+  join public.parametros p
+    on p.nome = i.parametro and p.aplica_a_tipo = 'ETA' and p.ativo and p.calculado
   join public.unidades u on u.tipo = 'ETA' and u.ativo
- where i.granularidade = 'semanal'
-   and p.nome = 'Índice de Água' and p.aplica_a_tipo = 'ETA' and p.ativo;
+ where i.granularidade = 'semanal';
 
 comment on view public.vw_dashboard is
   'Semana a partir dos dias consolidados. O índice é recalculado pela '
@@ -298,10 +334,10 @@ select u.nome, u.tipo, p.nome, p.unidade_medida, p.ordem,
        p.agregacao, i.periodo, i.valor, i.valor, i.valor,
        p.limite_inferior, p.limite_superior, p.limite_base
   from public.vw_indice_agua i
-  cross join public.parametros p
+  join public.parametros p
+    on p.nome = i.parametro and p.aplica_a_tipo = 'ETA' and p.ativo and p.calculado
   join public.unidades u on u.tipo = 'ETA' and u.ativo
- where i.granularidade = 'mensal'
-   and p.nome = 'Índice de Água' and p.aplica_a_tipo = 'ETA' and p.ativo;
+ where i.granularidade = 'mensal';
 
 comment on view public.vw_dashboard_mensal is
   'Mês de calendário a partir dos dias consolidados.';
@@ -375,10 +411,10 @@ grant select on public.vw_turnos           to authenticated;
 
 -- -------------------------------------------------------------
 -- 6) Importação em lote: parâmetro calculado não entra
---    'Índice de Água' existe no cadastro, então sem isto a planilha
---    conseguiria gravar um índice à mão por cima da conta. Ele passa a
---    ser recusado com nome próprio no relatório — o insumo oculto
---    ('Caminhão Pipa') continua importando normalmente.
+--    Os índices existem no cadastro, então sem isto a planilha
+--    conseguiria gravar um índice à mão por cima da conta. Eles passam a
+--    ser recusados com nome próprio no relatório — os insumos ocultos
+--    ('Caminhão Pipa', 'Volume de produção L5') continuam importando.
 -- -------------------------------------------------------------
 create or replace function public.importar_leituras()
 returns table (situacao text, linhas bigint, exemplos text)
@@ -474,7 +510,7 @@ end $$;
 --   select nome, aplica_a_tipo from public.parametros
 --    where not exibir_no_painel or calculado order by aplica_a_tipo, ordem;
 --
---   -- o índice, dia a dia, com os insumos à vista:
+--   -- os índices, dia a dia, com os insumos à vista:
 --   select * from public.vw_indice_agua
---    where granularidade = 'diario' order by periodo desc limit 15;
+--    where granularidade = 'diario' order by periodo desc, parametro limit 20;
 -- =============================================================
