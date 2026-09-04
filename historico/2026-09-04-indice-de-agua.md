@@ -86,9 +86,21 @@ simulados. Depois, com dados semeados:
 
 ---
 
-## 6. Em aberto
+## 6. O teto: 1,33 L/L
 
-- **Limite do índice** — sem meta cadastrada. Quando houver, é um `update`
-  em `limite_inferior`/`limite_superior` do parâmetro.
+Cadastrado como `limite_superior`, com `limite_base = 'periodo'` — o valor
+comparado é o que está na tela. Num índice é o certo: a semana que fecha em
+1,28 está dentro da meta mesmo tendo tido um dia ruim, e é o fechamento do
+período que a meta cobra. Não há limite inferior: gastar menos água que a
+meta não é desvio.
+
+O teto também confirma a conversão de m³ para litros. Com 1,33 L/L
+esperado, o índice tem de sair na casa da unidade — e sai. Sem o fator
+1000 sairia em 0,001, três ordens de grandeza fora da meta.
+
+---
+
+## 7. Em aberto
+
 - **Conferir a conversão** com um dia real de operação, antes de apresentar
   o número a terceiros.

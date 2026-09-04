@@ -50,16 +50,24 @@ alter table public.parametros
 -- -------------------------------------------------------------
 -- 2) Os dois parâmetros
 -- -------------------------------------------------------------
+--
+--    Teto do índice: 1,33 L/L. limite_base fica em 'periodo' — o valor
+--    comparado é o que está na tela. Num índice é o certo: a semana que
+--    fecha em 1,28 está dentro da meta mesmo tendo tido um dia ruim, e é
+--    o fechamento do período que a meta cobra.
 insert into public.parametros
-  (nome, unidade_medida, aplica_a_tipo, ordem, agregacao, exibir_no_painel, calculado) values
-  ('Índice de Água', 'L/L', 'ETA',  5, 'razao', true,  true),
-  ('Caminhão Pipa',  'm3',  'ETA', 90, 'soma',  false, false)
+  (nome, unidade_medida, aplica_a_tipo, ordem, agregacao,
+   exibir_no_painel, calculado, limite_superior) values
+  ('Índice de Água', 'L/L', 'ETA',  5, 'razao', true,  true,  1.33),
+  ('Caminhão Pipa',  'm3',  'ETA', 90, 'soma',  false, false, null)
 on conflict (nome, aplica_a_tipo) do update
    set unidade_medida   = excluded.unidade_medida,
        ordem            = excluded.ordem,
        agregacao        = excluded.agregacao,
        exibir_no_painel = excluded.exibir_no_painel,
-       calculado        = excluded.calculado;
+       calculado        = excluded.calculado,
+       limite_superior  = excluded.limite_superior,
+       limite_base      = 'periodo';
 
 -- -------------------------------------------------------------
 -- 3) O cálculo, nas três granularidades
