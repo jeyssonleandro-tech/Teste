@@ -12,7 +12,7 @@ estes nomes exatos na primeira linha:
 
 | data | unidade | parametro | valor | observacao |
 |---|---|---|---|---|
-| 2026-08-03 | ETA | Volume Tratado | 708 | |
+| 2026-08-03 | ETA | Volume FIT 100 | 708 | |
 | 2026-08-03 | ETA | Turbidez | 6.36 | |
 | 2026-08-03 | ETE Industrial | pH Equalizado | 6.8 | |
 
@@ -94,7 +94,7 @@ Ele devolve um relatório assim:
 | situacao | linhas | exemplos |
 |---|---|---|
 | gravadas | 340 | linhas inseridas ou corrigidas em leituras |
-| parâmetro não encontrado nessa unidade | 12 | Vazão de Entrada (Represa) |
+| parâmetro não encontrado nessa unidade | 12 | Turbidez (Represa) |
 
 4. **Se houver linhas rejeitadas**, corrija a planilha, esvazie a recepção
    e repita:
@@ -117,10 +117,10 @@ truncate public.importacao_leituras;
   o motivo e um exemplo do que estava escrito.
 - **Aceita os dois formatos de data e de número** que saem do Excel
   brasileiro e do Planilhas Google.
-- **Insumo oculto também se importa.** `Caminhão Pipa` (ETA) e
-  `Volume de produção L5` (Produção) entram pela planilha como qualquer
-  outro parâmetro, mesmo não aparecendo no painel — eles alimentam os
-  índices de água.
+- **Insumo oculto também se importa.** `Caminhão Pipa`, `Volume Andina 1`
+  (ETA) e `Volume de produção L5` (Produção) entram pela planilha como
+  qualquer outro parâmetro, mesmo não aparecendo no painel — eles
+  alimentam os índices de água.
 - **Parâmetro calculado não se importa.** `Índice de Água` e
   `Índice de Água Cervejaria` são conta, não medição: o banco os recusa se
   aparecerem na planilha, com linha própria no relatório.
