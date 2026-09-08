@@ -89,10 +89,16 @@ exclusivo de uma.
 
 1. Abra o formulário (`lancamento.html`)
 2. Entre com o e-mail e a senha que o supervisor forneceu
-3. Escolha a **unidade** e confira a **data** (vem preenchida com hoje)
-4. Preencha os valores medidos — **use vírgula para decimal**: `7,2`
-5. Deixe em branco o que não foi medido; só o que tem valor é gravado
-6. **Salvar lançamento**
+3. Escolha a **unidade** na fileira de abas do topo
+4. Confira a **data** (vem preenchida com hoje) e, nas unidades com turno,
+   o **turno** — ele já vem sugerido pela hora em que você abriu a tela
+5. Preencha os valores medidos — **use vírgula para decimal**: `7,2`
+6. Deixe em branco o que não foi medido; só o que tem valor é gravado
+7. **Salvar lançamento** — o botão acompanha a rolagem, não precisa
+   descer até o fim da lista
+
+O contador ao lado do nome da unidade — *"7 de 12 preenchidos"* — diz
+quanto falta sem você ter de conferir campo a campo.
 
 O painel reflete o lançamento na hora — basta recarregar a página.
 
