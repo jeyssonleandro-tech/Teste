@@ -74,26 +74,8 @@
     --alerta-soft: rgba(192,0,0,0.09);
     --sombra:   0 1px 2px rgba(22,17,15,.05), 0 8px 24px -12px rgba(22,17,15,.18);
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --ground:   #131110;
-      --panel:    #1C1918;
-      --sunk:     #242020;
-      --ink:      #F7F3F2;
-      --ink-2:    #C4BCBA;
-      --ink-3:    #9A9190;
-      --rule:     #34302F;
-      --rule-2:   #262322;
-      --campo:    #6B6463;
-      --brand:    #D42B2B;
-      --ok:       #3FC93F;
-      --ok-soft:  rgba(63,201,63,0.13);
-      --alerta:   #F0625F;
-      --alerta-soft: rgba(240,98,95,0.14);
-      --sombra:   0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
-    }
-  }
+  /* Abre sempre no claro, como o painel. Quem preferir escuro troca no
+     botão "Tema" — daí manda o [data-theme] abaixo. */
   :root[data-theme="dark"] {
     color-scheme: dark;
     --ground:   #131110;
@@ -884,9 +866,11 @@ el("form-lancamento").addEventListener("submit", salvar);
 el("btn-sair").addEventListener("click", sair);
 
 el("btn-tema").addEventListener("click", () => {
-  const escuro = document.documentElement.dataset.theme === "dark"
-    || (!document.documentElement.dataset.theme
-        && matchMedia("(prefers-color-scheme: dark)").matches);
+  /* Sem [data-theme] a página está clara — o padrão agora é fixo, não
+     depende mais do ajuste do aparelho. Consultar o prefers-color-scheme
+     aqui faria o primeiro clique não mudar nada em quem usa o celular no
+     modo escuro. */
+  const escuro = document.documentElement.dataset.theme === "dark";
   document.documentElement.dataset.theme = escuro ? "light" : "dark";
 });
 

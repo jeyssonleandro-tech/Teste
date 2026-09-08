@@ -87,28 +87,10 @@
     --alerta-soft: rgba(192,0,0,0.09);
     --sombra:   0 1px 2px rgba(22,17,15,.05), 0 8px 24px -12px rgba(22,17,15,.18);
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --ground:   #131110;
-      --panel:    #1C1918;
-      --sunk:     #242020;
-      --ink:      #F7F3F2;
-      --ink-2:    #C4BCBA;
-      --ink-3:    #9A9190;
-      --rule:     #34302F;
-      --rule-2:   #262322;
-      --brand:    #D42B2B;
-      --serie:    #A9A1A0;
-      --serie-fill: rgba(169,161,160,0.12);
-      --serie-2:  #5CC0F0;
-      --ok:       #3FC93F;
-      --ok-soft:  rgba(63,201,63,0.13);
-      --alerta:   #F0625F;
-      --alerta-soft: rgba(240,98,95,0.14);
-      --sombra:   0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
-    }
-  }
+  /* O painel abre SEMPRE no claro, mesmo em aparelho configurado no
+     escuro: é apresentado em reunião e impresso, e o escuro seria uma
+     surpresa em cima da hora. Quem preferir escuro troca no botão
+     "Tema" — daí manda o [data-theme] abaixo. */
   :root[data-theme="dark"] {
     color-scheme: dark;
     --ground:   #131110;
@@ -484,7 +466,7 @@
         <div class="menu" id="menu-periodo">
           <button class="abre" type="button" id="btn-periodo"
                   aria-haspopup="true" aria-expanded="false">
-            <span id="rotulo-periodo">12 semanas</span><span class="seta">▼</span>
+            <span id="rotulo-periodo">30 dias</span><span class="seta">▼</span>
           </button>
           <div class="menu-painel" id="painel-periodo" role="menu" hidden></div>
         </div>
@@ -528,8 +510,8 @@ let sessao = null;
 let LINHAS = [];
 let unidadeAtiva = null;
 let paramAtivo = null;
-let modo = "semanal";           // "diario" | "semanal" | "mensal"
-let pontosVisiveis = 12;
+let modo = "diario";            // "diario" | "semanal" | "mensal"
+let pontosVisiveis = 30;        // 30 dias — o preset do modo diário
 let mostrarTabela = false;
 /* 0 = consolidado do dia; 1 ou 2 = aquele turno isolado. Uma linha no
    gráfico em qualquer caso — o botão troca QUAL série se vê, em vez de
@@ -538,6 +520,12 @@ let turnoVisto = 0;
 let UNIDADES_TURNO = new Set();   // unidades que trabalham por turno
 let LINHAS_TURNO = [];            // série por turno, do modo atual
 const NOME_TURNO = { 1: "1º turno · 06h–18h", 2: "2º turno · 18h–06h" };
+
+/* Unidades que se lançam mas não se mostram. A Produção existe no banco
+   só para alimentar os índices de água; o painel é das estações de
+   tratamento. Esconder aqui tira a aba e tudo o que vem depois dela —
+   e o formulário de lançamento continua vendo a unidade normalmente. */
+const TIPOS_FORA_DO_PAINEL = new Set(["Produção"]);
 
 const PRESETS = {
   diario:  [[14, "14 dias"], [30, "30 dias"], [90, "90 dias"], [0, "Todo o histórico"]],
@@ -771,6 +759,7 @@ function organizar(linhas) {
   const unidades = new Map();
   for (const l of linhas) {
     if (!janela.has(l.periodo)) continue;
+    if (TIPOS_FORA_DO_PAINEL.has(l.tipo_unidade)) continue;
     if (!unidades.has(l.unidade)) {
       unidades.set(l.unidade, { nome: l.unidade, tipo: l.tipo_unidade, parametros: new Map() });
     }
@@ -1229,9 +1218,11 @@ document.getElementById("btn-tabela").onclick = ev => {
 };
 
 document.getElementById("btn-tema").onclick = () => {
-  const escuro = document.documentElement.dataset.theme === "dark"
-    || (!document.documentElement.dataset.theme
-        && matchMedia("(prefers-color-scheme: dark)").matches);
+  /* Sem [data-theme] a página está clara — o padrão agora é fixo, não
+     depende mais do ajuste do aparelho. Consultar o prefers-color-scheme
+     aqui faria o primeiro clique não mudar nada em quem usa o celular no
+     modo escuro. */
+  const escuro = document.documentElement.dataset.theme === "dark";
   document.documentElement.dataset.theme = escuro ? "light" : "dark";
   desenhar();
 };
