@@ -78,9 +78,9 @@
     --brand:    #C00000;
     --serie:    #57504E;
     --serie-fill: rgba(87,80,78,0.09);
-    /* Segunda série (2º turno): distante do cinza da primeira e do
-       vermelho de desvio, para as três coisas não se confundirem. */
-    --serie-2:  #00658F;
+    /* Líquido do tanque: distante do cinza da série e do vermelho de
+       desvio, para as três coisas não se confundirem. */
+    --liquido:  #00658F;
     --ok:       #12730F;
     --ok-soft:  rgba(18,115,15,0.10);
     --alerta:   #C00000;
@@ -104,7 +104,7 @@
     --brand:    #D42B2B;
     --serie:    #A9A1A0;
     --serie-fill: rgba(169,161,160,0.12);
-    --serie-2:  #5CC0F0;
+    --liquido:  #5CC0F0;
     --ok:       #3FC93F;
     --ok-soft:  rgba(63,201,63,0.13);
     --alerta:   #F0625F;
@@ -314,6 +314,51 @@
   .tela-grafico svg { display: block; width: 100%; height: auto; }
   .sem-dado { color: var(--ink-3); font-size: 14px; padding: 40px 0; }
 
+  /* ---------- tanques ----------
+     O supervisório da ETE mostra o nível como desenho, e é assim que a
+     equipe lê. A faixa repete essa leitura no painel: um traço de
+     líquido dentro de um corpo de tanque, com o número ao lado. Fica no
+     alto e ocupa a largura toda — é a primeira coisa que o turno
+     confere ao fechar. */
+  .tanques { grid-column: 1 / -1; min-width: 0; }
+  .tanques .rotulo { display: block; margin-bottom: 12px; }
+  .grade-tanques {
+    display: grid; gap: 14px; justify-content: start;
+    grid-template-columns: repeat(auto-fit, minmax(226px, 268px));
+  }
+  @media (max-width: 560px) {
+    .grade-tanques { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  }
+  .tanque {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--panel); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .tanque svg { display: block; flex: none; }
+  .tq-dados { min-width: 0; flex: 1; }
+  .tq-nome {
+    margin: 0; font: 600 14.5px Barlow, sans-serif; color: var(--ink-2);
+    line-height: 1.2;
+  }
+  .tq-valor {
+    display: flex; align-items: baseline; gap: 5px;
+    font-size: 31px; font-weight: 600; line-height: 1.05; margin-top: 4px;
+  }
+  .tq-valor .un {
+    font: 400 12px "IBM Plex Mono", monospace; color: var(--ink-3);
+  }
+  .tanque.fora .tq-valor { color: var(--alerta); }
+  .tanque.fora { border-color: var(--alerta); }
+  .tq-turnos {
+    list-style: none; margin: 9px 0 0; padding: 0;
+    display: flex; flex-wrap: wrap; gap: 3px 14px;
+  }
+  .tq-turnos li { display: flex; align-items: baseline; gap: 6px; }
+  .tq-turnos .rotulo { display: inline; margin: 0; }
+  .tq-turnos .numero { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+  .tq-turnos .vazio { color: var(--ink-3); font-weight: 400; }
+  .tq-quando { margin: 9px 0 0; font-size: 12.5px; color: var(--ink-3); }
+
   /* ---------- lista de parâmetros ----------
      Sem divisória entre linhas: espaço separa igual e não suja. */
   .painel-lista { min-width: 0; }
@@ -518,6 +563,8 @@ let mostrarTabela = false;
    sobrepor as duas. */
 let turnoVisto = 0;
 let UNIDADES_TURNO = new Set();   // unidades que trabalham por turno
+let TANQUES = new Set();          // parâmetros que o painel desenha como tanque
+let NIVEIS = [];                  // nível de cada tanque, turno a turno, por dia
 let LINHAS_TURNO = [];            // série por turno, do modo atual
 const NOME_TURNO = { 1: "1º turno · 06h–18h", 2: "2º turno · 18h–06h" };
 
@@ -1001,6 +1048,17 @@ function desenhar() {
        title="${v ? esc(NOME_TURNO[v]) : "Os dois turnos somados pela regra do parâmetro"}"
        aria-pressed="${v === turnoVisto}">${r}</button>`).join("");
 
+  /* Com a faixa de tanques desenhada, os níveis saem da lista e do
+     gráfico: a mesma informação duas vezes na mesma tela é ruído, e o
+     que se pediu foi o estado do tanque, não a tendência dele. Só sai
+     se sobrar algo na lista — unidade sem mais nada continua mostrando
+     o que tem. */
+  const faixaTanques = tanquesDa(u.nome);
+  if (faixaTanques) {
+    const semTanque = u.listaParam.filter(x => !TANQUES.has(x.nome));
+    if (semTanque.length) u.listaParam = semTanque;
+  }
+
   let p = u.listaParam.find(x => x.nome === paramAtivo);
   if (!p) p = u.listaParam.find(x => x.validos.length) || u.listaParam[0];
   paramAtivo = p.nome;
@@ -1047,6 +1105,7 @@ function desenhar() {
   }).join("");
 
   conteudo.innerHTML = `
+    ${faixaTanques || ""}
     <section class="destaque">
       <span class="rotulo">${turnoVisto ? esc(NOME_TURNO[turnoVisto]) : "Em destaque"}</span>
       <h3>${esc(p.nome)}</h3>
@@ -1131,6 +1190,94 @@ function ligarTooltip(p) {
     alvo.addEventListener("blur", esconder);
   });
   addEventListener("scroll", esconder, { passive: true, once: true });
+}
+
+/* ---------- tanques ----------
+   Nível não é série: o que interessa é o estado em que o tanque foi
+   deixado, não a tendência. Por isso a faixa mostra sempre o ÚLTIMO dia
+   lançado da unidade, independente da janela de tempo escolhida em cima
+   — quem fecha o turno quer saber como está agora.
+
+   O desenho vem do supervisório: corpo do tanque, líquido subindo do
+   fundo e as marcas de 25, 50 e 75%. */
+function desenhoTanque(fracao, fora) {
+  const L = 62, A = 104, borda = 1.5;
+  const dentroA = A - borda * 2, dentroL = L - borda * 2;
+  const h = Math.max(0, Math.min(1, fracao || 0)) * dentroA;
+  const cor = fora ? "var(--alerta)" : "var(--liquido)";
+  const id = "tq" + Math.random().toString(36).slice(2, 8);
+  return `<svg width="${L}" height="${A}" viewBox="0 0 ${L} ${A}" aria-hidden="true">
+    <defs><clipPath id="${id}">
+      <rect x="${borda}" y="${borda}" width="${dentroL}" height="${dentroA}" rx="7"/>
+    </clipPath></defs>
+    <rect x="${borda}" y="${borda}" width="${dentroL}" height="${dentroA}" rx="7"
+          fill="var(--sunk)" stroke="var(--rule)" stroke-width="${borda}"/>
+    <g clip-path="url(#${id})">
+      <rect x="0" y="${A - borda - h}" width="${L}" height="${h + borda}"
+            fill="${cor}" opacity="0.26"/>
+      <rect x="0" y="${A - borda - h}" width="${L}" height="2" fill="${cor}"/>
+      ${[0.25, 0.5, 0.75].map(f => {
+        const y = A - borda - dentroA * f;
+        return `<line x1="${borda}" y1="${y}" x2="${borda + 7}" y2="${y}"
+                      stroke="var(--ink-3)" stroke-width="1" opacity="0.5"/>`;
+      }).join("")}
+    </g>
+  </svg>`;
+}
+
+/* Um tanque por parâmetro marcado, com o valor de cada turno do último
+   dia em que a unidade lançou alguma coisa. */
+function tanquesDa(unidade) {
+  if (!TANQUES.size) return null;
+  const meus = NIVEIS.filter(l => l.unidade === unidade && TANQUES.has(l.parametro)
+                                  && l.valor !== null);
+  if (!meus.length) return null;
+
+  const dia = meus.map(l => l.periodo).sort().pop();
+  const doDia = meus.filter(l => l.periodo === dia);
+  const nomes = [...new Set(doDia.map(l => l.parametro))].sort((a, b) =>
+    a.localeCompare(b, "pt-BR"));
+
+  const cartoes = nomes.map(nome => {
+    const linhas = doDia.filter(l => l.parametro === nome)
+                        .sort((a, b) => Number(a.turno) - Number(b.turno));
+    const fim = linhas[linhas.length - 1];
+    const un = fim.unidade_medida && fim.unidade_medida !== "-" ? fim.unidade_medida : "";
+    const limSup = num(fim.limite_superior), limInf = num(fim.limite_inferior);
+    const valor = Number(fim.valor);
+    /* Escala: 100 quando o nível é percentual; senão o teto cadastrado
+       (a capacidade do tanque). Sem nenhum dos dois, o desenho fica
+       proporcional ao maior valor já visto — melhor que não desenhar. */
+    const topo = un === "%" ? 100
+      : limSup !== null ? limSup
+      : Math.max(...meus.map(l => Number(l.valor)), 1);
+    const fora = (limSup !== null && valor > limSup)
+              || (limInf !== null && valor < limInf);
+
+    const turnos = linhas.length && UNIDADES_TURNO.has(unidade)
+      ? `<ul class="tq-turnos">${[1, 2].map(t => {
+          const l = linhas.find(x => Number(x.turno) === t);
+          return `<li><span class="rotulo">${t}º</span>`
+            + `<span class="numero${l ? "" : " vazio"}">${
+                 l ? fmtNum(l.valor) : "—"}</span></li>`;
+        }).join("")}</ul>`
+      : "";
+
+    return `<article class="tanque${fora ? " fora" : ""}">
+      ${desenhoTanque(valor / topo, fora)}
+      <div class="tq-dados">
+        <h4 class="tq-nome">${esc(nome.replace(/^Nível /, ""))}</h4>
+        <div class="tq-valor numero"><span>${fmtNum(valor)}</span>${
+          un ? `<span class="un">${esc(un)}</span>` : ""}</div>
+        ${turnos}
+      </div>
+    </article>`;
+  }).join("");
+
+  return `<section class="tanques">
+    <span class="rotulo">Tanques · fim do turno · ${rotularPeriodo(dia)}</span>
+    <div class="grade-tanques">${cartoes}</div>
+  </section>`;
 }
 
 /* ---------- controles ---------- */
@@ -1279,6 +1426,18 @@ async function abrirPainel() {
       const comTurno = await consultar("/rest/v1/unidades?select=nome&usa_turno=is.true");
       UNIDADES_TURNO = new Set(comTurno.map(u => u.nome));
     } catch { UNIDADES_TURNO = new Set(); }
+
+    /* Tanques: quais parâmetros são nível, e as leituras turno a turno.
+       Também acessório — se o 16_tanques.sql ainda não rodou, a faixa
+       simplesmente não aparece e o resto do painel segue inteiro. */
+    try {
+      const marcados = await consultar("/rest/v1/parametros?select=nome&e_tanque=is.true");
+      TANQUES = new Set(marcados.map(p => p.nome));
+      if (TANQUES.size) NIVEIS = await consultar(
+        "/rest/v1/vw_turnos?select=unidade,parametro,unidade_medida,turno,periodo,valor,"
+        + "limite_inferior,limite_superior&granularidade=eq.diario"
+        + "&order=periodo.desc&limit=400");
+    } catch { TANQUES = new Set(); NIVEIS = []; }
 
     LINHAS = await carregar(modo);
     if (!LINHAS.length) {

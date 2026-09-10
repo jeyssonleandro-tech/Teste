@@ -100,6 +100,12 @@ exclusivo de uma.
 O contador ao lado do nome da unidade — *"7 de 12 preenchidos"* — diz
 quanto falta sem você ter de conferir campo a campo.
 
+**Níveis de tanque:** `Nível TQ Químico` e `Nível TQ Equalização` (ETE
+Industrial) e `Nível TQ Equalização` (ETE Sanitária) são lançados em **%**,
+com o valor lido no supervisório **ao fechar o turno**. Eles aparecem no
+painel como desenho de tanque, não como gráfico — é o estado em que o
+tanque foi deixado que interessa, não a tendência.
+
 O painel reflete o lançamento na hora — basta recarregar a página.
 
 ### Regras da rotina
