@@ -274,7 +274,22 @@
      O gráfico não mora num cartão: quando tudo é cartão, cartão nenhum
      significa alguma coisa. Ele respira direto sobre o fundo. */
   .palco { display: grid; gap: 28px 40px; align-items: start; padding-bottom: 56px; }
-  @media (min-width: 1000px) { .palco { grid-template-columns: minmax(0,1fr) 366px; } }
+  @media (min-width: 1000px) {
+    .palco {
+      grid-template-columns: minmax(0,1fr) 366px;
+      /* A linha 2 é flexível: sem isso a altura do gráfico, que ocupa as
+         duas linhas, seria repartida entre elas e abriria um vão entre
+         os tanques e a lista de parâmetros. */
+      grid-template-rows: min-content 1fr;
+    }
+    /* O gráfico ocupa a coluna inteira à esquerda; à direita os tanques
+       ficam em cima e a lista de parâmetros embaixo. Em tela estreita
+       tudo empilha na ordem do HTML: tanques, gráfico, lista. */
+    .tanques      { grid-column: 2; grid-row: 1; }
+    .destaque     { grid-column: 1; grid-row: 1 / span 2; }
+    .painel-lista { grid-column: 2; grid-row: 2; }
+    .tabela-wrap  { grid-row: 3; }
+  }
 
   .destaque { min-width: 0; }
   .destaque .rotulo-param { display: block; margin-bottom: 3px; }
@@ -315,49 +330,36 @@
   .sem-dado { color: var(--ink-3); font-size: 14px; padding: 40px 0; }
 
   /* ---------- tanques ----------
-     O supervisório da ETE mostra o nível como desenho, e é assim que a
-     equipe lê. A faixa repete essa leitura no painel: um traço de
-     líquido dentro de um corpo de tanque, com o número ao lado. Fica no
-     alto e ocupa a largura toda — é a primeira coisa que o turno
-     confere ao fechar. */
-  .tanques { grid-column: 1 / -1; min-width: 0; }
-  .tanques .rotulo { display: block; margin-bottom: 12px; }
-  .grade-tanques {
-    display: grid; gap: 14px; justify-content: start;
-    grid-template-columns: repeat(auto-fit, minmax(226px, 268px));
+     Sem cartão. No painel o que separa um bloco do outro é espaço: uma
+     caixa branca aqui criaria um objeto com mais peso que o gráfico,
+     para uma informação que é de conferência rápida. A faixa mora no
+     alto da coluna da direita, logo abaixo dos controles e acima da
+     lista de parâmetros — a ordem em que o turno lê ao fechar. */
+  .tanques { min-width: 0; }   /* o respiro é o gap do palco */
+  .tanques .rotulo { display: block; margin-bottom: 9px; }
+  .lista-tanques {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 2px;
   }
-  @media (max-width: 560px) {
-    .grade-tanques { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .lista-tanques li {
+    display: grid; grid-template-columns: 40px minmax(0,1fr) auto;
+    align-items: center; gap: 13px; padding: 7px 11px; border-radius: 9px;
   }
-  .tanque {
-    display: flex; align-items: center; gap: 16px;
-    background: var(--panel); border: 1px solid var(--rule);
-    border-radius: 12px; padding: 14px 16px;
-  }
-  .tanque svg { display: block; flex: none; }
-  .tq-dados { min-width: 0; flex: 1; }
-  .tq-nome {
-    margin: 0; font: 600 14.5px Barlow, sans-serif; color: var(--ink-2);
-    line-height: 1.2;
+  .lista-tanques svg { display: block; }
+  .tq-nome { font-size: 14.5px; line-height: 1.25; }
+  .tq-nome small {
+    display: block; font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 10.5px; color: var(--ink-3); letter-spacing: 0.04em; margin-top: 1px;
   }
   .tq-valor {
-    display: flex; align-items: baseline; gap: 5px;
-    font-size: 31px; font-weight: 600; line-height: 1.05; margin-top: 4px;
+    text-align: right; font-size: 19px; font-weight: 600; white-space: nowrap;
   }
   .tq-valor .un {
-    font: 400 12px "IBM Plex Mono", monospace; color: var(--ink-3);
+    font: 400 11px "IBM Plex Mono", ui-monospace, monospace;
+    color: var(--ink-3); margin-left: 4px;
   }
-  .tanque.fora .tq-valor { color: var(--alerta); }
-  .tanque.fora { border-color: var(--alerta); }
-  .tq-turnos {
-    list-style: none; margin: 9px 0 0; padding: 0;
-    display: flex; flex-wrap: wrap; gap: 3px 14px;
-  }
-  .tq-turnos li { display: flex; align-items: baseline; gap: 6px; }
-  .tq-turnos .rotulo { display: inline; margin: 0; }
-  .tq-turnos .numero { font-size: 14px; font-weight: 600; color: var(--ink-2); }
-  .tq-turnos .vazio { color: var(--ink-3); font-weight: 400; }
-  .tq-quando { margin: 9px 0 0; font-size: 12.5px; color: var(--ink-3); }
+  .lista-tanques li.fora .tq-valor { color: var(--alerta); }
+  .lista-tanques li.fora { background: var(--alerta-soft); }
 
   /* ---------- lista de parâmetros ----------
      Sem divisória entre linhas: espaço separa igual e não suja. */
@@ -1201,27 +1203,39 @@ function ligarTooltip(p) {
    O desenho vem do supervisório: corpo do tanque, líquido subindo do
    fundo e as marcas de 25, 50 e 75%. */
 function desenhoTanque(fracao, fora) {
-  const L = 62, A = 104, borda = 1.5;
-  const dentroA = A - borda * 2, dentroL = L - borda * 2;
-  const h = Math.max(0, Math.min(1, fracao || 0)) * dentroA;
+  const L = 34, A = 46;
+  const topo = 5, base = A - 3.5;          // pescoço e saia do tanque
+  const alturaUtil = base - topo;
+  const h = Math.max(0, Math.min(1, fracao || 0)) * alturaUtil;
   const cor = fora ? "var(--alerta)" : "var(--liquido)";
   const id = "tq" + Math.random().toString(36).slice(2, 8);
   return `<svg width="${L}" height="${A}" viewBox="0 0 ${L} ${A}" aria-hidden="true">
-    <defs><clipPath id="${id}">
-      <rect x="${borda}" y="${borda}" width="${dentroL}" height="${dentroA}" rx="7"/>
-    </clipPath></defs>
-    <rect x="${borda}" y="${borda}" width="${dentroL}" height="${dentroA}" rx="7"
-          fill="var(--sunk)" stroke="var(--rule)" stroke-width="${borda}"/>
+    <defs>
+      <clipPath id="${id}">
+        <rect x="5" y="${topo}" width="${L - 10}" height="${alturaUtil}" rx="2"/>
+      </clipPath>
+    </defs>
+    <!-- costado -->
+    <rect x="5" y="${topo}" width="${L - 10}" height="${alturaUtil}" rx="2"
+          fill="var(--sunk)" stroke="var(--ink-3)" stroke-width="1.1"/>
+    <!-- líquido, do fundo para cima -->
     <g clip-path="url(#${id})">
-      <rect x="0" y="${A - borda - h}" width="${L}" height="${h + borda}"
-            fill="${cor}" opacity="0.26"/>
-      <rect x="0" y="${A - borda - h}" width="${L}" height="2" fill="${cor}"/>
-      ${[0.25, 0.5, 0.75].map(f => {
-        const y = A - borda - dentroA * f;
-        return `<line x1="${borda}" y1="${y}" x2="${borda + 7}" y2="${y}"
-                      stroke="var(--ink-3)" stroke-width="1" opacity="0.5"/>`;
-      }).join("")}
+      <rect x="0" y="${base - h}" width="${L}" height="${h}" fill="${cor}" opacity="0.32"/>
+      <rect x="0" y="${base - h - 1}" width="${L}" height="1.8" fill="${cor}"/>
     </g>
+    <!-- marcas de 25, 50 e 75%, na parede de dentro -->
+    ${[0.25, 0.5, 0.75].map(f => {
+      const y = base - alturaUtil * f;
+      return `<line x1="5" y1="${y}" x2="8.5" y2="${y}"
+                    stroke="var(--ink-3)" stroke-width="0.9" opacity="0.55"/>`;
+    }).join("")}
+    <!-- bocal em cima e saia embaixo, como no supervisório -->
+    <line x1="${L / 2 - 3}" y1="2.5" x2="${L / 2 + 3}" y2="2.5"
+          stroke="var(--ink-3)" stroke-width="1.6" stroke-linecap="round"/>
+    <line x1="${L / 2}" y1="2.5" x2="${L / 2}" y2="${topo}"
+          stroke="var(--ink-3)" stroke-width="1.1"/>
+    <line x1="3" y1="${base + 2}" x2="${L - 3}" y2="${base + 2}"
+          stroke="var(--ink-3)" stroke-width="1.6" stroke-linecap="round"/>
   </svg>`;
 }
 
@@ -1238,7 +1252,7 @@ function tanquesDa(unidade) {
   const nomes = [...new Set(doDia.map(l => l.parametro))].sort((a, b) =>
     a.localeCompare(b, "pt-BR"));
 
-  const cartoes = nomes.map(nome => {
+  const itens = nomes.map(nome => {
     const linhas = doDia.filter(l => l.parametro === nome)
                         .sort((a, b) => Number(a.turno) - Number(b.turno));
     const fim = linhas[linhas.length - 1];
@@ -1254,29 +1268,25 @@ function tanquesDa(unidade) {
     const fora = (limSup !== null && valor > limSup)
               || (limInf !== null && valor < limInf);
 
-    const turnos = linhas.length && UNIDADES_TURNO.has(unidade)
-      ? `<ul class="tq-turnos">${[1, 2].map(t => {
+    const porTurno = UNIDADES_TURNO.has(unidade)
+      ? `<small>${[1, 2].map(t => {
           const l = linhas.find(x => Number(x.turno) === t);
-          return `<li><span class="rotulo">${t}º</span>`
-            + `<span class="numero${l ? "" : " vazio"}">${
-                 l ? fmtNum(l.valor) : "—"}</span></li>`;
-        }).join("")}</ul>`
+          return `${t}º ${l ? fmtNum(l.valor) : "—"}`;
+        }).join("  ·  ")}</small>`
       : "";
 
-    return `<article class="tanque${fora ? " fora" : ""}">
+    return `<li class="${fora ? "fora" : ""}"${
+        fora ? ` title="Acima do limite de ${fmtNum(limSup)}${un ? " " + esc(un) : ""}"` : ""}>
       ${desenhoTanque(valor / topo, fora)}
-      <div class="tq-dados">
-        <h4 class="tq-nome">${esc(nome.replace(/^Nível /, ""))}</h4>
-        <div class="tq-valor numero"><span>${fmtNum(valor)}</span>${
-          un ? `<span class="un">${esc(un)}</span>` : ""}</div>
-        ${turnos}
-      </div>
-    </article>`;
+      <span class="tq-nome">${esc(nome.replace(/^Nível /, ""))}${porTurno}</span>
+      <span class="tq-valor numero">${fmtNum(valor)}${
+        un ? `<span class="un">${esc(un)}</span>` : ""}</span>
+    </li>`;
   }).join("");
 
   return `<section class="tanques">
     <span class="rotulo">Tanques · fim do turno · ${rotularPeriodo(dia)}</span>
-    <div class="grade-tanques">${cartoes}</div>
+    <ul class="lista-tanques">${itens}</ul>
   </section>`;
 }
 
