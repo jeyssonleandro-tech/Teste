@@ -318,6 +318,10 @@
   .selo.ok   { color: var(--ok);     background: var(--ok-soft); }
   .meta { font-size: 13.5px; color: var(--ink-2); }
   .meta .faixa { color: var(--ink-3); }
+  .meta.acum {
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11.5px;
+    letter-spacing: 0.04em; color: var(--ink-3);
+  }
   /* Duas séries pedem legenda; uma série não. */
   .legenda {
     display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 18px;
@@ -510,7 +514,7 @@
         <div class="menu" id="menu-periodo">
           <button class="abre" type="button" id="btn-periodo"
                   aria-haspopup="true" aria-expanded="false">
-            <span id="rotulo-periodo">30 dias</span><span class="seta">▼</span>
+            <span id="rotulo-periodo">Mês</span><span class="seta">▼</span>
           </button>
           <div class="menu-painel" id="painel-periodo" role="menu" hidden></div>
         </div>
@@ -555,7 +559,14 @@ let LINHAS = [];
 let unidadeAtiva = null;
 let paramAtivo = null;
 let modo = "diario";            // "diario" | "semanal" | "mensal"
-let pontosVisiveis = 30;        // 30 dias — o preset do modo diário
+/* O painel trabalha sempre sobre UM mês de referência. No diário são os
+   dias desse mês; no semanal, as quatro últimas semanas que terminam
+   nele; no mensal, os doze meses que terminam nele. Além de ser a
+   leitura que a operação faz, isso mantém a consulta pequena: o REST do
+   Supabase corta a resposta em 1000 linhas, e pedir "todo o histórico"
+   fazia os dias mais recentes sumirem sem aviso. */
+let mesRef = null;              // 'AAAA-MM-01'
+let avisoCorte = "";            // preenchido se a resposta vier truncada
 let mostrarTabela = false;
 /* 0 = consolidado do dia; 1 ou 2 = aquele turno isolado. Uma linha no
    gráfico em qualquer caso — o botão troca QUAL série se vê, em vez de
@@ -563,6 +574,8 @@ let mostrarTabela = false;
 let turnoVisto = 0;
 let UNIDADES_TURNO = new Set();   // unidades que trabalham por turno
 let TANQUES = new Set();          // parâmetros que o painel desenha como tanque
+let ACUMULA = new Set();          // parâmetros lidos pelo acumulado do mês
+let PESOS = [];                   // produção por período, para ponderar o acumulado
 let NIVEIS = [];                  // nível de cada tanque, turno a turno, por dia
 let LINHAS_TURNO = [];            // série por turno, do modo atual
 const NOME_TURNO = { 1: "1º turno · 06h–18h", 2: "2º turno · 18h–06h" };
@@ -573,11 +586,8 @@ const NOME_TURNO = { 1: "1º turno · 06h–18h", 2: "2º turno · 18h–06h" };
    e o formulário de lançamento continua vendo a unidade normalmente. */
 const TIPOS_FORA_DO_PAINEL = new Set(["Produção"]);
 
-const PRESETS = {
-  diario:  [[14, "14 dias"], [30, "30 dias"], [90, "90 dias"], [0, "Todo o histórico"]],
-  semanal: [[8, "8 semanas"], [12, "12 semanas"], [26, "26 semanas"], [0, "Todo o histórico"]],
-  mensal:  [[6, "6 meses"], [12, "12 meses"], [24, "24 meses"], [0, "Todo o histórico"]]
-};
+const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+               "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const VIEWS = {
   diario:  { view: "vw_leituras_diarias", coluna: "data" },
   semanal: { view: "vw_dashboard",        coluna: "semana" },
@@ -589,6 +599,52 @@ const nomePeriodos = () =>
   modo === "mensal" ? "meses" : modo === "semanal" ? "semanas" : "dias";
 const periodoAnterior = () =>
   modo === "mensal" ? "mês anterior" : modo === "semanal" ? "semana anterior" : "dia anterior";
+
+/* ---------- datas ----------
+   Contas feitas ao meio-dia UTC: a data nunca escorrega de um dia por
+   causa de fuso. O "hoje" é o de São Paulo, como manda o projeto. */
+const hojeSP = () => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit"
+}).format(new Date());
+
+const mesDe = iso => iso.slice(0, 7) + "-01";
+const somaMeses = (mes, n) => {
+  const [a, m] = mes.split("-").map(Number);
+  const t = a * 12 + (m - 1) + n;
+  return `${Math.floor(t / 12)}-${String(t % 12 + 1).padStart(2, "0")}-01`;
+};
+const diasAntes = (iso, n) => {
+  const d = new Date(iso + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+};
+const segundaDe = iso => {
+  const d = new Date(iso + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+};
+const menorData = (a, b) => (a < b ? a : b);
+const nomeDoMes = mes => {
+  const [a, m] = mes.split("-");
+  return `${MESES[Number(m) - 1]} de ${a}`;
+};
+
+/* A janela de cada modo, em datas. O semanal fecha em quatro semanas —
+   28 dias, dentro do limite de 30 que a operação pediu. */
+function janelaDe(qual, mes) {
+  const fim = somaMeses(mes, 1);                      // exclusivo
+  if (qual === "diario")  return { de: mes, ate: fim };
+  if (qual === "semanal") {
+    /* Quatro semanas fechando na semana do último dia útil do mês: 28
+       dias corridos, dentro do limite de 30 que a operação pediu. A
+       janela vai de segunda a segunda porque é assim que a semana é
+       gravada no banco. */
+    const ultimoDia = menorData(hojeSP(), diasAntes(fim, 1));
+    const ultimaSemana = segundaDe(ultimoDia);
+    return { de: diasAntes(ultimaSemana, 21), ate: diasAntes(ultimaSemana, -7) };
+  }
+  return { de: somaMeses(mes, -11), ate: fim };       // doze meses até o escolhido
+}
 
 /* ---------- utilidades ---------- */
 const fmtData = iso => { const [a, m, d] = iso.split("-"); return `${d}/${m}/${a}`; };
@@ -757,14 +813,33 @@ function sair() {
 }
 
 /* ---------- consulta ao banco, com renovação de sessão ---------- */
-async function consultar(caminho) {
-  const chamar = () => fetch(`${SUPABASE_URL}${caminho}`, {
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${sessao.access_token}` }
-  });
+async function consultar(caminho, contar = false) {
+  const cabecalhos = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${sessao.access_token}`
+  };
+  /* count=exact faz o banco informar quantas linhas EXISTEM, não só
+     quantas coube devolver. É assim que se percebe uma resposta cortada
+     — que é silenciosa por natureza e já escondeu dias inteiros. */
+  if (contar) cabecalhos.Prefer = "count=exact";
+  const chamar = () => fetch(`${SUPABASE_URL}${caminho}`, { headers: cabecalhos });
   let resp = await chamar();
-  if (resp.status === 401 && sessao?.refresh_token && await renovarSessao()) resp = await chamar();
+  if (resp.status === 401 && sessao?.refresh_token && await renovarSessao()) {
+    cabecalhos.Authorization = `Bearer ${sessao.access_token}`;
+    resp = await chamar();
+  }
   if (resp.status === 401) { sair(); throw new Error("Sessão expirada. Entre novamente."); }
   if (!resp.ok) throw new Error(`O banco respondeu ${resp.status}.`);
+
+  if (contar) {
+    const faixa = resp.headers.get("content-range") || "";   // ex.: "0-999/3500"
+    const [trecho, total] = faixa.split("/");
+    const ultima = Number((trecho || "").split("-")[1]);
+    avisoCorte = (total && total !== "*" && isFinite(ultima) && Number(total) > ultima + 1)
+      ? `O banco tinha ${total} linhas para este período e devolveu ${ultima + 1}. `
+        + `Escolha um período menor — o que está no gráfico não é tudo.`
+      : "";
+  }
   return resp.json();
 }
 
@@ -778,33 +853,81 @@ async function carregar(qual) {
   const extras = agregado
     ? ",agregacao,valor_min_dia,valor_max_dia,limite_inferior,limite_superior,limite_base"
     : ",limite_inferior,limite_superior";
+  const { de, ate } = janelaDe(qual, mesRef);
   const caminho = `/rest/v1/${view}`
     + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,${coluna},valor${extras}`
-    + `&order=${coluna}.asc`;
+    + `&${coluna}=gte.${de}&${coluna}=lt.${ate}`
+    + `&order=${coluna}.asc&limit=5000`;
 
-  const linhas = await consultar(caminho);
+  const linhas = await consultar(caminho, true);
   return linhas.map(l => ({ ...l, periodo: l[coluna] }));
 }
 
 /* Série separada por turno, do modo atual. Só existe para as unidades
    que trabalham por turno — o banco já filtra. */
 async function carregarTurnos(qual) {
+  const { de, ate } = janelaDe(qual, mesRef);
   return consultar(`/rest/v1/vw_turnos`
     + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,`
     + `agregacao,turno,periodo,valor,valor_min_dia,valor_max_dia,`
     + `limite_inferior,limite_superior,limite_base`
-    + `&granularidade=eq.${qual}&order=periodo.asc`);
+    + `&granularidade=eq.${qual}&periodo=gte.${de}&periodo=lt.${ate}`
+    + `&order=periodo.asc&limit=5000`);
+}
+
+/* Os pesos do acumulado. Para uma razão, o acumulado do período é a
+   soma do numerador dividida pela soma do denominador — o que equivale a
+   uma média dos valores PONDERADA pela produção. É essa produção que
+   esta consulta traz. Sem ela, o acumulado cai para média simples. */
+async function carregarPesos(qual) {
+  if (!ACUMULA.size) return [];
+  const { de, ate } = janelaDe(qual, mesRef);
+  try {
+    return await consultar(`/rest/v1/vw_indice_agua`
+      + `?select=parametro,periodo,producao_cxu&granularidade=eq.${qual}`
+      + `&periodo=gte.${de}&periodo=lt.${ate}&order=periodo.asc&limit=2000`);
+  } catch { return []; }
+}
+
+/* ---------- acumulado do mês ----------
+   Cada ponto passa a ser o acumulado desde o começo da janela até ali.
+
+   Para uma razão — o índice de água — o acumulado do período é a soma do
+   numerador dividida pela soma do denominador, e isso é exatamente uma
+   média dos valores ponderada pela produção de cada período. Fazendo
+   assim, os fatores de conversão ficam onde devem estar, no banco, e o
+   painel não repete constante nenhuma.
+
+   Sem peso disponível, a conta cai para média simples — que é o certo
+   para a vazão de captação e o único possível para o resto. */
+function acumular(p) {
+  const peso = periodo => {
+    const l = PESOS.find(x => x.parametro === p.nome && x.periodo === periodo);
+    const v = l ? Number(l.producao_cxu) : NaN;
+    return isFinite(v) && v > 0 ? v : 1;
+  };
+  let somaValor = 0, somaPeso = 0;
+  for (const ponto of p.pontos) {
+    if (ponto.valor === null || !isFinite(ponto.valor)) { ponto.valor = null; continue; }
+    const w = peso(ponto.periodo);
+    somaValor += ponto.valor * w;
+    somaPeso  += w;
+    ponto.valor = somaPeso ? somaValor / somaPeso : null;
+    ponto.minDia = null;
+    ponto.maxDia = null;
+  }
+  p.acumulado = true;
 }
 
 /* ---------- organização em unidade → parâmetro → série ---------- */
 function organizar(linhas) {
-  const periodos = [...new Set(linhas.map(l => l.periodo))].sort();
-  const corte = pontosVisiveis > 0 ? periodos.slice(-pontosVisiveis) : periodos;
-  const janela = new Set(corte);
+  /* A janela já veio filtrada do banco — aqui não se corta mais nada.
+     Cortar no navegador era o que escondia dia lançado quando a resposta
+     chegava truncada. */
+  const corte = [...new Set(linhas.map(l => l.periodo))].sort();
 
   const unidades = new Map();
   for (const l of linhas) {
-    if (!janela.has(l.periodo)) continue;
     if (TIPOS_FORA_DO_PAINEL.has(l.tipo_unidade)) continue;
     if (!unidades.has(l.unidade)) {
       unidades.set(l.unidade, { nome: l.unidade, tipo: l.tipo_unidade, parametros: new Map() });
@@ -834,6 +957,7 @@ function organizar(linhas) {
     );
     for (const p of u.listaParam) {
       p.pontos.sort((a, b) => a.periodo.localeCompare(b.periodo));
+      if (ACUMULA.has(p.nome) && modo !== "mensal") acumular(p);
       p.validos = p.pontos.filter(x => x.valor !== null && isFinite(x.valor));
     }
     u.periodos = corte.filter(s => u.listaParam.some(p => p.pontos.some(x => x.periodo === s)));
@@ -1096,7 +1220,10 @@ function desenhar() {
         aria-current="${item.nome === p.nome}"
         ${al ? `title="${esc(textoEstado(item, al))}"` : ""}>
       <span class="sinal ${cl}" aria-hidden="true">${al ? SIMBOLO[al.estado] : ""}</span>
-      <span class="item-nome">${esc(item.nome)}${un ? `<small>${esc(un)}</small>` : ""}</span>
+      <span class="item-nome">${esc(item.nome)}${
+        un || item.acumulado
+          ? `<small>${esc(un)}${item.acumulado ? (un ? " · " : "") + "acum. mês" : ""}</small>`
+          : ""}</span>
       <span class="item-mini">${miniTendencia(item)}</span>
       <span class="item-num numero${cl ? " " + cl : ""}">${ult ? fmtNum(ult.valor) : "—"}
         ${vi.curto ? `<small>${vi.curto}</small>` : ""}</span>
@@ -1104,6 +1231,7 @@ function desenhar() {
   }).join("");
 
   conteudo.innerHTML = `
+    ${avisoCorte ? `<p class="aviso" style="grid-column:1/-1">${esc(avisoCorte)}</p>` : ""}
     ${faixaTanques || ""}
     <section class="destaque">
       <span class="rotulo">${turnoVisto ? esc(NOME_TURNO[turnoVisto]) : "Em destaque"}</span>
@@ -1115,6 +1243,8 @@ function desenhar() {
       <div class="linha-estado">
         ${alerta ? `<span class="selo ${classeEstado(alerta)}">${
                      esc(textoEstado(p, alerta))}</span>` : ""}
+        ${p.acumulado ? `<span class="meta acum">acumulado de ${
+                          esc(nomeDoMes(mesRef))}</span>` : ""}
         <span class="meta">${v.texto}</span>
         ${temLimite(p) ? `<span class="meta faixa">${esc(textoFaixa(p))}</span>` : ""}
       </div>
@@ -1311,8 +1441,15 @@ function montarAbas(nomes) {
        aria-current="${n === unidadeAtiva}">${esc(n)}</button>`).join("");
 }
 
-const rotuloDoPreset = () =>
-  (PRESETS[modo].find(([v]) => v === pontosVisiveis) || PRESETS[modo][1])[1];
+const rotuloDoMes = mes => {
+  const n = nomeDoMes(mes).replace(" de ", " ");
+  return n.charAt(0).toUpperCase() + n.slice(1);
+};
+/* Doze meses para trás, a partir do corrente. */
+const mesesOferecidos = () => {
+  const atual = mesDe(hojeSP());
+  return Array.from({ length: 12 }, (_, i) => somaMeses(atual, -i));
+};
 
 function montarControles() {
   document.getElementById("filtro-modo").innerHTML =
@@ -1320,10 +1457,10 @@ function montarControles() {
       `<button type="button" data-modo="${v}"
          aria-pressed="${v === modo}">${r}</button>`).join("");
 
-  document.getElementById("painel-periodo").innerHTML = PRESETS[modo].map(([v, r]) =>
-    `<button type="button" role="menuitem" data-periodo="${v}"
-       aria-current="${v === pontosVisiveis}">${r}</button>`).join("");
-  document.getElementById("rotulo-periodo").textContent = rotuloDoPreset();
+  document.getElementById("painel-periodo").innerHTML = mesesOferecidos().map(m =>
+    `<button type="button" role="menuitem" data-mes="${m}"
+       aria-current="${m === mesRef}">${rotuloDoMes(m)}</button>`).join("");
+  document.getElementById("rotulo-periodo").textContent = rotuloDoMes(mesRef);
 }
 
 /* menu suspenso da janela de tempo */
@@ -1343,12 +1480,22 @@ document.addEventListener("click", ev => {
 });
 document.addEventListener("keydown", ev => { if (ev.key === "Escape") fecharMenu(); });
 
-painelPeriodo().onclick = ev => {
-  const b = ev.target.closest("[data-periodo]"); if (!b) return;
-  pontosVisiveis = Number(b.dataset.periodo);
+painelPeriodo().onclick = async ev => {
+  const b = ev.target.closest("[data-mes]"); if (!b || b.dataset.mes === mesRef) return;
+  mesRef = b.dataset.mes;
   fecharMenu();
-  montarControles(); desenhar();
+  await recarregar();
 };
+
+/* Trocar de modo ou de mês refaz a consulta: a janela mora no banco,
+   não na tela. */
+async function recarregar() {
+  LINHAS = await carregar(modo);
+  PESOS  = await carregarPesos(modo);
+  LINHAS_TURNO = turnoVisto ? await carregarTurnos(modo) : [];
+  montarControles();
+  desenhar();
+}
 
 document.getElementById("abas-unidade").onclick = ev => {
   const b = ev.target.closest("[data-unidade]"); if (!b) return;
@@ -1361,10 +1508,7 @@ document.getElementById("abas-unidade").onclick = ev => {
 document.getElementById("filtro-modo").onclick = async ev => {
   const b = ev.target.closest("[data-modo]"); if (!b || b.dataset.modo === modo) return;
   modo = b.dataset.modo;
-  pontosVisiveis = PRESETS[modo][1][0];
-  LINHAS = await carregar(modo);
-  LINHAS_TURNO = turnoVisto ? await carregarTurnos(modo) : [];
-  montarControles(); desenhar();
+  await recarregar();
 };
 
 document.getElementById("filtro-turno").onclick = async ev => {
@@ -1453,6 +1597,11 @@ async function abrirPainel() {
        Também acessório — se o 16_tanques.sql ainda não rodou, a faixa
        simplesmente não aparece e o resto do painel segue inteiro. */
     try {
+      const acumulados = await consultar("/rest/v1/parametros?select=nome&acumula_mes=is.true");
+      ACUMULA = new Set(acumulados.map(p => p.nome));
+    } catch { ACUMULA = new Set(); }
+
+    try {
       const marcados = await consultar("/rest/v1/parametros?select=nome&e_tanque=is.true");
       TANQUES = new Set(marcados.map(p => p.nome));
       if (TANQUES.size) NIVEIS = await consultar(
@@ -1461,7 +1610,15 @@ async function abrirPainel() {
         + "&order=periodo.desc&limit=400");
     } catch { TANQUES = new Set(); NIVEIS = []; }
 
+    /* O mês de referência é o corrente. Se ainda não houver lançamento
+       nele — começo de mês, ou fim de semana prolongado —, o painel abre
+       no último mês que tem dado, em vez de numa tela vazia. */
+    const ultima = await consultar(
+      "/rest/v1/vw_leituras_diarias?select=data&order=data.desc&limit=1");
+    mesRef = ultima.length ? mesDe(ultima[0].data) : mesDe(hojeSP());
+
     LINHAS = await carregar(modo);
+    PESOS  = await carregarPesos(modo);
     if (!LINHAS.length) {
       estado.innerHTML = "A conexão funcionou, mas ainda não há leituras lançadas. "
         + 'Assim que a primeira medição for registrada pelo '
