@@ -472,7 +472,7 @@
   <form id="form-login" autocomplete="on">
     <div class="filete-topo"></div>
     <h1>Dashboard Estações de tratamento</h1>
-    <p class="ajuda">Entre com o e-mail e a senha que o supervisor cadastrou.</p>
+    <p class="ajuda">Entre com o e-mail e a senha que o administrador cadastrou.</p>
     <div id="recado-login"></div>
     <label class="rotulo" for="email">E-mail</label>
     <input type="email" id="email" name="email" autocomplete="username" required>
@@ -773,7 +773,7 @@ async function entrar(email, senha) {
       .toLowerCase();
     if (motivo.includes("not confirmed") || motivo.includes("email_not_confirmed")) {
       throw new Error("Este usuário existe, mas o e-mail não foi confirmado. "
-        + "O supervisor precisa confirmá-lo em Authentication → Users.");
+        + "O administrador precisa confirmá-lo em Authentication → Users.");
     }
     if (motivo.includes("provider_disabled") || motivo.includes("logins are disabled")
         || motivo.includes("signups not allowed")) {
