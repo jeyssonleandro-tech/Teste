@@ -68,10 +68,18 @@ Silêncio foi o que custou caro aqui. Resposta truncada agora tem voz.
 
 ## 5. Acumulado do mês
 
-Índice de Água, Índice de Água Cervejaria e Vazão de captação passam a ser
-lidos pelo **acumulado do mês corrente** no diário e no semanal — cada
-ponto é o acumulado até ali. No mensal nada muda: o valor do mês já é o
-fechamento.
+Índice de Água, Índice de Água Cervejaria e Vazão de captação ganham a
+média do mês corrente **no número em destaque**. A série do gráfico, a
+lista e a tabela seguem com o valor de cada dia ou semana.
+
+A primeira versão acumulava a série inteira — cada ponto do gráfico virava
+o acumulado até ali. Foi corrigido no mesmo dia: o pedido era um número,
+não uma curva. Um gráfico de acumulado só sobe e esconde justamente o que
+o operador precisa ver, que é o dia que saiu da linha.
+
+Ao lado do número do mês fica o do último período (*"dia 14/09/2026:
+1,2"*), para as duas leituras conviverem sem se confundir. No mensal nada
+muda: o valor do mês já é o fechamento.
 
 A marcação é do banco (`parametros.acumula_mes`), não do HTML.
 
@@ -96,5 +104,7 @@ pedida na URL** — assim o teste falha se a consulta esquecer o filtro:
 - trocar o mês refaz a consulta e muda o eixo;
 - a janela semanal mede 28 dias;
 - a mensal vai de outubro/2025 a setembro/2026;
-- o índice aparece com rótulo de acumulado;
-- o último ponto do acumulado bate com a média ponderada calculada à mão.
+- o índice traz o rótulo da média do mês no destaque;
+- **a série do gráfico continua oscilando** — o teste falha se ela virar
+  uma curva sempre crescente, que é a assinatura de série acumulada;
+- o número em destaque bate com a média ponderada calculada à mão.

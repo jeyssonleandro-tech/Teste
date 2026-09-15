@@ -687,6 +687,14 @@ const limitePorDia = p => modo !== "diario" && p.limBase === "diario";
 const limiteDesenhavel = p =>
   !(modo !== "diario" && p.limBase === "diario" && p.agreg === "soma");
 
+/* O que o alerta julga: o acumulado do mês, quando o parâmetro é desse
+   tipo; senão, o último ponto da série. O número da lista continua sendo
+   o do período — quem tem de bater com o selo é o do destaque. */
+const pontoDeJulgamento = p =>
+  p.acumuladoMes !== undefined && p.acumuladoMes !== null
+    ? { valor: p.acumuladoMes, minDia: null, maxDia: null }
+    : p.validos[p.validos.length - 1];
+
 function avaliar(p, ponto) {
   if (!ponto || ponto.valor === null || !temLimite(p)) return null;
   const porDia = limitePorDia(p);
@@ -908,15 +916,15 @@ function acumular(p) {
   };
   let somaValor = 0, somaPeso = 0;
   for (const ponto of p.pontos) {
-    if (ponto.valor === null || !isFinite(ponto.valor)) { ponto.valor = null; continue; }
+    if (ponto.valor === null || !isFinite(ponto.valor)) continue;
     const w = peso(ponto.periodo);
     somaValor += ponto.valor * w;
     somaPeso  += w;
-    ponto.valor = somaPeso ? somaValor / somaPeso : null;
-    ponto.minDia = null;
-    ponto.maxDia = null;
   }
-  p.acumulado = true;
+  /* A SÉRIE NÃO MUDA: o gráfico, a lista e a tabela seguem com o valor
+     de cada dia ou semana. O acumulado é um número só, do período
+     inteiro, e vive apenas no destaque. */
+  p.acumuladoMes = somaPeso ? somaValor / somaPeso : null;
 }
 
 /* ---------- organização em unidade → parâmetro → série ---------- */
@@ -1188,13 +1196,17 @@ function desenhar() {
 
   const ultimo = p.validos[p.validos.length - 1];
   const v = variacao(p);
-  const alerta = avaliar(p, ultimo);
+  /* Quando o parâmetro é de acumulado, o número grande é o do mês e o
+     alerta julga esse número — o selo tem de falar do que está escrito
+     ali. O gráfico ao lado continua mostrando cada dia. */
+  const emDestaque = pontoDeJulgamento(p);
+  const alerta = avaliar(p, emDestaque);
   const unLegivel = p.un && p.un !== "-" ? p.un : "";
 
   /* Resumo da unidade: é o que o superior lê em três segundos. */
   const comLimite = u.listaParam.filter(temLimite);
   const foraDeFaixa = comLimite.filter(item => {
-    const a = avaliar(item, item.validos[item.validos.length - 1]);
+    const a = avaliar(item, pontoDeJulgamento(item));
     return a && a.estado !== "dentro";
   }).length;
   const fim = periodos[periodos.length - 1];
@@ -1213,6 +1225,9 @@ function desenhar() {
   const itens = u.listaParam.map(item => {
     const ult = item.validos[item.validos.length - 1];
     const vi = variacao(item);
+    /* Aqui o sinal julga o número que está ao lado dele — o do período.
+       Marcar de vermelho um 1,2 porque a média do mês estourou seria
+       mentir sobre o número escrito. Quem fala do mês é o destaque. */
     const al = avaliar(item, ult);
     const cl = classeEstado(al);
     const un = item.un && item.un !== "-" ? item.un : "";
@@ -1220,10 +1235,7 @@ function desenhar() {
         aria-current="${item.nome === p.nome}"
         ${al ? `title="${esc(textoEstado(item, al))}"` : ""}>
       <span class="sinal ${cl}" aria-hidden="true">${al ? SIMBOLO[al.estado] : ""}</span>
-      <span class="item-nome">${esc(item.nome)}${
-        un || item.acumulado
-          ? `<small>${esc(un)}${item.acumulado ? (un ? " · " : "") + "acum. mês" : ""}</small>`
-          : ""}</span>
+      <span class="item-nome">${esc(item.nome)}${un ? `<small>${esc(un)}</small>` : ""}</span>
       <span class="item-mini">${miniTendencia(item)}</span>
       <span class="item-num numero${cl ? " " + cl : ""}">${ult ? fmtNum(ult.valor) : "—"}
         ${vi.curto ? `<small>${vi.curto}</small>` : ""}</span>
@@ -1237,15 +1249,19 @@ function desenhar() {
       <span class="rotulo">${turnoVisto ? esc(NOME_TURNO[turnoVisto]) : "Em destaque"}</span>
       <h3>${esc(p.nome)}</h3>
       <div class="valor numero${alerta ? " " + classeEstado(alerta) : ""}">
-        <span>${ultimo ? fmtNum(ultimo.valor) : "—"}</span>${
-        ultimo && unLegivel ? `<span class="un">${esc(unLegivel)}</span>` : ""}
+        <span>${emDestaque ? fmtNum(emDestaque.valor) : "—"}</span>${
+        emDestaque && unLegivel ? `<span class="un">${esc(unLegivel)}</span>` : ""}
       </div>
       <div class="linha-estado">
         ${alerta ? `<span class="selo ${classeEstado(alerta)}">${
                      esc(textoEstado(p, alerta))}</span>` : ""}
-        ${p.acumulado ? `<span class="meta acum">acumulado de ${
-                          esc(nomeDoMes(mesRef))}</span>` : ""}
-        <span class="meta">${v.texto}</span>
+        ${p.acumuladoMes !== undefined
+            ? `<span class="meta acum">média de ${esc(nomeDoMes(mesRef))}</span>`
+            : ""}
+        <span class="meta">${p.acumuladoMes !== undefined
+            ? (ultimo ? `${esc(rotuloPeriodo().toLowerCase())} ${
+                 esc(rotularPeriodo(ultimo.periodo))}: ${fmtNum(ultimo.valor)}` : "")
+            : v.texto}</span>
         ${temLimite(p) ? `<span class="meta faixa">${esc(textoFaixa(p))}</span>` : ""}
       </div>
       <div class="tela-grafico" id="tela-grafico"></div>
