@@ -442,6 +442,11 @@ let unidades = [];
 let parametros = [];
 let unidadeId = null;
 let turnoSel = 1;
+/* leitor | lancador | admin. A tela só se adianta ao banco: quem manda
+   é a política do Supabase. Por isso, na dúvida — banco ainda sem
+   perfis, rede oscilando —, o formulário segue liberado e o erro, se
+   vier, vem de lá com o motivo. */
+let papel = "lancador";
 
 /* ---------- utilidades ---------- */
 const el = id => document.getElementById(id);
@@ -616,6 +621,18 @@ async function carregarCadastro() {
   }
 }
 
+/* O papel de quem entrou. Função 'meu_papel' só existe depois do
+   23_perfis.sql; antes disso, todo mundo lança, como sempre foi. */
+async function lerPapel() {
+  try {
+    const resp = await api("/rest/v1/rpc/meu_papel", { method: "POST", body: "{}" });
+    if (resp.ok) {
+      const p = await resp.json();
+      if (typeof p === "string" && p) papel = p;
+    }
+  } catch { /* sem perfis no banco: segue como lançador */ }
+}
+
 /* Um parâmetro pertence à unidade quando o tipo dela combina com
    'aplica_a_tipo' — 'ETE' cobre 'ETE Industrial' e 'ETE Sanitária'. */
 const parametrosDa = unidade => parametros.filter(p => {
@@ -713,12 +730,14 @@ async function montarParametros() {
           ${esc(p.nome)}${un}${cadencia}${marca}
         </label>
         <input class="valor" type="text" inputmode="decimal" id="campo-${p.id}"
-               data-parametro="${p.id}" value="${valor}" placeholder="—">
+               data-parametro="${p.id}" value="${valor}" placeholder="—"
+               ${papel === "leitor" ? "disabled" : ""}>
       </div>`;
   }).join("");
 
   el("observacao").value =
     Object.values(existentes).find(l => l.observacao)?.observacao || "";
+  el("observacao").disabled = papel === "leitor";
   atualizarResumo();
 }
 
@@ -796,6 +815,11 @@ async function abrirLancamento() {
   el("tela-lancamento").classList.remove("oculto");
   el("quem").textContent = sessao.email;
 
+  /* O papel vem antes de montar o formulário: os campos de um leitor já
+     nascem travados, em vez de travarem depois de ele digitar. */
+  await lerPapel();
+  aplicarPapel();
+
   el("data").value = hojeSaoPaulo();
   el("data").max = hojeSaoPaulo();
 
@@ -829,6 +853,18 @@ function aplicarLogo() {
   }
 }
 aplicarLogo();
+
+/* Leitor vê a tela, mas não grava. O aviso é explícito: descobrir isso
+   só depois de digitar doze valores e apertar Salvar seria cruel. */
+function aplicarPapel() {
+  if (papel !== "leitor") return;
+  el("btn-salvar").disabled = true;
+  el("btn-salvar").textContent = "Somente leitura";
+  el("form-lancamento").setAttribute("aria-disabled", "true");
+  recado("recado", "Seu acesso é de <b>leitura</b>: dá para conferir o que já "
+    + "foi lançado, mas não gravar. Peça ao administrador para liberar o "
+    + "lançamento na sua conta.", false);
+}
 
 /* ---------- eventos ---------- */
 el("form-login").addEventListener("submit", async ev => {
