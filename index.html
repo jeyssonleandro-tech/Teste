@@ -1066,15 +1066,25 @@ function graficoGrande(p, largura, series) {
           font-family="IBM Plex Mono, monospace" fill="var(--ink-3)"
           letter-spacing="1">LIMITE</text>` : "";
 
+  /* Datas do eixo. O último período aparece sempre — é a leitura mais
+     procurada —, e por isso ele pode cair ao lado de uma marca regular:
+     era assim que 15/09 e 16/09 saíam impressos um por cima do outro.
+     Quem ficar perto demais do último cede o lugar. */
+  const LARGURA_ROTULO = 66;
   const cabem = Math.max(2, Math.floor((W - pad.l - pad.r) / 74));
   const passoRot = Math.max(1, Math.ceil((periodos.length - 1) / (cabem - 1)));
-  const datas = periodos.map((per, i) => {
-    const ultimo = i === periodos.length - 1;
-    if (i % passoRot !== 0 && !ultimo) return "";
-    const anc = i === 0 ? "start" : ultimo ? "end" : "middle";
+  const ultimoI = periodos.length - 1;
+  const indices = [];
+  for (let i = 0; i < ultimoI; i += passoRot) indices.push(i);
+  while (indices.length
+         && x(ultimoI) - x(indices[indices.length - 1]) < LARGURA_ROTULO) indices.pop();
+  indices.push(ultimoI);
+
+  const datas = indices.map(i => {
+    const anc = i === 0 ? "start" : i === ultimoI ? "end" : "middle";
     return `<text x="${x(i).toFixed(1)}" y="${H - 11}" font-size="11.5"
                   font-family="IBM Plex Mono, monospace" fill="var(--ink-3)"
-                  text-anchor="${anc}">${rotularCurto(per)}</text>`;
+                  text-anchor="${anc}">${rotularCurto(periodos[i])}</text>`;
   }).join("");
 
   /* Com muitos pontos as áreas de toque se sobreporiam e uma bloquearia
