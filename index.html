@@ -459,67 +459,146 @@
     .menu > button.abre { width: 100%; justify-content: space-between; }
   }
   /* ---------- apresentação ----------
-     Um slide por unidade, em tela cheia. O mesmo desenho do painel, com
-     o corpo crescido para ser lido de longe: em reunião ninguém está a
-     50cm da tela. Sem cartão em volta de nada — o fundo é o slide. */
+     Um slide por unidade. O parâmetro escolhido ocupa a coluna da
+     esquerda inteira — nome, número, comparação e gráfico —, e os
+     demais ficam à direita como cartões clicáveis. Clicar troca o
+     destaque: a apresentação se dirige, não se assiste.
+
+     Tudo em corpo grande: numa sala de reunião ninguém está a 50cm da
+     tela, e foi isso que estragou a primeira versão. */
   #apresentacao {
     position: fixed; inset: 0; z-index: 80; background: var(--ground);
     overflow: hidden;
   }
   .slide {
     position: absolute; inset: 0; display: none;
-    flex-direction: column; padding: 4vh 5vw 11vh;
+    flex-direction: column; padding: 3.4vh 4vw 10vh;
+    /* No monitor o slide cabe inteiro. No celular ele passa da tela, e
+       rolar é melhor do que cortar — o conteúdo é o mesmo. */
+    overflow-y: auto; overflow-x: hidden;
   }
   .slide.ativo { display: flex; }
 
   .slide-topo {
-    display: flex; align-items: flex-end; gap: 24px;
-    border-bottom: 1px solid var(--rule); padding-bottom: 14px; margin-bottom: 22px;
+    display: flex; align-items: center; gap: 24px;
+    border-bottom: 2px solid var(--ink); padding-bottom: 12px; margin-bottom: 20px;
   }
-  .slide-topo .rotulo { display: block; margin-bottom: 3px; }
+  .slide-topo .rotulo { display: block; margin-bottom: 2px; }
   .slide-topo h2 {
-    margin: 0; font-size: clamp(30px, 3.6vw, 52px); font-weight: 600;
+    margin: 0; font-size: clamp(26px, 3vw, 44px); font-weight: 600;
     letter-spacing: -0.02em; line-height: 1;
   }
   .slide-topo .quando {
-    margin-left: auto; text-align: right; font-size: 14px; color: var(--ink-2);
-    white-space: nowrap;
+    margin-left: auto; font-size: 15px; color: var(--ink-2); white-space: nowrap;
   }
-  .slide-topo img.logo { height: 30px; align-self: center; }
+  .slide-topo .quando b { font-weight: 600; color: var(--ink); }
+  .slide-topo img.logo { height: 30px; flex: none; }
 
-  .grade-numeros {
-    display: grid; gap: 10px 26px;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    margin-bottom: 24px;
+  .slide-corpo {
+    flex: 1; min-height: 0; display: grid; gap: 26px 34px;
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
   }
-  .num-item { min-width: 0; padding: 2px 0; }
-  .num-nome {
-    font-size: 13.5px; color: var(--ink-2); line-height: 1.25;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+
+  /* ---- herói ---- */
+  .heroi { min-width: 0; display: flex; flex-direction: column; }
+  .heroi h3 {
+    margin: 0; font: 600 clamp(17px, 1.5vw, 22px) Barlow, sans-serif;
+    color: var(--ink-2); letter-spacing: -0.005em;
   }
-  .num-valor {
-    display: flex; align-items: baseline; gap: 6px; margin-top: 1px;
+  .heroi-numero {
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 16px;
+    margin-top: 2px;
+  }
+  .heroi-numero .valor {
     font-family: "Barlow Semi Condensed", Barlow, sans-serif;
-    font-size: clamp(26px, 2.6vw, 38px); font-weight: 600; line-height: 1.05;
-    font-variant-numeric: tabular-nums; letter-spacing: -0.015em;
+    font-size: clamp(50px, 6.4vw, 96px); font-weight: 600; line-height: 0.95;
+    letter-spacing: -0.025em; font-variant-numeric: tabular-nums;
   }
-  .num-valor .un {
-    font: 400 12px "IBM Plex Mono", ui-monospace, monospace; color: var(--ink-3);
+  .heroi-numero .un {
+    font: 400 15px "IBM Plex Mono", ui-monospace, monospace; color: var(--ink-3);
   }
-  .num-valor.fora { color: var(--alerta); }
-  .num-valor.ok   { color: var(--ok); }
-  .num-antes {
-    font-size: 12.5px; color: var(--ink-3); margin-top: 2px;
+  .heroi-numero .valor.fora { color: var(--alerta); }
+  .heroi-numero .valor.ok   { color: var(--ok); }
+
+  .heroi-linha {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px;
+    margin-top: 14px;
+  }
+  /* A comparação com o mês anterior é leitura de diretoria: ela tem o
+     mesmo peso do selo, não o de uma nota de rodapé. */
+  .compara {
+    display: inline-flex; align-items: baseline; gap: 9px;
+    font-size: clamp(16px, 1.4vw, 20px); color: var(--ink-2);
+  }
+  .compara b {
+    font-family: "Barlow Semi Condensed", Barlow, sans-serif;
+    font-size: clamp(21px, 1.9vw, 28px); font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
-  .num-antes .sobe { color: var(--ink-2); }
+  .compara .sobe { color: var(--alerta); }
+  .compara .desce { color: var(--ok); }
+  .compara .igual { color: var(--ink-3); }
+  .heroi .selo { font-size: 14px; padding: 6px 14px; }
+  .heroi .meta-linha { font-size: 15px; color: var(--ink-2); }
+  .heroi .meta-linha b { color: var(--ink); font-weight: 600; }
+  .heroi .grafico { flex: 1; min-height: 0; margin-top: 18px; }
+  .heroi .grafico .rotulo { display: block; margin-bottom: 6px; }
+  .heroi .grafico svg { display: block; width: 100%; height: auto; }
 
-  .slide-grafico { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  .slide-grafico .rotulo { display: block; margin-bottom: 8px; }
-  .slide-grafico svg { display: block; width: 100%; height: auto; }
+  /* ---- cartões dos demais parâmetros ---- */
+  .lado { min-width: 0; display: flex; flex-direction: column; }
+  .lado > .rotulo { display: block; margin-bottom: 10px; }
+  .cartoes {
+    display: grid; gap: 8px; align-content: start;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    overflow: auto;
+  }
+  .cartao {
+    text-align: left; cursor: pointer; font: inherit; min-width: 0;
+    background: var(--panel); border: 1px solid var(--rule);
+    border-radius: 11px; padding: 11px 13px;
+  }
+  .cartao:hover { border-color: var(--ink-3); }
+  .cartao[aria-current="true"] {
+    background: var(--ink); border-color: var(--ink);
+  }
+  .cartao[aria-current="true"] .c-nome,
+  .cartao[aria-current="true"] .c-antes { color: var(--ground); opacity: .75; }
+  .cartao[aria-current="true"] .c-valor { color: var(--ground); }
+  /* No cartão invertido o vermelho da variação cairia para 1,7:1 contra
+     o fundo escuro. Ali a seta vale pela forma, e a cor vem do texto. */
+  .cartao[aria-current="true"] .sobe,
+  .cartao[aria-current="true"] .desce { color: var(--ground); }
+  .c-nome {
+    font-size: 13px; color: var(--ink-2); line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .c-valor {
+    display: flex; align-items: baseline; gap: 5px; margin-top: 3px;
+    font-family: "Barlow Semi Condensed", Barlow, sans-serif;
+    font-size: 27px; font-weight: 600; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .c-valor .un { font: 400 11px "IBM Plex Mono", monospace; color: var(--ink-3); }
+  .c-valor.fora { color: var(--alerta); }
+  .c-valor.ok   { color: var(--ok); }
+  .c-antes { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+  .c-antes .sobe { color: var(--alerta); }
+  .c-antes .desce { color: var(--ok); }
+
+  /* ---- painel de edição ---- */
+  .editor { display: grid; gap: 6px; align-content: start; overflow: auto; }
+  .editor label {
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    font-size: 14.5px; padding: 7px 10px; border-radius: 8px;
+  }
+  .editor label:hover { background: var(--sunk); }
+  .editor input { width: 17px; height: 17px; accent-color: var(--ink); }
+  .editor .aviso-editor { font-size: 13px; color: var(--ink-3); margin: 0 0 6px; }
 
   /* capa */
-  .slide.capa { justify-content: center; align-items: flex-start; gap: 0; }
+  .slide.capa { justify-content: center; align-items: flex-start; }
   .slide.capa img.logo { height: clamp(38px, 4.6vw, 62px); margin-bottom: 34px; }
   .slide.capa .filete { width: 96px; height: 5px; margin-bottom: 26px; }
   .slide.capa h1 {
@@ -535,7 +614,7 @@
   .barra-slides {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
     display: flex; align-items: center; gap: 10px;
-    padding: 14px 5vw; background: var(--ground);
+    padding: 12px 4vw; background: var(--ground);
     border-top: 1px solid var(--rule);
   }
   .barra-slides .conta {
@@ -544,24 +623,29 @@
   }
   .barra-slides .espaco { flex: 1; }
   .barra-slides button {
-    font: 500 13.5px Barlow, sans-serif; cursor: pointer;
+    font: 500 13.5px Barlow, sans-serif; cursor: pointer; white-space: nowrap;
     padding: 8px 14px; border-radius: 8px;
     border: 1px solid var(--rule); background: var(--panel); color: var(--ink-2);
   }
   .barra-slides button:hover { background: var(--sunk); color: var(--ink); }
   .barra-slides button[disabled] { opacity: .4; cursor: default; }
-  .barra-slides button { white-space: nowrap; }
+  .barra-slides button[aria-pressed="true"] {
+    background: var(--ink); border-color: var(--ink); color: var(--panel);
+  }
 
+  @media (max-width: 900px) {
+    .slide-corpo { grid-template-columns: 1fr; }
+    .heroi .grafico { min-height: 200px; }
+    .cartoes { grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
+  }
   @media (max-width: 640px) {
-    /* Numa tela estreita os rótulos dos botões cedem lugar às setas —
-       quatro botões por extenso quebrariam em três linhas. */
-    .barra-slides { padding: 12px 4vw; gap: 8px; }
+    .barra-slides { padding: 11px 4vw; gap: 7px; }
     .barra-slides .rot { display: none; }
-    .barra-slides button { padding: 9px 13px; font-size: 14px; }
-    .slide { padding: 3vh 5vw 13vh; }
-    .slide-topo { flex-wrap: wrap; gap: 8px 16px; }
-    .slide-topo .quando { margin-left: 0; text-align: left; flex: 1 0 100%; }
-    .grade-numeros { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; }
+    .barra-slides button { padding: 9px 12px; font-size: 14px; }
+    .slide { padding: 2.6vh 5vw 13vh; }
+    .slide-topo { flex-wrap: wrap; gap: 6px 14px; padding-bottom: 10px; margin-bottom: 14px; }
+    .slide-topo .quando { margin-left: 0; flex: 1 0 100%; font-size: 13.5px; }
+    .slide-topo img.logo { height: 22px; }
   }
 
   @media print {
@@ -1587,18 +1671,25 @@ function tanquesDa(unidade) {
 
 
 /* ---------- apresentação do mês ----------
-   Um botão no topo e a reunião está pronta: capa, e um slide por unidade
-   com o fechamento do mês, a comparação com o mês anterior e o gráfico
-   dos dias. Nada é gerado fora daqui — sem arquivo, sem biblioteca, sem
-   depender da rede, que é o que sempre falha na hora de apresentar.
+   Um botão no topo e a reunião está pronta: capa e um slide por unidade,
+   com o fechamento do mês, a comparação com o mês anterior, quantos dias
+   ficaram fora da meta e o gráfico do parâmetro em destaque.
 
-   Imprimir com a apresentação aberta gera o PDF, uma página por slide. */
-let slideAtivo = 0, totalSlides = 0;
+   Dirigível: clicar num parâmetro o promove ao destaque. E editável:
+   o botão Editar liga as caixas de seleção, e o que se marca ali fica
+   gravado no banco — vale para todo mundo, não só para esta sessão.
+
+   Nada é gerado fora daqui. Imprimir com a apresentação aberta gera o
+   PDF, uma página por slide. */
+let slideAtivo = 0;
+let APRESENTACAO = null;         // dados já consultados, para redesenhar sem ir ao banco
+let destaqueDe = {};             // unidade → parâmetro em destaque
+let editandoSlide = false;
 
 /* O SVG é desenhado no tamanho em que vai ser visto. Desenhar largo e
    encolher por CSS encolhe a fonte do eixo junto, e no celular ela some. */
 const larguraDeSlide = () =>
-  Math.round(Math.max(320, Math.min(1180, innerWidth * 0.9)));
+  Math.round(Math.max(300, Math.min(880, innerWidth * 0.55)));
 
 async function abrirApresentacao() {
   const botao = document.getElementById("btn-apresentar");
@@ -1606,12 +1697,11 @@ async function abrirApresentacao() {
   botao.textContent = "Montando…";
   botao.disabled = true;
   try {
-    const alvo = document.getElementById("apresentacao");
-    alvo.innerHTML = await montarSlides();
-    alvo.classList.remove("oculto");
+    APRESENTACAO = await lerDadosDaApresentacao();
+    editandoSlide = false;
+    desenharApresentacao();
+    document.getElementById("apresentacao").classList.remove("oculto");
     document.body.style.overflow = "hidden";
-    slideAtivo = 0;
-    totalSlides = alvo.querySelectorAll(".slide").length;
     mostrarSlide(0);
   } catch (e) {
     alert(`Não foi possível montar a apresentação. ${e.message}`);
@@ -1637,23 +1727,43 @@ function mostrarSlide(i) {
   const pro = document.getElementById("slide-proximo");
   if (ant) ant.disabled = slideAtivo === 0;
   if (pro) pro.disabled = slideAtivo === slides.length - 1;
+  const ed = document.getElementById("slide-editar");
+  if (ed) {
+    ed.hidden = slideAtivo === 0;                     // a capa não se edita
+    ed.setAttribute("aria-pressed", String(editandoSlide));
+  }
 }
 
-async function montarSlides() {
+async function lerDadosDaApresentacao() {
   const mes = mesRef, ant = somaMeses(mesRef, -1), fim = somaMeses(mesRef, 1);
-
-  /* Os dois meses de fechamento, e os dias do mês para o gráfico. */
   const colunas = "unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,"
     + "valor,agregacao,valor_min_dia,valor_max_dia,"
     + "limite_inferior,limite_superior,limite_base";
-  const [mensal, diario] = await Promise.all([
+
+  const [mensal, diario, cadastro] = await Promise.all([
     consultar(`/rest/v1/vw_dashboard_mensal?select=${colunas},mes`
       + `&mes=gte.${ant}&mes=lt.${fim}&order=mes.asc&limit=5000`),
     consultar(`/rest/v1/vw_leituras_diarias`
       + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,`
       + `agregacao,data,valor,limite_inferior,limite_superior`
-      + `&data=gte.${mes}&data=lt.${fim}&order=data.asc&limit=5000`)
+      + `&data=gte.${mes}&data=lt.${fim}&order=data.asc&limit=5000`),
+    /* ids e marcações: é com eles que o Editar grava de volta. Se a
+       coluna ainda não existir, a apresentação segue com tudo à mostra. */
+    consultar("/rest/v1/parametros?select=id,nome,aplica_a_tipo,ordem,"
+      + "exibir_na_apresentacao&ativo=is.true&order=ordem").catch(() =>
+      consultar("/rest/v1/parametros?select=id,nome,aplica_a_tipo,ordem&ativo=is.true&order=ordem"))
   ]);
+  return { mes, ant, mensal, diario, cadastro };
+}
+
+/* Produção do mês, para as intensidades da ETA. */
+const producaoDoMes = (mensal, mes) => {
+  const l = mensal.find(x => x.parametro === "Volume de produção" && x.mes === mes);
+  return l && l.valor !== null ? Number(l.valor) : null;
+};
+
+function desenharApresentacao() {
+  const { mes, ant, mensal, diario, cadastro } = APRESENTACAO;
 
   /* O gráfico é do mês em dias; o julgamento dos números é do mês. Cada
      um pede um 'modo' diferente nos rótulos e nas regras de limite, e
@@ -1676,109 +1786,267 @@ async function montarSlides() {
       <p class="emissao">Emitido em ${fmtData(hojeSP())} · dados lançados pela equipe de operação</p>
     </section>`;
 
-  const slides = unidades.map(nome => slideDaUnidade(nome, mes, ant, mensal, porDia)).join("");
-
-  return capa + slides + `
-    <div class="barra-slides">
-      <button type="button" id="slide-anterior">‹<span class="rot"> Anterior</span></button>
-      <button type="button" id="slide-proximo"><span class="rot">Próximo </span>›</button>
-      <span class="conta"></span>
-      <span class="espaco"></span>
-      <button type="button" id="slide-imprimir"><span class="rot">Salvar em </span>PDF</button>
-      <button type="button" id="slide-fechar">Sair</button>
-    </div>`;
+  document.getElementById("apresentacao").innerHTML = capa
+    + unidades.map(nome => slideDaUnidade(nome, porDia)).join("")
+    + `<div class="barra-slides">
+        <button type="button" id="slide-anterior">‹<span class="rot"> Anterior</span></button>
+        <button type="button" id="slide-proximo"><span class="rot">Próximo </span>›</button>
+        <span class="conta"></span>
+        <span class="espaco"></span>
+        <button type="button" id="slide-editar" aria-pressed="false">Editar</button>
+        <button type="button" id="slide-imprimir"><span class="rot">Salvar em </span>PDF</button>
+        <button type="button" id="slide-fechar">Sair</button>
+      </div>`;
 }
 
-function slideDaUnidade(nome, mes, ant, mensal, porDia) {
-  const doMes = mensal.filter(l => l.unidade === nome && l.mes === mes);
+/* Tudo o que um parâmetro rende num slide: fechamento, mês anterior,
+   dias fora da meta e, quando faz sentido, a intensidade por caixa. */
+function dadosDoParametro(l, doAnt, porDia, unidade, producao) {
+  const p = {
+    nome: l.parametro, un: l.unidade_medida || "",
+    limInf: num(l.limite_inferior), limSup: num(l.limite_superior),
+    limBase: l.limite_base || "periodo", agreg: l.agregacao || "media"
+  };
+  const ponto = {
+    valor: l.valor === null ? null : Number(l.valor),
+    minDia: num(l.valor_min_dia), maxDia: num(l.valor_max_dia)
+  };
+  const anterior = doAnt.find(x => x.parametro === l.parametro);
+  const antes = anterior && anterior.valor !== null ? Number(anterior.valor) : null;
+
+  /* Dias fora da meta: conta no dia a dia, com o limite do parâmetro. */
+  let diasFora = null, diasTotal = 0;
+  if (p.limInf !== null || p.limSup !== null) {
+    const u = porDia.unidades.find(x => x.nome === unidade);
+    const serie = u && u.listaParam.find(x => x.nome === p.nome);
+    if (serie) {
+      diasTotal = serie.validos.length;
+      diasFora = serie.validos.filter(d =>
+        (p.limSup !== null && d.valor > p.limSup)
+        || (p.limInf !== null && d.valor < p.limInf)).length;
+    }
+  }
+
+  /* Intensidade: água por caixa produzida. Só onde comparar com a
+     produção diz alguma coisa — os volumes de água da ETA. */
+  let intensidade = null;
+  if (producao && ponto.valor !== null && /^m3/.test(p.un)
+      && !/produção/i.test(p.nome)) {
+    intensidade = ponto.valor * 1000 / producao;
+  }
+  return { p, ponto, antes, diasFora, diasTotal, intensidade };
+}
+
+function textoCompara(valor, antes, mesAnt, curto) {
+  if (antes === null || valor === null)
+    return `<span class="${curto ? "" : "compara"}">sem ${esc(nomeDoMes(mesAnt))} para comparar</span>`;
+  const dif = valor - antes;
+  const cls = dif > 0 ? "sobe" : dif < 0 ? "desce" : "igual";
+  const seta = dif > 0 ? "▲" : dif < 0 ? "▼" : "▬";
+  const pct = antes !== 0
+    ? `${dif > 0 ? "+" : ""}${(dif / Math.abs(antes) * 100).toFixed(1)}%` : "";
+  if (curto) return `${esc(nomeDoMes(mesAnt).split(" ")[0])}: ${fmtNum(antes)} `
+    + `<span class="${cls}">${seta} ${esc(pct)}</span>`;
+  return `<span class="compara">${esc(nomeDoMes(mesAnt))}: ${fmtNum(antes)}`
+    + `<b class="${cls}">${seta} ${esc(pct)}</b></span>`;
+}
+
+function slideDaUnidade(nome, porDia) {
+  const { mes, ant, mensal, cadastro } = APRESENTACAO;
+  const producao = producaoDoMes(mensal, mes);
+
+  /* A lista do slide é a do cadastro: o que estiver desmarcado fica de
+     fora, e o Editar mexe exatamente nisso. */
+  const visivel = new Map(cadastro.map(c =>
+    [`${c.nome}|${c.aplica_a_tipo}`, c.exibir_na_apresentacao !== false]));
+  const doMes = mensal
+    .filter(l => l.unidade === nome && l.mes === mes)
+    .filter(l => visivel.get(`${l.parametro}|${l.tipo_unidade}`) !== false)
+    .sort((a, b) => (a.ordem_parametro ?? 0) - (b.ordem_parametro ?? 0)
+                    || a.parametro.localeCompare(b.parametro, "pt-BR"));
   const doAnt = mensal.filter(l => l.unidade === nome && l.mes === ant);
 
-  /* Os limites do mês valem sobre o fechamento — ou sobre os extremos
-     dos dias, quando o parâmetro é assim. É a mesma regra do painel. */
+  if (!doMes.length) {
+    return `<section class="slide">${topoDoSlide(nome, 0, 0)}
+      <p class="aviso">Nenhum parâmetro selecionado para esta unidade neste mês.</p></section>`;
+  }
+
   const modoReal = modo;
   modo = "mensal";
-  const numeros = doMes
-    .sort((a, b) => (a.ordem_parametro ?? 0) - (b.ordem_parametro ?? 0)
-                    || a.parametro.localeCompare(b.parametro, "pt-BR"))
-    .map(l => {
-      const p = {
-        nome: l.parametro, un: l.unidade_medida || "",
-        limInf: num(l.limite_inferior), limSup: num(l.limite_superior),
-        limBase: l.limite_base || "periodo", agreg: l.agregacao || "media"
-      };
-      const ponto = {
-        valor: l.valor === null ? null : Number(l.valor),
-        minDia: num(l.valor_min_dia), maxDia: num(l.valor_max_dia)
-      };
-      const a = avaliar(p, ponto);
-      const cl = classeEstado(a);
-      const un = p.un && p.un !== "-" ? p.un : "";
-      const anterior = doAnt.find(x => x.parametro === l.parametro);
-      const va = anterior && anterior.valor !== null ? Number(anterior.valor) : null;
-      let comparacao = `<div class="num-antes">sem ${esc(nomeDoMes(ant))} para comparar</div>`;
-      if (va !== null && ponto.valor !== null) {
-        const dif = ponto.valor - va;
-        const seta = dif > 0 ? "▲" : dif < 0 ? "▼" : "▬";
-        const pct = va !== 0
-          ? ` (${dif > 0 ? "+" : ""}${(dif / Math.abs(va) * 100).toFixed(1)}%)` : "";
-        comparacao = `<div class="num-antes">${esc(nomeDoMes(ant))}: ${fmtNum(va)}`
-          + ` <span class="sobe">${seta}${esc(pct)}</span></div>`;
-      }
-      return `<div class="num-item">
-        <div class="num-nome">${esc(p.nome)}</div>
-        <div class="num-valor${cl ? " " + cl : ""}">
-          <span>${ponto.valor === null ? "—" : fmtNum(ponto.valor)}</span>${
-          un ? `<span class="un">${esc(un)}</span>` : ""}</div>
-        ${comparacao}
-      </div>`;
-    }).join("");
+  const itens = doMes.map(l => dadosDoParametro(l, doAnt, porDia, nome, producao));
+  const foraDeFaixa = itens.filter(it => {
+    const a = avaliar(it.p, it.ponto);
+    return a && a.estado !== "dentro";
+  }).length;
+
+  if (!destaqueDe[nome] || !itens.some(it => it.p.nome === destaqueDe[nome]))
+    destaqueDe[nome] = (itens.find(it => {
+      const a = avaliar(it.p, it.ponto);
+      return a && a.estado !== "dentro";
+    }) || itens[0]).p.nome;
+
+  const heroi = itens.find(it => it.p.nome === destaqueDe[nome]);
+  const cartoes = itens.map(it => {
+    const a = avaliar(it.p, it.ponto);
+    const cl = classeEstado(a);
+    const un = it.p.un && it.p.un !== "-" ? it.p.un : "";
+    return `<button type="button" class="cartao" data-param="${esc(it.p.nome)}"
+              aria-current="${it.p.nome === destaqueDe[nome]}">
+      <span class="c-nome">${esc(it.p.nome)}</span>
+      <span class="c-valor${cl ? " " + cl : ""}">${
+        it.ponto.valor === null ? "—" : fmtNum(it.ponto.valor)}${
+        un ? `<span class="un">${esc(un)}</span>` : ""}</span>
+      <span class="c-antes">${textoCompara(it.ponto.valor, it.antes, ant, true)}</span>
+    </button>`;
+  }).join("");
   modo = modoReal;
 
-  /* O gráfico do slide é o do primeiro parâmetro da unidade com série no
-     mês — o mesmo que o painel abre. */
+  return `<section class="slide" data-unidade="${esc(nome)}">
+    ${topoDoSlide(nome, itens.length, foraDeFaixa)}
+    <div class="slide-corpo">
+      ${blocoHeroi(heroi, nome, porDia, producao)}
+      <div class="lado">
+        ${editandoSlide
+          ? `<span class="rotulo">O que entra no slide</span>${editorDaUnidade(nome)}`
+          : `<span class="rotulo">Parâmetros da unidade</span>
+             <div class="cartoes">${cartoes}</div>`}
+      </div>
+    </div>
+  </section>`;
+}
+
+function topoDoSlide(nome, quantos, foraDeFaixa) {
+  const { mes } = APRESENTACAO;
+  return `<div class="slide-topo">
+    <div>
+      <span class="rotulo">Unidade</span>
+      <h2>${esc(nome)}</h2>
+    </div>
+    <div class="quando">
+      Fechamento de <b>${esc(nomeDoMes(mes))}</b><br>
+      ${quantos} parâmetros${foraDeFaixa
+        ? ` · <b style="color:var(--alerta)">${foraDeFaixa} fora da meta</b>` : ""}
+    </div>
+    ${LOGO_EMPRESA ? `<img class="logo" src="${LOGO_EMPRESA}" alt="">` : ""}
+  </div>`;
+}
+
+function blocoHeroi(it, unidade, porDia, producao) {
+  if (!it) return `<div class="heroi"></div>`;
+  const modoReal = modo;
+  modo = "mensal";
+  const a = avaliar(it.p, it.ponto);
+  const cl = classeEstado(a);
+  const selo = a ? `<span class="selo ${cl}">${esc(textoEstado(it.p, a))}</span>` : "";
+  modo = modoReal;
+
+  const un = it.p.un && it.p.un !== "-" ? it.p.un : "";
+  const dias = it.diasFora !== null
+    ? `<span class="meta-linha"><b>${it.diasFora}</b> de ${it.diasTotal} dias fora da meta</span>`
+    : "";
+  const meta = temLimite(it.p)
+    ? `<span class="meta-linha">${esc(textoFaixa(it.p))}</span>` : "";
+  const porCaixa = it.intensidade !== null
+    ? `<span class="meta-linha"><b>${fmtNum(it.intensidade)}</b> L por caixa produzida</span>`
+    : "";
+
   modo = "diario";
-  const u = porDia.unidades.find(x => x.nome === nome);
-  const p = u && (u.listaParam.find(x => x.validos.length) || u.listaParam[0]);
-  const grafico = p && p.validos.length
-    ? `<section class="slide-grafico">
-         <span class="rotulo">${esc(p.nome)}${
-           p.un && p.un !== "-" ? ` · ${esc(p.un)}` : ""} · dia a dia</span>
-         ${graficoGrande(p, larguraDeSlide())}
-       </section>`
+  const u = porDia.unidades.find(x => x.nome === unidade);
+  const serie = u && u.listaParam.find(x => x.nome === it.p.nome);
+  const grafico = serie && serie.validos.length
+    ? `<div class="grafico">
+         <span class="rotulo">dia a dia · ${esc(nomeDoMes(APRESENTACAO.mes))}</span>
+         ${graficoGrande(serie, larguraDeSlide())}
+       </div>`
     : "";
   modo = modoReal;
 
-  return `
-    <section class="slide">
-      <div class="slide-topo">
-        <div>
-          <span class="rotulo">Unidade</span>
-          <h2>${esc(nome)}</h2>
-        </div>
-        <div class="quando">
-          Fechamento de<br>${esc(nomeDoMes(mes))}
-        </div>
-        ${LOGO_EMPRESA ? `<img class="logo" src="${LOGO_EMPRESA}" alt="">` : ""}
-      </div>
-      <div class="grade-numeros">${numeros
-        || '<p class="num-nome">Nenhum lançamento neste mês.</p>'}</div>
-      ${grafico}
-    </section>`;
+  return `<div class="heroi">
+    <h3>${esc(it.p.nome)}</h3>
+    <div class="heroi-numero">
+      <span class="valor${cl ? " " + cl : ""}">${
+        it.ponto.valor === null ? "—" : fmtNum(it.ponto.valor)}</span>
+      ${un ? `<span class="un">${esc(un)}</span>` : ""}
+      ${textoCompara(it.ponto.valor, it.antes, APRESENTACAO.ant, false)}
+    </div>
+    <div class="heroi-linha">${selo}${dias}${meta}${porCaixa}</div>
+    ${grafico}
+  </div>`;
+}
+
+/* As caixas de seleção da unidade, na coluna da direita. */
+function editorDaUnidade(nome) {
+  const { mensal, mes, cadastro } = APRESENTACAO;
+  const tipo = (mensal.find(l => l.unidade === nome) || {}).tipo_unidade || "";
+  const doTipo = cadastro.filter(c => !c.aplica_a_tipo
+    || tipo.startsWith(c.aplica_a_tipo) || c.aplica_a_tipo.startsWith(tipo));
+  const temDado = new Set(mensal.filter(l => l.unidade === nome && l.mes === mes)
+    .map(l => l.parametro));
+  return `<p class="aviso-editor">Marque o que aparece nos slides desta unidade.
+      A escolha fica gravada e vale para todo mundo.</p>
+    <div class="editor">${doTipo.map(c => `
+      <label>
+        <input type="checkbox" data-id="${c.id}"
+               ${c.exibir_na_apresentacao !== false ? "checked" : ""}>
+        <span>${esc(c.nome)}${temDado.has(c.nome) ? "" : " · sem dado no mês"}</span>
+      </label>`).join("")}</div>`;
+}
+
+async function marcarParametro(id, entra) {
+  const alvo = APRESENTACAO.cadastro.find(c => String(c.id) === String(id));
+  if (alvo) alvo.exibir_na_apresentacao = entra;
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/parametros?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${sessao.access_token}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal"
+    },
+    body: JSON.stringify({ exibir_na_apresentacao: entra })
+  });
+  if (!resp.ok) throw new Error(`o banco recusou a alteração (${resp.status})`);
 }
 
 document.getElementById("btn-apresentar").onclick = abrirApresentacao;
 
-document.getElementById("apresentacao").addEventListener("click", ev => {
+document.getElementById("apresentacao").addEventListener("click", async ev => {
+  const cartao = ev.target.closest(".cartao");
+  if (cartao) {
+    const slide = cartao.closest(".slide");
+    destaqueDe[slide.dataset.unidade] = cartao.dataset.param;
+    const i = slideAtivo;
+    desenharApresentacao(); mostrarSlide(i);
+    return;
+  }
   const b = ev.target.closest("button"); if (!b) return;
   if (b.id === "slide-anterior") mostrarSlide(slideAtivo - 1);
   if (b.id === "slide-proximo")  mostrarSlide(slideAtivo + 1);
   if (b.id === "slide-imprimir") print();
   if (b.id === "slide-fechar")   fecharApresentacao();
+  if (b.id === "slide-editar") {
+    editandoSlide = !editandoSlide;
+    const i = slideAtivo;
+    desenharApresentacao(); mostrarSlide(i);
+  }
+});
+
+document.getElementById("apresentacao").addEventListener("change", async ev => {
+  const caixa = ev.target.closest("input[data-id]"); if (!caixa) return;
+  const i = slideAtivo;
+  try {
+    await marcarParametro(caixa.dataset.id, caixa.checked);
+    desenharApresentacao(); mostrarSlide(i);
+  } catch (e) {
+    caixa.checked = !caixa.checked;
+    alert(`Não foi possível gravar: ${e.message}`);
+  }
 });
 
 document.addEventListener("keydown", ev => {
   const aberta = !document.getElementById("apresentacao").classList.contains("oculto");
   if (!aberta) return;
+  if (ev.target.matches("input")) return;
   if (ev.key === "ArrowRight" || ev.key === "PageDown" || ev.key === " ") {
     ev.preventDefault(); mostrarSlide(slideAtivo + 1);
   }
