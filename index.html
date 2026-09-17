@@ -458,10 +458,124 @@
     .menu { flex: 1 1 auto; }
     .menu > button.abre { width: 100%; justify-content: space-between; }
   }
+  /* ---------- apresentação ----------
+     Um slide por unidade, em tela cheia. O mesmo desenho do painel, com
+     o corpo crescido para ser lido de longe: em reunião ninguém está a
+     50cm da tela. Sem cartão em volta de nada — o fundo é o slide. */
+  #apresentacao {
+    position: fixed; inset: 0; z-index: 80; background: var(--ground);
+    overflow: hidden;
+  }
+  .slide {
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; padding: 4vh 5vw 11vh;
+  }
+  .slide.ativo { display: flex; }
+
+  .slide-topo {
+    display: flex; align-items: flex-end; gap: 24px;
+    border-bottom: 1px solid var(--rule); padding-bottom: 14px; margin-bottom: 22px;
+  }
+  .slide-topo .rotulo { display: block; margin-bottom: 3px; }
+  .slide-topo h2 {
+    margin: 0; font-size: clamp(30px, 3.6vw, 52px); font-weight: 600;
+    letter-spacing: -0.02em; line-height: 1;
+  }
+  .slide-topo .quando {
+    margin-left: auto; text-align: right; font-size: 14px; color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .slide-topo img.logo { height: 30px; align-self: center; }
+
+  .grade-numeros {
+    display: grid; gap: 10px 26px;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    margin-bottom: 24px;
+  }
+  .num-item { min-width: 0; padding: 2px 0; }
+  .num-nome {
+    font-size: 13.5px; color: var(--ink-2); line-height: 1.25;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .num-valor {
+    display: flex; align-items: baseline; gap: 6px; margin-top: 1px;
+    font-family: "Barlow Semi Condensed", Barlow, sans-serif;
+    font-size: clamp(26px, 2.6vw, 38px); font-weight: 600; line-height: 1.05;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.015em;
+  }
+  .num-valor .un {
+    font: 400 12px "IBM Plex Mono", ui-monospace, monospace; color: var(--ink-3);
+  }
+  .num-valor.fora { color: var(--alerta); }
+  .num-valor.ok   { color: var(--ok); }
+  .num-antes {
+    font-size: 12.5px; color: var(--ink-3); margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .num-antes .sobe { color: var(--ink-2); }
+
+  .slide-grafico { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .slide-grafico .rotulo { display: block; margin-bottom: 8px; }
+  .slide-grafico svg { display: block; width: 100%; height: auto; }
+
+  /* capa */
+  .slide.capa { justify-content: center; align-items: flex-start; gap: 0; }
+  .slide.capa img.logo { height: clamp(38px, 4.6vw, 62px); margin-bottom: 34px; }
+  .slide.capa .filete { width: 96px; height: 5px; margin-bottom: 26px; }
+  .slide.capa h1 {
+    margin: 0; font-size: clamp(38px, 5.6vw, 84px); font-weight: 600;
+    letter-spacing: -0.03em; line-height: 0.98;
+  }
+  .slide.capa .mes {
+    margin: 10px 0 0; font-size: clamp(20px, 2.4vw, 34px); color: var(--ink-2);
+    font-family: "Barlow Semi Condensed", Barlow, sans-serif;
+  }
+  .slide.capa .emissao { margin: 30px 0 0; font-size: 13.5px; color: var(--ink-3); }
+
+  .barra-slides {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 5vw; background: var(--ground);
+    border-top: 1px solid var(--rule);
+  }
+  .barra-slides .conta {
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px;
+    color: var(--ink-3); letter-spacing: 0.06em;
+  }
+  .barra-slides .espaco { flex: 1; }
+  .barra-slides button {
+    font: 500 13.5px Barlow, sans-serif; cursor: pointer;
+    padding: 8px 14px; border-radius: 8px;
+    border: 1px solid var(--rule); background: var(--panel); color: var(--ink-2);
+  }
+  .barra-slides button:hover { background: var(--sunk); color: var(--ink); }
+  .barra-slides button[disabled] { opacity: .4; cursor: default; }
+  .barra-slides button { white-space: nowrap; }
+
+  @media (max-width: 640px) {
+    /* Numa tela estreita os rótulos dos botões cedem lugar às setas —
+       quatro botões por extenso quebrariam em três linhas. */
+    .barra-slides { padding: 12px 4vw; gap: 8px; }
+    .barra-slides .rot { display: none; }
+    .barra-slides button { padding: 9px 13px; font-size: 14px; }
+    .slide { padding: 3vh 5vw 13vh; }
+    .slide-topo { flex-wrap: wrap; gap: 8px 16px; }
+    .slide-topo .quando { margin-left: 0; text-align: left; flex: 1 0 100%; }
+    .grade-numeros { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; }
+  }
+
   @media print {
     header.topo, .controles, #tooltip { display: none; }
     body { background: #fff; }
     .palco { grid-template-columns: 1fr; }
+    /* Em apresentação, imprimir é gerar o PDF: um slide por página. */
+    body:has(#apresentacao:not(.oculto)) > *:not(#apresentacao) { display: none !important; }
+    #apresentacao { position: static; overflow: visible; }
+    .slide, .slide.ativo {
+      display: flex !important; position: static; min-height: 96vh;
+      padding: 6vh 4vw; break-after: page; page-break-after: always;
+    }
+    .barra-slides { display: none; }
   }
 </style>
 </head>
@@ -491,6 +605,7 @@
         <img class="logo" id="logo-empresa" alt="" hidden>
         <h1>Dashboard Estações de tratamento</h1>
         <div class="acoes">
+          <button class="quieto" id="btn-apresentar" type="button">Apresentar</button>
           <button class="quieto" id="btn-tema" type="button">Tema</button>
           <button class="quieto" id="btn-sair" type="button">Sair</button>
         </div>
@@ -533,6 +648,10 @@
     </footer>
   </div>
 </div>
+
+<!-- ============ APRESENTAÇÃO ============ -->
+<div id="apresentacao" class="oculto" role="dialog" aria-modal="true"
+     aria-label="Apresentação do mês"></div>
 
 <div id="tooltip" role="status" aria-live="polite"></div>
 
@@ -1465,6 +1584,209 @@ function tanquesDa(unidade) {
     <ul class="lista-tanques">${itens}</ul>
   </section>`;
 }
+
+
+/* ---------- apresentação do mês ----------
+   Um botão no topo e a reunião está pronta: capa, e um slide por unidade
+   com o fechamento do mês, a comparação com o mês anterior e o gráfico
+   dos dias. Nada é gerado fora daqui — sem arquivo, sem biblioteca, sem
+   depender da rede, que é o que sempre falha na hora de apresentar.
+
+   Imprimir com a apresentação aberta gera o PDF, uma página por slide. */
+let slideAtivo = 0, totalSlides = 0;
+
+/* O SVG é desenhado no tamanho em que vai ser visto. Desenhar largo e
+   encolher por CSS encolhe a fonte do eixo junto, e no celular ela some. */
+const larguraDeSlide = () =>
+  Math.round(Math.max(320, Math.min(1180, innerWidth * 0.9)));
+
+async function abrirApresentacao() {
+  const botao = document.getElementById("btn-apresentar");
+  const antes = botao.textContent;
+  botao.textContent = "Montando…";
+  botao.disabled = true;
+  try {
+    const alvo = document.getElementById("apresentacao");
+    alvo.innerHTML = await montarSlides();
+    alvo.classList.remove("oculto");
+    document.body.style.overflow = "hidden";
+    slideAtivo = 0;
+    totalSlides = alvo.querySelectorAll(".slide").length;
+    mostrarSlide(0);
+  } catch (e) {
+    alert(`Não foi possível montar a apresentação. ${e.message}`);
+  } finally {
+    botao.textContent = antes;
+    botao.disabled = false;
+  }
+}
+
+function fecharApresentacao() {
+  document.getElementById("apresentacao").classList.add("oculto");
+  document.body.style.overflow = "";
+}
+
+function mostrarSlide(i) {
+  const slides = document.querySelectorAll("#apresentacao .slide");
+  if (!slides.length) return;
+  slideAtivo = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, j) => s.classList.toggle("ativo", j === slideAtivo));
+  const conta = document.querySelector("#apresentacao .conta");
+  if (conta) conta.textContent = `${slideAtivo + 1} / ${slides.length}`;
+  const ant = document.getElementById("slide-anterior");
+  const pro = document.getElementById("slide-proximo");
+  if (ant) ant.disabled = slideAtivo === 0;
+  if (pro) pro.disabled = slideAtivo === slides.length - 1;
+}
+
+async function montarSlides() {
+  const mes = mesRef, ant = somaMeses(mesRef, -1), fim = somaMeses(mesRef, 1);
+
+  /* Os dois meses de fechamento, e os dias do mês para o gráfico. */
+  const colunas = "unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,"
+    + "valor,agregacao,valor_min_dia,valor_max_dia,"
+    + "limite_inferior,limite_superior,limite_base";
+  const [mensal, diario] = await Promise.all([
+    consultar(`/rest/v1/vw_dashboard_mensal?select=${colunas},mes`
+      + `&mes=gte.${ant}&mes=lt.${fim}&order=mes.asc&limit=5000`),
+    consultar(`/rest/v1/vw_leituras_diarias`
+      + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,`
+      + `agregacao,data,valor,limite_inferior,limite_superior`
+      + `&data=gte.${mes}&data=lt.${fim}&order=data.asc&limit=5000`)
+  ]);
+
+  /* O gráfico é do mês em dias; o julgamento dos números é do mês. Cada
+     um pede um 'modo' diferente nos rótulos e nas regras de limite, e
+     por isso o modo é trocado por um instante em cada etapa. */
+  const modoReal = modo;
+  modo = "diario";
+  const porDia = organizar(diario.map(l => ({ ...l, periodo: l.data })));
+  modo = modoReal;
+
+  const unidades = [...new Set(mensal
+    .filter(l => !TIPOS_FORA_DO_PAINEL.has(l.tipo_unidade))
+    .map(l => l.unidade))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  const capa = `
+    <section class="slide capa">
+      ${LOGO_EMPRESA ? `<img class="logo" src="${LOGO_EMPRESA}" alt="Logo da empresa">` : ""}
+      <div class="filete"></div>
+      <h1>Estações de<br>Tratamento</h1>
+      <p class="mes">${esc(nomeDoMes(mes))}</p>
+      <p class="emissao">Emitido em ${fmtData(hojeSP())} · dados lançados pela equipe de operação</p>
+    </section>`;
+
+  const slides = unidades.map(nome => slideDaUnidade(nome, mes, ant, mensal, porDia)).join("");
+
+  return capa + slides + `
+    <div class="barra-slides">
+      <button type="button" id="slide-anterior">‹<span class="rot"> Anterior</span></button>
+      <button type="button" id="slide-proximo"><span class="rot">Próximo </span>›</button>
+      <span class="conta"></span>
+      <span class="espaco"></span>
+      <button type="button" id="slide-imprimir"><span class="rot">Salvar em </span>PDF</button>
+      <button type="button" id="slide-fechar">Sair</button>
+    </div>`;
+}
+
+function slideDaUnidade(nome, mes, ant, mensal, porDia) {
+  const doMes = mensal.filter(l => l.unidade === nome && l.mes === mes);
+  const doAnt = mensal.filter(l => l.unidade === nome && l.mes === ant);
+
+  /* Os limites do mês valem sobre o fechamento — ou sobre os extremos
+     dos dias, quando o parâmetro é assim. É a mesma regra do painel. */
+  const modoReal = modo;
+  modo = "mensal";
+  const numeros = doMes
+    .sort((a, b) => (a.ordem_parametro ?? 0) - (b.ordem_parametro ?? 0)
+                    || a.parametro.localeCompare(b.parametro, "pt-BR"))
+    .map(l => {
+      const p = {
+        nome: l.parametro, un: l.unidade_medida || "",
+        limInf: num(l.limite_inferior), limSup: num(l.limite_superior),
+        limBase: l.limite_base || "periodo", agreg: l.agregacao || "media"
+      };
+      const ponto = {
+        valor: l.valor === null ? null : Number(l.valor),
+        minDia: num(l.valor_min_dia), maxDia: num(l.valor_max_dia)
+      };
+      const a = avaliar(p, ponto);
+      const cl = classeEstado(a);
+      const un = p.un && p.un !== "-" ? p.un : "";
+      const anterior = doAnt.find(x => x.parametro === l.parametro);
+      const va = anterior && anterior.valor !== null ? Number(anterior.valor) : null;
+      let comparacao = `<div class="num-antes">sem ${esc(nomeDoMes(ant))} para comparar</div>`;
+      if (va !== null && ponto.valor !== null) {
+        const dif = ponto.valor - va;
+        const seta = dif > 0 ? "▲" : dif < 0 ? "▼" : "▬";
+        const pct = va !== 0
+          ? ` (${dif > 0 ? "+" : ""}${(dif / Math.abs(va) * 100).toFixed(1)}%)` : "";
+        comparacao = `<div class="num-antes">${esc(nomeDoMes(ant))}: ${fmtNum(va)}`
+          + ` <span class="sobe">${seta}${esc(pct)}</span></div>`;
+      }
+      return `<div class="num-item">
+        <div class="num-nome">${esc(p.nome)}</div>
+        <div class="num-valor${cl ? " " + cl : ""}">
+          <span>${ponto.valor === null ? "—" : fmtNum(ponto.valor)}</span>${
+          un ? `<span class="un">${esc(un)}</span>` : ""}</div>
+        ${comparacao}
+      </div>`;
+    }).join("");
+  modo = modoReal;
+
+  /* O gráfico do slide é o do primeiro parâmetro da unidade com série no
+     mês — o mesmo que o painel abre. */
+  modo = "diario";
+  const u = porDia.unidades.find(x => x.nome === nome);
+  const p = u && (u.listaParam.find(x => x.validos.length) || u.listaParam[0]);
+  const grafico = p && p.validos.length
+    ? `<section class="slide-grafico">
+         <span class="rotulo">${esc(p.nome)}${
+           p.un && p.un !== "-" ? ` · ${esc(p.un)}` : ""} · dia a dia</span>
+         ${graficoGrande(p, larguraDeSlide())}
+       </section>`
+    : "";
+  modo = modoReal;
+
+  return `
+    <section class="slide">
+      <div class="slide-topo">
+        <div>
+          <span class="rotulo">Unidade</span>
+          <h2>${esc(nome)}</h2>
+        </div>
+        <div class="quando">
+          Fechamento de<br>${esc(nomeDoMes(mes))}
+        </div>
+        ${LOGO_EMPRESA ? `<img class="logo" src="${LOGO_EMPRESA}" alt="">` : ""}
+      </div>
+      <div class="grade-numeros">${numeros
+        || '<p class="num-nome">Nenhum lançamento neste mês.</p>'}</div>
+      ${grafico}
+    </section>`;
+}
+
+document.getElementById("btn-apresentar").onclick = abrirApresentacao;
+
+document.getElementById("apresentacao").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  if (b.id === "slide-anterior") mostrarSlide(slideAtivo - 1);
+  if (b.id === "slide-proximo")  mostrarSlide(slideAtivo + 1);
+  if (b.id === "slide-imprimir") print();
+  if (b.id === "slide-fechar")   fecharApresentacao();
+});
+
+document.addEventListener("keydown", ev => {
+  const aberta = !document.getElementById("apresentacao").classList.contains("oculto");
+  if (!aberta) return;
+  if (ev.key === "ArrowRight" || ev.key === "PageDown" || ev.key === " ") {
+    ev.preventDefault(); mostrarSlide(slideAtivo + 1);
+  }
+  if (ev.key === "ArrowLeft" || ev.key === "PageUp") {
+    ev.preventDefault(); mostrarSlide(slideAtivo - 1);
+  }
+  if (ev.key === "Escape") fecharApresentacao();
+});
 
 /* ---------- controles ---------- */
 function montarAbas(nomes) {
