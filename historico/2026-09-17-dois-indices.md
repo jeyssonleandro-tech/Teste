@@ -89,3 +89,21 @@ não teria como saber qual das três contas aplicar.
 
 **Validado:** o total da chuva no mês bate com a soma feita à mão, a vazão
 segue como média, e cada uma traz o rótulo certo.
+
+---
+
+## 7. Teto do c/ cerveja e a saída da L5
+
+**1,40 L/L** para o Índice de Água c/ Cerveja, com `limite_base =
+'periodo'` — como o parâmetro é de acumulado, o número julgado é a média
+do mês. É o fechamento que a meta cobra, não o pior dia. O par fica
+completo: 1,33 sem cerveja, 1,40 com.
+
+**`Volume de produção L5` foi desativado, não apagado.** Apagar a linha de
+`parametros` esbarraria no `ON DELETE RESTRICT` de `leituras` e só passaria
+depois de destruir todas as medições já lançadas. Desativado, ele some do
+formulário, do painel e da importação, e o que a operação já mediu
+continua no banco — reversível com um `ativo = true`.
+
+Agora são dois parâmetros inativos: `Vazão de Entrada` (ETA) e
+`Volume de produção L5` (Produção).
