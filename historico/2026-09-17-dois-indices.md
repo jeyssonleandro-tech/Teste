@@ -61,3 +61,31 @@ PostgreSQL 16 limpo, scripts `01` ao `19`, com o `19` rodado duas vezes.
 
 O painel lista os dois na ordem certa (5 e 6), o teto de 1,33 seguiu com o
 `s/ Cerveja`, e o acumulado do mês acompanhou os dois nomes novos.
+
+---
+
+## 6. Pluviometria: o mês inteiro
+
+Chuva de um dia não diz nada sozinha; o que a operação acompanha é quanto
+choveu no mês. A Pluviometria entrou na mesma marcação `acumula_mes`.
+
+Só que somar chuva e tirar média de vazão são contas diferentes — e a
+resposta já estava no banco. **O acumulado passou a seguir a regra de
+agregação que cada parâmetro já tem**, a mesma que o banco usa para fechar
+semana e mês:
+
+| agregação | número do mês | quem |
+|---|---|---|
+| `soma` | total do período | Pluviometria |
+| `razao` | soma ÷ soma (média ponderada pela produção) | os dois índices de água |
+| resto | média dos períodos | Vazão de captação |
+
+Nenhuma coluna nova: a regra já existia. O rótulo do destaque acompanha —
+*"total de setembro de 2026"* para a chuva, *"média de setembro de 2026"*
+para a vazão.
+
+A visão diária passou a trazer `agregacao` na consulta; sem ela o painel
+não teria como saber qual das três contas aplicar.
+
+**Validado:** o total da chuva no mês bate com a soma feita à mão, a vazão
+segue como média, e cada uma traz o rótulo certo.

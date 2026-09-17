@@ -860,7 +860,9 @@ async function carregar(qual) {
      limite é diário. */
   const extras = agregado
     ? ",agregacao,valor_min_dia,valor_max_dia,limite_inferior,limite_superior,limite_base"
-    : ",limite_inferior,limite_superior";
+    /* 'agregacao' também no diário: é ela que diz se o número do mês é
+       soma, média ou razão. */
+    : ",agregacao,limite_inferior,limite_superior";
   const { de, ate } = janelaDe(qual, mesRef);
   const caminho = `/rest/v1/${view}`
     + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,${coluna},valor${extras}`
@@ -897,34 +899,38 @@ async function carregarPesos(qual) {
   } catch { return []; }
 }
 
-/* ---------- acumulado do mês ----------
-   Cada ponto passa a ser o acumulado desde o começo da janela até ali.
+/* ---------- o número do mês ----------
+   Um número só, do período inteiro, para o destaque. A série do gráfico,
+   a lista e a tabela não mudam.
 
-   Para uma razão — o índice de água — o acumulado do período é a soma do
-   numerador dividida pela soma do denominador, e isso é exatamente uma
-   média dos valores ponderada pela produção de cada período. Fazendo
-   assim, os fatores de conversão ficam onde devem estar, no banco, e o
-   painel não repete constante nenhuma.
+   Cada parâmetro acumula pela regra que já tem no banco — a mesma que
+   fecha semana e mês:
 
-   Sem peso disponível, a conta cai para média simples — que é o certo
-   para a vazão de captação e o único possível para o resto. */
+     soma   → total do período            (Pluviometria)
+     razao  → soma do numerador ÷ soma do denominador, que é uma média
+              ponderada pela produção     (os índices de água)
+     resto  → média dos períodos          (Vazão de captação)
+
+   Fazendo a razão por ponderação, os fatores de conversão ficam onde
+   devem estar, no banco, e o painel não repete constante nenhuma. */
 function acumular(p) {
   const peso = periodo => {
+    if (p.agreg !== "razao") return 1;
     const l = PESOS.find(x => x.parametro === p.nome && x.periodo === periodo);
     const v = l ? Number(l.producao_cxu) : NaN;
     return isFinite(v) && v > 0 ? v : 1;
   };
-  let somaValor = 0, somaPeso = 0;
+  let somaValor = 0, somaPeso = 0, houve = false;
   for (const ponto of p.pontos) {
     if (ponto.valor === null || !isFinite(ponto.valor)) continue;
     const w = peso(ponto.periodo);
     somaValor += ponto.valor * w;
     somaPeso  += w;
+    houve = true;
   }
-  /* A SÉRIE NÃO MUDA: o gráfico, a lista e a tabela seguem com o valor
-     de cada dia ou semana. O acumulado é um número só, do período
-     inteiro, e vive apenas no destaque. */
-  p.acumuladoMes = somaPeso ? somaValor / somaPeso : null;
+  if (!houve) { p.acumuladoMes = null; p.tipoAcumulado = null; return; }
+  p.tipoAcumulado = p.agreg === "soma" ? "soma" : "media";
+  p.acumuladoMes = p.tipoAcumulado === "soma" ? somaValor : somaValor / somaPeso;
 }
 
 /* ---------- organização em unidade → parâmetro → série ---------- */
@@ -1256,7 +1262,9 @@ function desenhar() {
         ${alerta ? `<span class="selo ${classeEstado(alerta)}">${
                      esc(textoEstado(p, alerta))}</span>` : ""}
         ${p.acumuladoMes !== undefined
-            ? `<span class="meta acum">média de ${esc(nomeDoMes(mesRef))}</span>`
+            ? `<span class="meta acum">${
+                 p.tipoAcumulado === "soma" ? "total" : "média"} de ${
+                 esc(nomeDoMes(mesRef))}</span>`
             : ""}
         <span class="meta">${p.acumuladoMes !== undefined
             ? (ultimo ? `${esc(rotuloPeriodo().toLowerCase())} ${
