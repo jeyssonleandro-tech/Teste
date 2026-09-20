@@ -596,6 +596,29 @@
     }
   }
 
+  async function aplicarVisibilidade(){
+    var isAdmin = false;
+    try {
+      if (window.claude && window.claude.use) {
+        var user = await window.claude.use('user');
+        if (user) isAdmin = !!(user.isOwner() || user.canEdit());
+      }
+    } catch (e) {}
+
+    var tabs = document.querySelector('.tabs');
+    var tabInter = document.getElementById('tabBtnInter');
+    var painelInter = document.getElementById('painelInter');
+    var painelPart = document.getElementById('painelPart');
+
+    if (isAdmin) {
+      tabs.hidden = false;
+    } else {
+      tabs.hidden = true;
+      painelInter.hidden = true;
+      painelPart.hidden = false;
+    }
+  }
+
   async function iniciarDb(){
     var statusDot = document.getElementById('statusDot');
     var statusTexto = document.getElementById('statusTexto');
@@ -642,5 +665,6 @@
 
   carregarInicial();
   iniciarDb();
+  aplicarVisibilidade();
 })();
 </script>
