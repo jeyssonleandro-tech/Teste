@@ -104,5 +104,9 @@ site de marketing essa ordem vinha diferente). Usar sempre esta versão.
 ## Temas já desenvolvidos
 
 - **F2 – Comportamento Líder (Perfil DISC)** — primeiro tema oficial,
-  usado como teste de formato. Ver
-  [`simulado-f14/temas/F2-comportamento-lider.md`](temas/F2-comportamento-lider.md).
+  usado como teste de formato.
+  - Conteúdo completo: [`temas/F2-comportamento-lider.md`](temas/F2-comportamento-lider.md)
+  - Roteiro do intermediador (uso exclusivo de quem conduz):
+    [`temas/F2-roteiro-intermediador.md`](temas/F2-roteiro-intermediador.md)
+  - Fichas para impressão/distribuição aos jogadores:
+    [`temas/F2-fichas-impressao.md`](temas/F2-fichas-impressao.md)
