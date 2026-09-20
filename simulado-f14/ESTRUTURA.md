@@ -21,6 +21,10 @@ liderados, casos) é montado sob demanda, um tema por vez, e registrado em
   todas jogando o **mesmo caso simultaneamente**, em paralelo.
 - Quem sobrar (grupo não é múltiplo de 5) fica de fora da rodada como
   observador.
+- **Menos de 10 participantes:** forma-se apenas **uma mesa** (não mesas
+  incompletas), e todo o restante acompanha como plateia até o debate
+  final. Múltiplas mesas em paralelo só entram em jogo a partir de 10
+  participantes (o suficiente para pelo menos 2 mesas completas).
 
 ## Sorteio de papéis
 
