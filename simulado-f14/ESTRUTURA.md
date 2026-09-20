@@ -99,5 +99,6 @@ site de marketing essa ordem vinha diferente). Usar sempre esta versão.
 
 ## Temas já desenvolvidos
 
-Nenhum ainda. Quando um tema for montado, adicionar aqui o link para o
-arquivo correspondente em `simulado-f14/temas/` (ex: `F1-lider-motivado.md`).
+- **F2 – Comportamento Líder (Perfil DISC)** — primeiro tema oficial,
+  usado como teste de formato. Ver
+  [`simulado-f14/temas/F2-comportamento-lider.md`](temas/F2-comportamento-lider.md).
