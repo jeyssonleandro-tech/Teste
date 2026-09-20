@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minha Ficha — Simulado F14</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <span class="eyebrow">Simulado F14 da Liderança</span>
+    <h1>Minha Ficha</h1>
+    <p class="subtitulo" id="temaSubtitulo">Escolha seu nome para ver o seu papel nesta rodada.</p>
+  </header>
+
+  <div id="semDados" class="card" hidden>
+    <p style="margin:0;">Este link ainda não tem um sorteio associado. Peça ao intermediador o link ou QR code gerado depois do sorteio de hoje.</p>
+  </div>
+
+  <div id="comDados" class="card" hidden>
+    <label class="field-label" for="selectParticipante">Selecione seu nome</label>
+    <select id="selectParticipante"><option value="">— escolha —</option></select>
+    <button class="primary" id="btnVerFicha" style="margin-top:10px;">Ver minha ficha</button>
+  </div>
+
+  <div id="fichaWrap"></div>
+</div>
+
+<script src="temas/f2.js"></script>
+<script src="sorteio.js"></script>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var d = params.get('d');
+  var estado = d ? decodificarEstado(d) : null;
+
+  var semDados = document.getElementById('semDados');
+  var comDados = document.getElementById('comDados');
+  var temaSubtitulo = document.getElementById('temaSubtitulo');
+
+  if (!estado) {
+    semDados.hidden = false;
+    return;
+  }
+
+  var TEMA = window.TEMAS && window.TEMAS[estado.tema];
+  if (!TEMA) {
+    semDados.hidden = false;
+    semDados.querySelector('p').textContent = 'Tema "' + estado.tema + '" não encontrado nesta página.';
+    return;
+  }
+
+  temaSubtitulo.textContent = TEMA.id + ' — ' + TEMA.titulo;
+  comDados.hidden = false;
+
+  var sel = document.getElementById('selectParticipante');
+  sel.innerHTML = '<option value="">— escolha —</option>' + estado.participantes.map(function (n) {
+    return '<option value="' + n.replace(/"/g, '&quot;') + '">' + n + '</option>';
+  }).join('');
+
+  function renderFicha(nome) {
+    var wrap = document.getElementById('fichaWrap');
+    if (!nome) { wrap.innerHTML = ''; return; }
+    if (estado.foraDaRodada && estado.foraDaRodada.indexOf(nome) !== -1) {
+      wrap.innerHTML = '<div class="info-box">Você não participará desse simulado nesta rodada — acompanhe como plateia e participe do debate final.</div>';
+      return;
+    }
+    var papelChave = null, mesaNumero = null;
+    estado.mesas.forEach(function (mesa) {
+      Object.keys(mesa.papeis).forEach(function (chave) {
+        if (mesa.papeis[chave] === nome) { papelChave = chave; mesaNumero = mesa.numero; }
+      });
+    });
+    if (!papelChave) { wrap.innerHTML = '<div class="aviso">Nome não encontrado nesta rodada.</div>'; return; }
+
+    var dados = papelChave === 'lider' ? TEMA.lider : TEMA.liderados.filter(function (l) { return l.id === papelChave; })[0];
+    var classe = papelChave === 'lider' ? 'lider' : dados.classe;
+    var tagTexto = (papelChave === 'lider' ? 'LÍDER' : dados.tag) + ' · MESA ' + mesaNumero;
+    wrap.innerHTML =
+      '<div class="ficha-card ' + classe + '">' +
+      '<span class="ficha-eyebrow">' + tagTexto + '</span>' +
+      '<h2>' + dados.nome + '</h2>' +
+      '<span class="ficha-cargo">' + dados.cargo + '</span>' +
+      '<div class="ficha-texto">' + dados.texto.replace(/</g, '&lt;') + '</div>' +
+      '</div>';
+  }
+
+  document.getElementById('btnVerFicha').addEventListener('click', function () {
+    renderFicha(sel.value);
+  });
+})();
+</script>
+</body>
+</html>

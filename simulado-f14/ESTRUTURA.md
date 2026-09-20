@@ -110,3 +110,37 @@ site de marketing essa ordem vinha diferente). Usar sempre esta versão.
     [`temas/F2-roteiro-intermediador.md`](temas/F2-roteiro-intermediador.md)
   - Fichas para impressão/distribuição aos jogadores:
     [`temas/F2-fichas-impressao.md`](temas/F2-fichas-impressao.md)
+  - Ferramenta digital de sorteio: ver seção "Ferramenta de sorteio"
+    abaixo.
+
+## Ferramenta de sorteio
+
+Página estática em `docs/`, publicada via **GitHub Pages** (sem login,
+funciona para qualquer pessoa com o link — decisão tomada depois de
+constatar que nem todo participante tem conta Claude, o que inviabilizava
+hospedar como Artifact do Claude).
+
+- `docs/intermediador.html` — **uso exclusivo de quem conduz a sessão**.
+  Não está linkado de nenhum outro lugar; só compartilhe esse endereço
+  com você mesmo. Nela: cole os presentes, clique em "Sortear rodada" e
+  ela gera um link + QR code para o grupo.
+- `docs/index.html` — página que o **grupo** acessa (pelo link/QR gerado
+  acima). Cada pessoa escolhe o próprio nome e só vê sua própria ficha.
+  O resultado do sorteio vai embutido no próprio link (parâmetro `?d=`),
+  não depende de nenhum servidor/banco — por isso funciona sem conta e
+  sem internet além de abrir a página uma vez.
+- `docs/temas/f2.js` — dados do tema (fichas, condições, encruzilhada).
+  Temas futuros entram como um novo arquivo `docs/temas/fX.js` seguindo
+  o mesmo padrão.
+- `docs/sorteio.js` — lógica do sorteio (mesa única `<10`, múltiplas
+  mesas `≥10`, regra de não repetir líder — guardada no navegador de
+  quem conduz, via `localStorage`, por tema).
+
+**Configuração única necessária (feita por você, uma vez):** no GitHub,
+em Settings → Pages, escolher "Deploy from a branch", selecionar esta
+branch e a pasta `/docs`. Depois disso o link fica em
+`https://jeyssonleandro-tech.github.io/Teste/intermediador.html` (uso
+seu) e `https://jeyssonleandro-tech.github.io/Teste/index.html` (o que
+vira link/QR pro grupo). Se este conteúdo for movido para a branch
+principal do repositório no futuro, atualizar essa configuração de
+Pages para apontar para a branch nova.

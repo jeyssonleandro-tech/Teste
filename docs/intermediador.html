@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Intermediador — Simulado F14</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <span class="eyebrow">Uso exclusivo do intermediador</span>
+    <h1>Sorteio de Papéis</h1>
+    <p class="subtitulo" id="temaSubtitulo"></p>
+  </header>
+
+  <div class="card">
+    <label class="field-label" for="participantesInput">Quem está presente hoje (um nome por linha)</label>
+    <textarea id="participantesInput" placeholder="João&#10;Maria&#10;Pedro&#10;Ana&#10;Lucas"></textarea>
+    <div id="avisoErro" hidden class="aviso" style="margin-top:8px;"></div>
+    <button class="primary" id="btnSortear" style="margin-top:10px;">Sortear rodada</button>
+  </div>
+
+  <div id="resultadosWrap"></div>
+
+  <div id="compartilharWrap" hidden class="qr-box">
+    <p class="field-label" style="margin:0;">Compartilhe este link/QR com o grupo</p>
+    <div id="qrcode"></div>
+    <div class="link-copiar">
+      <input type="text" id="linkGerado" readonly>
+      <button class="secondary" id="btnCopiar">Copiar</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-dim);margin:0;">Cada pessoa abre o link, escolhe o próprio nome e vê só a própria ficha.</p>
+  </div>
+
+  <details class="cola">
+    <summary>Cola do intermediador — condições, encruzilhada, debate</summary>
+    <div class="conteudo" id="colaConteudo"></div>
+  </details>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="temas/f2.js"></script>
+<script src="sorteio.js"></script>
+<script>
+(function () {
+  var TEMA = TEMA_F2;
+  var PAPEIS_LIDERADOS = TEMA.liderados.map(function (l) { return l.id; });
+
+  document.getElementById('temaSubtitulo').textContent = TEMA.id + ' — ' + TEMA.titulo;
+
+  var colaEl = document.getElementById('colaConteudo');
+  colaEl.innerHTML =
+    '<div><h4>Condições a injetar</h4><ul>' + TEMA.cola.condicoes.map(function (c) { return '<li>' + c + '</li>'; }).join('') + '</ul></div>' +
+    '<div><h4>Encruzilhada — Débora</h4><p>' + TEMA.cola.encruzilhada + '</p></div>' +
+    '<div><h4>Perguntas do debate</h4><ul>' + TEMA.cola.perguntas.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ul></div>';
+
+  function papelInfo(chave) {
+    if (chave === 'lider') return { nome: TEMA.lider.nome, cargo: TEMA.lider.cargo, classe: 'lider', tag: 'LÍDER' };
+    var f = TEMA.liderados.filter(function (l) { return l.id === chave; })[0];
+    return f ? { nome: f.nome, cargo: f.cargo, classe: f.classe, tag: f.tag } : null;
+  }
+
+  function renderResultados(estado) {
+    var wrap = document.getElementById('resultadosWrap');
+    var html = '';
+    estado.mesas.forEach(function (mesa) {
+      html += '<div class="card" style="margin-bottom:10px;">';
+      html += '<p class="mesa-titulo">Mesa ' + mesa.numero + '</p>';
+      ['lider'].concat(PAPEIS_LIDERADOS).forEach(function (chave) {
+        var info = papelInfo(chave);
+        var pessoa = mesa.papeis[chave];
+        html += '<div class="papel-row">' +
+          '<span class="tag ' + info.classe + '">' + (chave === 'lider' ? 'LÍDER' : info.tag) + '</span>' +
+          '<div><div class="papel-nome">' + pessoa + '</div><div class="papel-cargo">' + info.nome + (chave !== 'lider' ? ' · ' + info.cargo : '') + '</div></div>' +
+          '</div>';
+      });
+      html += '</div>';
+    });
+    if (estado.foraDaRodada && estado.foraDaRodada.length) {
+      html += '<div class="fora-box"><strong>Fora desta rodada</strong> (plateia ativa): ' + estado.foraDaRodada.join(', ') + '</div>';
+    }
+    wrap.innerHTML = html;
+  }
+
+  function gerarLinkEQr(estado) {
+    var d = codificarEstado(estado);
+    var base = location.href.replace(/intermediador\.html.*$/, 'index.html');
+    var url = base + '?d=' + d;
+
+    document.getElementById('compartilharWrap').hidden = false;
+    document.getElementById('linkGerado').value = url;
+
+    var qrEl = document.getElementById('qrcode');
+    qrEl.innerHTML = '';
+    if (window.QRCode) {
+      new QRCode(qrEl, { text: url, width: 200, height: 200 });
+    } else {
+      qrEl.textContent = '(QR indisponível offline — use o link abaixo)';
+    }
+  }
+
+  function mostrarErro(msg) {
+    var el = document.getElementById('avisoErro');
+    if (!msg) { el.hidden = true; el.textContent = ''; return; }
+    el.hidden = false; el.textContent = msg;
+  }
+
+  document.getElementById('btnSortear').addEventListener('click', function () {
+    mostrarErro(null);
+    var raw = document.getElementById('participantesInput').value;
+    var nomes = Array.from(new Set(raw.split('\n').map(function (s) { return s.trim(); }).filter(Boolean)));
+    if (nomes.length < 5) { mostrarErro('Precisa de pelo menos 5 participantes presentes para formar uma mesa.'); return; }
+    var estado = sortearRodada(TEMA.id, PAPEIS_LIDERADOS, nomes);
+    renderResultados(estado);
+    gerarLinkEQr(estado);
+  });
+
+  document.getElementById('btnCopiar').addEventListener('click', function () {
+    var input = document.getElementById('linkGerado');
+    input.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    if (navigator.clipboard) { navigator.clipboard.writeText(input.value).catch(function () {}); }
+  });
+})();
+</script>
+</body>
+</html>
