@@ -1,0 +1,646 @@
+<title>Sorteio F14</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root {
+    --bg: #f6f2ea;
+    --surface: #ffffff;
+    --surface-2: #efe8d9;
+    --border: #ddd2ba;
+    --text: #211b13;
+    --text-dim: #6e6250;
+    --accent: #c2540c;
+    --accent-contrast: #fff8f0;
+    --role-lider: #26221b;
+    --role-lider-bg: #e8e3d8;
+    --role-d: #ad1f1f;
+    --role-d-bg: #f7dede;
+    --role-i: #a15a06;
+    --role-i-bg: #f6e6cd;
+    --role-s: #1f7a3d;
+    --role-s-bg: #dcefe1;
+    --role-c: #1d4ed8;
+    --role-c-bg: #dde6fb;
+    --danger: #ad1f1f;
+    --ok: #1f7a3d;
+    --shadow: 0 1px 2px rgba(33,27,19,.06), 0 6px 16px rgba(33,27,19,.06);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f;
+      --surface: #211c15;
+      --surface-2: #2a241b;
+      --border: #3c3527;
+      --text: #f2ece0;
+      --text-dim: #b3a892;
+      --accent: #e8792f;
+      --accent-contrast: #1a0f06;
+      --role-lider: #f2ece0;
+      --role-lider-bg: #33301f;
+      --role-d: #f19c9c;
+      --role-d-bg: #3a2020;
+      --role-i: #f0c27f;
+      --role-i-bg: #3a2c14;
+      --role-s: #9adcae;
+      --role-s-bg: #163826;
+      --role-c: #a9c0f7;
+      --role-c-bg: #1c2a4d;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f;
+    --surface: #211c15;
+    --surface-2: #2a241b;
+    --border: #3c3527;
+    --text: #f2ece0;
+    --text-dim: #b3a892;
+    --accent: #e8792f;
+    --accent-contrast: #1a0f06;
+    --role-lider: #f2ece0;
+    --role-lider-bg: #33301f;
+    --role-d: #f19c9c;
+    --role-d-bg: #3a2020;
+    --role-i: #f0c27f;
+    --role-i-bg: #3a2c14;
+    --role-s: #9adcae;
+    --role-s-bg: #163826;
+    --role-c: #a9c0f7;
+    --role-c-bg: #1c2a4d;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 20px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  header.top { display: flex; flex-direction: column; gap: 4px; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  h1 {
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 900;
+    font-size: clamp(28px, 8vw, 40px);
+    line-height: .95;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .subtitulo { color: var(--text-dim); font-size: 14px; margin: 0; }
+
+  .tabs {
+    display: flex;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 9px 6px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .tab-btn[aria-selected="true"] {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+
+  section.panel { display: flex; flex-direction: column; gap: 14px; }
+  [hidden] { display: none !important; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  label.field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  textarea, select {
+    width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 12px 16px;
+    border-radius: 9px;
+    cursor: pointer;
+    width: 100%;
+  }
+  button.primary:active { transform: translateY(1px); }
+  button.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .aviso {
+    font-size: 13px;
+    color: var(--danger);
+    background: var(--role-d-bg);
+    border: 1px solid var(--role-d);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .status-line {
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); flex: none; }
+  .dot.on { background: var(--ok); }
+
+  .mesa-titulo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 0 0 8px;
+  }
+  .papel-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .papel-row:last-child { border-bottom: none; }
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 3px 7px;
+    border-radius: 6px;
+    flex: none;
+    min-width: 44px;
+    text-align: center;
+  }
+  .tag.lider { background: var(--role-lider-bg); color: var(--role-lider); }
+  .tag.d { background: var(--role-d-bg); color: var(--role-d); }
+  .tag.i { background: var(--role-i-bg); color: var(--role-i); }
+  .tag.s { background: var(--role-s-bg); color: var(--role-s); }
+  .tag.c { background: var(--role-c-bg); color: var(--role-c); }
+  .papel-nome { font-weight: 600; font-size: 15px; }
+  .papel-cargo { font-size: 12px; color: var(--text-dim); }
+
+  .fora-box {
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  details.cola {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 4px 16px;
+  }
+  details.cola summary {
+    cursor: pointer;
+    font-weight: 700;
+    padding: 12px 0;
+    font-size: 14px;
+  }
+  details.cola .conteudo { padding-bottom: 14px; display: flex; flex-direction: column; gap: 12px; }
+  details.cola h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); margin: 0 0 4px; }
+  details.cola p, details.cola li { font-size: 13.5px; line-height: 1.5; margin: 0; }
+  details.cola ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+
+  .ficha-card {
+    border-radius: 14px;
+    padding: 18px;
+    color: var(--role-lider);
+    background: var(--role-lider-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ficha-card.d { background: var(--role-d-bg); color: var(--role-d); }
+  .ficha-card.i { background: var(--role-i-bg); color: var(--role-i); }
+  .ficha-card.s { background: var(--role-s-bg); color: var(--role-s); }
+  .ficha-card.c { background: var(--role-c-bg); color: var(--role-c); }
+  .ficha-card .ficha-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    opacity: .8;
+  }
+  .ficha-card h2 {
+    font-family: 'Big Shoulders Display', sans-serif;
+    font-weight: 900;
+    font-size: 30px;
+    margin: 0;
+    color: var(--text);
+  }
+  .ficha-card .ficha-cargo { font-weight: 600; font-size: 13px; color: var(--text); }
+  .ficha-card .ficha-texto {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text);
+    white-space: pre-line;
+  }
+
+  .exemplo-flag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border-radius: 6px;
+    padding: 2px 6px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+</style>
+
+<div class="page">
+  <header class="top">
+    <span class="eyebrow">Simulado F14 da Liderança</span>
+    <h1>Sorteio de Papéis</h1>
+    <p class="subtitulo" id="temaSubtitulo"></p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn" id="tabBtnInter" role="tab" aria-selected="true">Intermediador</button>
+    <button class="tab-btn" id="tabBtnPart" role="tab" aria-selected="false">Minha ficha</button>
+  </div>
+
+  <section class="panel" id="painelInter">
+    <div class="card">
+      <span class="status-line"><span class="dot" id="statusDot"></span><span id="statusTexto">verificando sincronização…</span></span>
+    </div>
+
+    <div class="card">
+      <label class="field-label" for="participantesInput">Quem está presente hoje (um nome por linha)</label>
+      <textarea id="participantesInput" placeholder="João&#10;Maria&#10;Pedro&#10;Ana&#10;Lucas"></textarea>
+      <div id="avisoErro" hidden class="aviso" style="margin-top:8px;"></div>
+      <button class="primary" id="btnSortear" style="margin-top:10px;">Sortear rodada</button>
+    </div>
+
+    <div id="resultadosWrap"></div>
+
+    <details class="cola">
+      <summary>Cola do intermediador — F2 (condições, encruzilhada, debate)</summary>
+      <div class="conteudo" id="colaConteudo"></div>
+    </details>
+  </section>
+
+  <section class="panel" id="painelPart" hidden>
+    <div class="card">
+      <label class="field-label" for="selectParticipante">Selecione seu nome</label>
+      <select id="selectParticipante"><option value="">— escolha —</option></select>
+      <button class="primary" id="btnVerFicha" style="margin-top:10px;">Ver minha ficha</button>
+    </div>
+    <div id="fichaWrap"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  var TEMA = {
+    id: "F2",
+    titulo: "Comportamento Líder (Perfil DISC)",
+    lider: {
+      nome: "Líder",
+      cargo: "Líder de turno na linha de produção",
+      classe: "lider",
+      texto: "Contexto: a gerência da fábrica decidiu implementar uma nova checagem de qualidade na linha, que adiciona cerca de 5 minutos a cada parada. A meta diária de produção não muda.\n\nSituação: você precisa comunicar essa mudança à sua equipe — Marcos, Bianca, Carlos e Débora — e conseguir adesão real, não só concordância forçada. Antes mesmo desta conversa, já rolou um comentário informal na linha de que \"isso vai atrasar tudo\".\n\nSua missão: decida como conduzir essa comunicação (reunião com todos? conversas individuais primeiro?) e preste atenção em como cada pessoa da equipe reage — adapte sua abordagem a cada uma.\n\nDébora, a técnica química responsável pela linha, tem autoridade técnica: pode recusar liberar a mudança até se sentir segura com o processo."
+    },
+    liderados: [
+      {
+        id: "marcos", nome: "Marcos", tag: "D", classe: "d",
+        cargo: "Operador líder de turno, 8 anos de casa",
+        texto: "Como você é: direto, impaciente, vai ao ponto. Não gosta de enrolação nem de reunião longa sem objetivo. Fala olhando no olho, tom firme.\n\nFrases suas: \"Vai direto ao assunto.\" / \"Isso já foi decidido ou ainda dá pra discutir?\" / \"Eu resolvo, só me diz o prazo.\"\n\nO que te irrita: sentir que estão escondendo informação ou enrolando.\nO que te motiva: autonomia, desafio, ser reconhecido por resolver rápido.\n\nComo jogar: questione o líder diretamente, peça lógica por trás da decisão. Se ele explicar bem o \"porquê\", você cede rápido — mas teste um pouco antes."
+      },
+      {
+        id: "bianca", nome: "Bianca", tag: "I", classe: "i",
+        cargo: "Operadora, 2 anos de casa, \"alma da linha\"",
+        texto: "Como você é: animada, fala com as mãos, puxa assunto, faz piada mesmo em momento tenso. Se importa muito com o clima do grupo.\n\nFrases suas: \"Gente, calma, vamos conversar!\" / \"Também acho que a galera vai ficar puta se não explicarem direito\" / \"Ninguém me perguntou nada antes!\"\n\nO que te irrita: ser ignorada, decisão anunciada sem ninguém \"sentir\" que você participou.\nO que te motiva: ser ouvida na frente do grupo, sentir-se parte da solução, elogio público.\n\nComo jogar: reaja primeiro ao clima emocional, não ao conteúdo técnico. Se o líder te der espaço pra opinar na frente dos outros, você vira aliada na hora."
+      },
+      {
+        id: "carlos", nome: "Carlos", tag: "S", classe: "s",
+        cargo: "Operador, 15 anos de casa, o mais experiente",
+        texto: "Como você é: calmo, fala pouco, demora pra responder, evita confronto direto. Prefere rotina a mudança.\n\nFrases suas: \"Sempre fizemos assim, mas... tá bom, se for pra melhorar.\" / \"Vai mudar muita coisa de uma vez?\" — ou só silêncio e um aceno de cabeça quando está desconfortável.\n\nO que te irrita: mudança anunciada de forma abrupta.\nO que te motiva: segurança, previsibilidade, sentir que o líder está no controle da transição.\n\nComo jogar: não discorde abertamente — mostre desconforto por gestos, silêncio, respostas evasivas. Só relaxa se o líder detalhar o passo a passo e o prazo de adaptação."
+      },
+      {
+        id: "debora", nome: "Débora", tag: "C", classe: "c",
+        cargo: "Técnica química, responsável pela linha de produção",
+        texto: "Como você é: precisa, técnica, faz perguntas objetivas, anota tudo, questiona números. Você não decide sozinha uma validação formal de processo — precisa checar com seu coordenador de qualidade antes.\n\nFrases suas: \"Isso está documentado em algum procedimento?\" / \"Quem validou esse tempo de 5 minutos, foi medido ou é estimativa?\" / \"Preciso checar isso com meu coordenador antes de liberar a linha.\"\n\nO que te irrita: resposta vaga, decisão sem passar por você antes, \"confia em mim\" sem dado nenhum.\nO que te motiva: clareza, critério técnico, ser tratada como responsável.\n\nSeu poder na cena: você pode recusar liberar a mudança até ter critério técnico ou aval do seu coordenador. Não ceda só porque o líder \"pediu com jeito\"."
+      }
+    ],
+    cola: {
+      condicoes: [
+        "Adversa — no início: \"A meta diária de produção continua a mesma, mesmo com a nova checagem.\"",
+        "Adversa — no meio: \"Um operador já comentou pelos corredores que isso vai atrasar tudo, antes mesmo desta conversa.\"",
+        "Favorável — alívio: \"A gerência da fábrica pode liberar um piloto de 2 semanas antes de tornar definitivo, se bem justificado.\"",
+        "Favorável — alívio: \"O time de qualidade se oferece para dar um treinamento rápido de 15 min antes da mudança.\""
+      ],
+      encruzilhada: "Quando a conversa do líder com a Débora travar (ela insiste em documentação/validação), leia para o líder: escolha uma das três — A) Autoridade: reforça que a decisão veio da gerência da fábrica e pede que ela aplique. B) Parceria técnica: pede que ela acione o coordenador de qualidade para validar antes de comunicar aos demais. C) Escalar: pausa a implementação e leva a preocupação à gerência da fábrica antes de seguir. Reações: (A) ela aplica mas registra a falta de validação com o coordenador — vira bomba-relógio. (B) liga pro coordenador — aprova rápido se houver dados/prazo, senão pede mais tempo. (C) ganha respeito dela mas atrasa tudo e passa a imagem de líder que não decide sozinho.",
+      perguntas: [
+        "Qual perfil foi mais fácil/difícil de liderar e por quê?",
+        "Em que momento você percebeu que precisava mudar de abordagem?",
+        "Na conversa com a Débora, qual alternativa você escolheu e o que isso gerou?",
+        "O que você faria diferente sabendo o perfil de cada um antes da reunião?"
+      ]
+    }
+  };
+
+  document.getElementById('temaSubtitulo').textContent = TEMA.id + " — " + TEMA.titulo;
+
+  var colaEl = document.getElementById('colaConteudo');
+  colaEl.innerHTML =
+    '<div><h4>Condições a injetar</h4><ul>' + TEMA.cola.condicoes.map(function(c){ return '<li>' + c + '</li>'; }).join('') + '</ul></div>' +
+    '<div><h4>Encruzilhada — Débora</h4><p>' + TEMA.cola.encruzilhada + '</p></div>' +
+    '<div><h4>Perguntas do debate</h4><ul>' + TEMA.cola.perguntas.map(function(p){ return '<li>' + p + '</li>'; }).join('') + '</ul></div>';
+
+  var LOCAL_ESTADO = 'f14_f2_estado_v1';
+  var LOCAL_HIST = 'f14_f2_historico_v1';
+  var db = null;
+
+  function embaralhar(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  async function lerEstado(){
+    if (db) {
+      try {
+        var snap = await db.doc('temas/f2').get();
+        if (snap.exists) return snap.data();
+      } catch (e) {}
+    }
+    try {
+      var raw = localStorage.getItem(LOCAL_ESTADO);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  async function salvarEstado(data){
+    if (db) {
+      try { await db.doc('temas/f2').set(data); return; } catch (e) {}
+    }
+    try { localStorage.setItem(LOCAL_ESTADO, JSON.stringify(data)); } catch (e) {}
+  }
+
+  async function lerHistorico(){
+    if (db) {
+      try {
+        var snap = await db.doc('historico/f2').get();
+        return snap.exists ? snap.data() : { ultimosLideres: [] };
+      } catch (e) {}
+    }
+    try {
+      var raw = localStorage.getItem(LOCAL_HIST);
+      return raw ? JSON.parse(raw) : { ultimosLideres: [] };
+    } catch (e) { return { ultimosLideres: [] }; }
+  }
+
+  async function salvarHistorico(data){
+    if (db) {
+      try { await db.doc('historico/f2').set(data); return; } catch (e) {}
+    }
+    try { localStorage.setItem(LOCAL_HIST, JSON.stringify(data)); } catch (e) {}
+  }
+
+  function papelInfo(chaveOuId){
+    if (chaveOuId === 'lider') return { nome: TEMA.lider.nome, cargo: TEMA.lider.cargo, classe: 'lider', tag: 'LÍDER' };
+    var found = TEMA.liderados.filter(function(l){ return l.id === chaveOuId; })[0];
+    return found ? { nome: found.nome, cargo: found.cargo, classe: found.classe, tag: found.tag } : null;
+  }
+
+  function renderResultados(estado, opts){
+    var wrap = document.getElementById('resultadosWrap');
+    if (!estado) { wrap.innerHTML = ''; return; }
+    var ehExemplo = !!(opts && opts.exemplo);
+    var html = '';
+    if (ehExemplo) html += '<span class="exemplo-flag">Exemplo ilustrativo — ainda sem sorteio real</span>';
+    estado.mesas.forEach(function(mesa){
+      html += '<div class="card" style="margin-bottom:10px;">';
+      html += '<p class="mesa-titulo">Mesa ' + mesa.numero + '</p>';
+      ['lider','marcos','bianca','carlos','debora'].forEach(function(chave){
+        var info = papelInfo(chave);
+        var pessoa = mesa.papeis[chave];
+        html += '<div class="papel-row">' +
+          '<span class="tag ' + info.classe + '">' + (chave === 'lider' ? 'LÍDER' : info.tag) + '</span>' +
+          '<div><div class="papel-nome">' + pessoa + '</div><div class="papel-cargo">' + info.nome + (chave!=='lider' ? ' · ' + info.cargo : '') + '</div></div>' +
+          '</div>';
+      });
+      html += '</div>';
+    });
+    if (estado.foraDaRodada && estado.foraDaRodada.length) {
+      html += '<div class="fora-box"><strong>Fora desta rodada</strong> (plateia ativa): ' + estado.foraDaRodada.join(', ') + '</div>';
+    }
+    wrap.innerHTML = html;
+  }
+
+  function atualizarSelect(nomes){
+    var sel = document.getElementById('selectParticipante');
+    var atual = sel.value;
+    sel.innerHTML = '<option value="">— escolha —</option>' + nomes.map(function(n){ return '<option value="' + n.replace(/"/g,'&quot;') + '">' + n + '</option>'; }).join('');
+    if (nomes.indexOf(atual) !== -1) sel.value = atual;
+  }
+
+  function mostrarErro(msg){
+    var el = document.getElementById('avisoErro');
+    if (!msg) { el.hidden = true; el.textContent = ''; return; }
+    el.hidden = false; el.textContent = msg;
+  }
+
+  async function sortear(){
+    mostrarErro(null);
+    var raw = document.getElementById('participantesInput').value;
+    var nomes = Array.from(new Set(raw.split('\n').map(function(s){ return s.trim(); }).filter(Boolean)));
+    if (nomes.length < 5) { mostrarErro('Precisa de pelo menos 5 participantes presentes para formar uma mesa.'); return; }
+
+    var numMesas = nomes.length < 10 ? 1 : Math.floor(nomes.length / 5);
+    var embaralhados = embaralhar(nomes);
+    var emJogo = embaralhados.slice(0, numMesas * 5);
+    var foraDaRodada = embaralhados.slice(numMesas * 5);
+
+    var hist = await lerHistorico();
+    var ultimosLideres = hist.ultimosLideres || [];
+    var mesas = [];
+    var novosLideres = [];
+
+    for (var m = 0; m < numMesas; m++) {
+      var grupo = emJogo.slice(m * 5, m * 5 + 5);
+      var candidatosLider = grupo.filter(function(p){ return ultimosLideres.indexOf(p) === -1; });
+      if (candidatosLider.length === 0) candidatosLider = grupo;
+      var lider = candidatosLider[Math.floor(Math.random() * candidatosLider.length)];
+      var restantes = embaralhar(grupo.filter(function(p){ return p !== lider; }));
+      mesas.push({
+        numero: m + 1,
+        papeis: { lider: lider, marcos: restantes[0], bianca: restantes[1], carlos: restantes[2], debora: restantes[3] }
+      });
+      novosLideres.push(lider);
+    }
+
+    var estado = { tema: TEMA.id, participantes: nomes, mesas: mesas, foraDaRodada: foraDaRodada, sorteadoEm: new Date().toISOString() };
+    await salvarEstado(estado);
+    await salvarHistorico({ ultimosLideres: novosLideres });
+    renderResultados(estado, { exemplo: false });
+    atualizarSelect(nomes);
+  }
+
+  function renderFicha(nome, estado){
+    var wrap = document.getElementById('fichaWrap');
+    if (!nome) { wrap.innerHTML = ''; return; }
+    if (!estado) { wrap.innerHTML = '<div class="aviso">Ainda não há sorteio registrado para esta rodada.</div>'; return; }
+    if (estado.foraDaRodada && estado.foraDaRodada.indexOf(nome) !== -1) {
+      wrap.innerHTML = '<div class="aviso" style="color:var(--text);background:var(--surface-2);border-color:var(--border);">Você não participará desse simulado nesta rodada — acompanhe como plateia e participe do debate final.</div>';
+      return;
+    }
+    var papelChave = null, mesaNumero = null;
+    for (var i = 0; i < estado.mesas.length; i++) {
+      var mesa = estado.mesas[i];
+      for (var chave in mesa.papeis) {
+        if (mesa.papeis[chave] === nome) { papelChave = chave; mesaNumero = mesa.numero; }
+      }
+    }
+    if (!papelChave) { wrap.innerHTML = '<div class="aviso">Nome não encontrado nesta rodada.</div>'; return; }
+
+    var dados = papelChave === 'lider' ? TEMA.lider : TEMA.liderados.filter(function(l){ return l.id === papelChave; })[0];
+    var classe = papelChave === 'lider' ? 'lider' : dados.classe;
+    var tagTexto = papelChave === 'lider' ? 'LÍDER · MESA ' + mesaNumero : dados.tag + ' · MESA ' + mesaNumero;
+    wrap.innerHTML =
+      '<div class="ficha-card ' + classe + '">' +
+      '<span class="ficha-eyebrow">' + tagTexto + '</span>' +
+      '<h2>' + dados.nome + '</h2>' +
+      '<span class="ficha-cargo">' + dados.cargo + '</span>' +
+      '<div class="ficha-texto">' + dados.texto.replace(/</g,'&lt;') + '</div>' +
+      '</div>';
+  }
+
+  var estadoAtual = null;
+
+  async function carregarInicial(){
+    estadoAtual = await lerEstado();
+    if (estadoAtual) {
+      renderResultados(estadoAtual, { exemplo: false });
+      atualizarSelect(estadoAtual.participantes || []);
+    } else {
+      var exemploNomes = ['João', 'Maria', 'Pedro', 'Ana', 'Lucas'];
+      var exemplo = { tema: TEMA.id, participantes: exemploNomes, mesas: [{ numero: 1, papeis: { lider: 'João', marcos: 'Pedro', bianca: 'Maria', carlos: 'Lucas', debora: 'Ana' } }], foraDaRodada: [] };
+      renderResultados(exemplo, { exemplo: true });
+      atualizarSelect(exemploNomes);
+    }
+  }
+
+  async function iniciarDb(){
+    var statusDot = document.getElementById('statusDot');
+    var statusTexto = document.getElementById('statusTexto');
+    try {
+      if (window.claude && window.claude.use) {
+        db = await window.claude.use('db');
+      }
+    } catch (e) { db = null; }
+    if (db) {
+      statusDot.classList.add('on');
+      statusTexto.textContent = 'sincronizado entre dispositivos';
+      try {
+        db.doc('temas/f2').onSnapshot(function(snap){
+          if (snap.exists) {
+            estadoAtual = snap.data();
+            renderResultados(estadoAtual, { exemplo: false });
+            atualizarSelect(estadoAtual.participantes || []);
+          }
+        });
+      } catch (e) {}
+    } else {
+      statusTexto.textContent = 'modo local — funciona só neste aparelho (fichas impressas como reforço)';
+    }
+  }
+
+  document.getElementById('btnSortear').addEventListener('click', function(){ sortear(); });
+  document.getElementById('btnVerFicha').addEventListener('click', function(){
+    var nome = document.getElementById('selectParticipante').value;
+    renderFicha(nome, estadoAtual);
+  });
+
+  var tabInter = document.getElementById('tabBtnInter');
+  var tabPart = document.getElementById('tabBtnPart');
+  var painelInter = document.getElementById('painelInter');
+  var painelPart = document.getElementById('painelPart');
+  tabInter.addEventListener('click', function(){
+    tabInter.setAttribute('aria-selected','true'); tabPart.setAttribute('aria-selected','false');
+    painelInter.hidden = false; painelPart.hidden = true;
+  });
+  tabPart.addEventListener('click', function(){
+    tabInter.setAttribute('aria-selected','false'); tabPart.setAttribute('aria-selected','true');
+    painelInter.hidden = true; painelPart.hidden = false;
+  });
+
+  carregarInicial();
+  iniciarDb();
+})();
+</script>
