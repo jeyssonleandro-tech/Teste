@@ -72,24 +72,30 @@ as mesas. Decisão a ser tomada quando tivermos o primeiro tema montado.
 
 Lista geral, só para contexto. **Não usar para gerar conteúdo antecipado**
 — cada tema é desenvolvido em conjunto, um de cada vez, quando o usuário
-trouxer os subtítulos/detalhes daquele capítulo específico.
+trouxer os detalhes daquele capítulo específico.
 
-| # | Tema | Resumo |
-|---|------|--------|
-| F1 | Líder motivado | Estratégias de líderes altamente motivados mesmo em situações desafiadoras, evitando ansiedade e burnout. |
-| F2 | Autoconhecimento | Identificar comportamentos limitantes e como mudá-los para ser promovido em vez de demitido. |
-| F3 | Persuadir e Influenciar Pessoas | 8 estratégias para persuadir e influenciar liderados, líderes, pares e clientes. |
-| F4 | Inovação e Melhoria Contínua | Inovar e melhorar continuamente: mais rápido, mais barato, com mais qualidade. |
-| F5 | Como Planejar, Executar e Cobrar as Tarefas dos Liderados | Ferramentas de planejamento, execução e delegação. |
-| F6 | Como Motivar e Engajar a Equipe Mesmo em Momentos Difíceis | 7 estratégias para elevar motivação mesmo em momentos difíceis. |
-| F7 | Como Elevar a Competência da Equipe para a Alta Performance | 7 estratégias de coaching para desenvolver liderados rumo à alta performance. |
-| F8 | Comunicação – Como Liderar Pessoas Diferentes | 8 estilos de liderança para comunicação personalizada e respeitosa. |
-| F9 | Como Aplicar Feedbacks e Feedforwards | 6 pontos essenciais de um feedback eficaz. |
-| F10 | Administração do Tempo para Líderes | 5 soluções práticas para priorizar, organizar e delegar. |
-| F11 | Gestão de Conflitos na Equipe e Como Liderar Pessoas Difíceis | Transformar conflitos em ações que beneficiam todos os envolvidos. |
-| F12 | Inteligência Emocional dos Líderes e Liderados | Dominar emoções e ser mais assertivo ao cobrar e dar feedback. |
-| F13 | Como Contratar Pessoas Certas para o Lugar Certo | Avaliar comportamento do candidato em 20 minutos de conversa. |
-| F14 | Falar em Público – Oratória | Estratégias para perder o medo de falar em público. |
+A numeração abaixo segue a **plataforma real do curso** (o que o grupo
+efetivamente assiste). Ela difere um pouco da ordem do site de marketing
+nos temas F10–F13: na plataforma, Inteligência Emocional é F10, Contratar
+Certo é F11, Gestão de Conflito é F12 e Administração do Tempo é F13 (no
+site de marketing essa ordem vinha diferente). Usar sempre esta versão.
+
+| # | Tema | Subtemas (vídeo aulas) |
+|---|------|------|
+| F1 | Automotivação do Líder | Como ser um Líder Motivado · Cuide da Roda da sua Vida · Cuide da sua Energia · Qual é o seu propósito de vida? · Ative os 3 Hormônios Naturais da Motivação |
+| F2 | Comportamento Líder (Perfil DISC) | Perfil de Liderança DISC · Pessoas de Dominância · Pessoas de Influência · Pessoas de Estabilidade · Pessoas de Conformidade · Como Mudar Comportamento |
+| F3 | Persuasão e Influência | Como Persuadir e Influenciar – 1, 2 e 3 |
+| F4 | Criatividade e Inovação | Criatividade e Inovação – 1 e 2 |
+| F5 | Delegando Atividades | Como Delegar Atividades |
+| F6 | Motivando e Engajando | Motivação e Engajamento – 1 e 2 |
+| F7 | Competências do Time | Competências da sua Equipe · Reunião One a One |
+| F8 | Oito Formas de Liderar | Estilos para Liderar Pessoas – 1 e 2 |
+| F9 | Feedback | Teste: Dimensões do Feedback · Explicando o Resultado do Teste · Feedback nos Liderados – 1 e 2 · Aplique Feedback no seu Líder |
+| F10 | Inteligência Emocional | IE na Liderança |
+| F11 | Como Contratar Certo | Como Contratar Pessoas Certas |
+| F12 | Gestão de Conflito | Liderando Pessoas Difíceis |
+| F13 | Administração do Tempo | Administração do Tempo |
+| F14 | Oratória e Falar em Público | Tudo começa com um Script · Exemplo de Script Persuasivo · Repertório · Tom de Voz |
 
 ## Temas já desenvolvidos
 
