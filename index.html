@@ -175,6 +175,10 @@
   .topo-linha { display: flex; align-items: center; gap: 20px; padding: 16px 0 14px; }
   img.logo { height: 34px; width: auto; flex: none; display: block; }
   img.logo[hidden] { display: none; }
+  /* Regras de display (inline-flex dos segmentados, por exemplo) vencem o
+     atributo hidden do navegador — e o seletor de turno aparecia na ETA e
+     na Represa, onde não faz nada. Escondido é escondido. */
+  [hidden] { display: none !important; }
   header.topo h1 {
     flex: 1; min-width: 0; margin: 0; font-size: 21px; font-weight: 600;
     letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -245,13 +249,13 @@
   /* A janela de tempo vira menu suspenso: quatro opções que só
      aparecem quando alguém quer trocá-las. */
   .menu { position: relative; }
-  .menu > button.abre {
+  .menu > button.abre, .aviso.vazio button.abre {
     font: 500 13.5px Barlow, sans-serif; cursor: pointer;
     display: inline-flex; align-items: center; gap: 7px;
     padding: 8px 13px; border-radius: 8px;
     border: 1px solid var(--rule); background: var(--panel); color: var(--ink-2);
   }
-  .menu > button.abre:hover { background: var(--sunk); }
+  .menu > button.abre:hover, .aviso.vazio button.abre:hover { background: var(--sunk); }
   .menu > button.abre .seta { font-size: 9px; color: var(--ink-3); }
   .menu-painel {
     position: absolute; top: calc(100% + 6px); right: 0; z-index: 40;
@@ -431,6 +435,8 @@
     border-left: 3px solid var(--brand);
     border-radius: 10px; padding: 16px 18px; color: var(--ink-2); font-size: 14.5px;
   }
+  .aviso.vazio { display: grid; gap: 14px; justify-items: start; }
+  .aviso.vazio p { margin: 0; color: var(--ink); font-size: 15.5px; line-height: 1.5; }
   footer.rodape {
     padding: 20px 0 40px; border-top: 1px solid var(--rule);
     color: var(--ink-3); font-size: 13px;
@@ -776,6 +782,13 @@ let mostrarTabela = false;
    sobrepor as duas. */
 let turnoVisto = 0;
 let UNIDADES_TURNO = new Set();   // unidades que trabalham por turno
+/* As abas saem do cadastro, não dos dados. Antes vinham dos dados do
+   mês: na virada para novembro, a ETE Industrial já tinha o 1º turno do
+   dia 01 lançado e a ETA e a Represa ainda não — e as duas abas sumiram
+   do painel. Unidade sem lançamento no mês agora aparece vazia, com o
+   caminho para o último mês que tem dado. */
+let UNIDADES_PAINEL = [];
+const ULTIMO_LANCAMENTO = new Map(); // unidade → última data lançada
 let TANQUES = new Set();          // parâmetros que o painel desenha como tanque
 let ACUMULA = new Set();          // parâmetros lidos pelo acumulado do mês
 /* Só o administrador mexe no que entra na apresentação. Na dúvida a
@@ -801,8 +814,9 @@ const VIEWS = {
 };
 const rotuloPeriodo = () =>
   modo === "mensal" ? "Mês de" : modo === "semanal" ? "Semana de" : "Dia";
-const nomePeriodos = () =>
-  modo === "mensal" ? "meses" : modo === "semanal" ? "semanas" : "dias";
+const nomePeriodos = (n = 2) => n === 1
+  ? (modo === "mensal" ? "mês" : modo === "semanal" ? "semana" : "dia")
+  : (modo === "mensal" ? "meses" : modo === "semanal" ? "semanas" : "dias");
 const periodoAnterior = () =>
   modo === "mensal" ? "mês anterior" : modo === "semanal" ? "semana anterior" : "dia anterior";
 
@@ -1371,7 +1385,12 @@ function desenhar() {
   const base = organizar(LINHAS);
   const conteudo = document.getElementById("conteudo");
 
-  montarAbas(base.unidades.map(x => x.nome));
+  const comDado = base.unidades.map(x => x.nome);
+  const nomesAbas = UNIDADES_PAINEL.length
+    ? [...UNIDADES_PAINEL, ...comDado.filter(n => !UNIDADES_PAINEL.includes(n))]
+    : comDado;
+  if (!unidadeAtiva || !nomesAbas.includes(unidadeAtiva)) unidadeAtiva = comDado[0] || nomesAbas[0];
+  montarAbas(nomesAbas);
 
   const vista = turnoVisto
     ? organizar(LINHAS_TURNO.filter(l => Number(l.turno) === turnoVisto))
@@ -1379,8 +1398,8 @@ function desenhar() {
   const { periodos } = vista.unidades.length ? vista : base;
 
   const u = vista.unidades.find(x => x.nome === unidadeAtiva)
-         || base.unidades.find(x => x.nome === unidadeAtiva)
-         || base.unidades[0];
+         || base.unidades.find(x => x.nome === unidadeAtiva);
+  if (!u && unidadeAtiva) { semLancamentoNoMes(unidadeAtiva); return; }
   if (!u) {
     conteudo.innerHTML = `<p class="aviso">Nenhum lançamento no período selecionado.</p>`;
     document.getElementById("barra-unidade").hidden = true;
@@ -1388,6 +1407,7 @@ function desenhar() {
   }
   unidadeAtiva = u.nome;
   document.getElementById("barra-unidade").hidden = false;
+  document.getElementById("btn-tabela").hidden = false;
 
   /* O botão só existe onde há turno; ao sair dessa unidade, a
      comparação se desliga sozinha em vez de ficar ligada sem efeito. */
@@ -1442,7 +1462,7 @@ function desenhar() {
           ? `<span class="desvio">${foraDeFaixa} fora de faixa</span>`
           : `<span class="conforme">todos dentro dos limites</span>`)
     + `<span class="sep">·</span>`
-    + `<span>${periodos.length} ${nomePeriodos()} até ${rotularPeriodo(fim)}</span>`;
+    + `<span>${periodos.length} ${nomePeriodos(periodos.length)} até ${rotularPeriodo(fim)}</span>`;
 
   const itens = u.listaParam.map(item => {
     const ult = item.validos[item.validos.length - 1];
@@ -2060,6 +2080,42 @@ document.addEventListener("keydown", ev => {
 });
 
 /* ---------- controles ---------- */
+/* Unidade cadastrada sem nenhum lançamento na janela escolhida. A tela
+   continua com os controles de modo e mês, diz qual foi o último dia
+   lançado e oferece ir direto para aquele mês. */
+function semLancamentoNoMes(nome) {
+  document.getElementById("barra-unidade").hidden = false;
+  document.getElementById("nome-unidade").textContent = nome;
+  document.getElementById("filtro-turno").hidden = true;
+  document.getElementById("btn-tabela").hidden = true;
+  document.getElementById("resumo").innerHTML =
+    `<span class="desvio">sem lançamentos em ${esc(nomeDoMes(mesRef))}</span>`;
+  const conteudo = document.getElementById("conteudo");
+  const pintar = ultima => {
+    if (unidadeAtiva !== nome) return;          // trocou de aba no meio da consulta
+    const mesUlt = ultima ? mesDe(ultima) : null;
+    conteudo.innerHTML = `<div class="aviso vazio" style="grid-column:1/-1">
+      <p><b>${esc(nome)}</b> ainda não tem lançamento em ${esc(nomeDoMes(mesRef))}.
+      ${ultima ? `O último lançamento é de <b>${fmtData(ultima)}</b>.` : "Nenhum lançamento encontrado."}</p>
+      ${mesUlt && mesUlt !== mesRef
+        ? `<button type="button" class="abre" data-ir-mes="${mesUlt}">Ver ${esc(rotuloDoMes(mesUlt))}</button>`
+        : ""}
+    </div>`;
+  };
+  if (ULTIMO_LANCAMENTO.has(nome)) { pintar(ULTIMO_LANCAMENTO.get(nome)); return; }
+  conteudo.innerHTML = `<p class="aviso" style="grid-column:1/-1">Procurando o último lançamento de ${esc(nome)}…</p>`;
+  consultar(`/rest/v1/vw_leituras_diarias?select=data&unidade=eq.${encodeURIComponent(nome)}`
+    + `&order=data.desc&limit=1`)
+    .then(r => { const d = r[0]?.data || null; ULTIMO_LANCAMENTO.set(nome, d); pintar(d); })
+    .catch(() => pintar(null));
+}
+
+document.getElementById("conteudo").addEventListener("click", async ev => {
+  const b = ev.target.closest("[data-ir-mes]"); if (!b) return;
+  mesRef = b.dataset.irMes;
+  await recarregar();
+});
+
 function montarAbas(nomes) {
   const nav = document.getElementById("abas-unidade");
   if (!unidadeAtiva) unidadeAtiva = nomes[0];
@@ -2219,6 +2275,11 @@ async function abrirPainel() {
       const comTurno = await consultar("/rest/v1/unidades?select=nome&usa_turno=is.true");
       UNIDADES_TURNO = new Set(comTurno.map(u => u.nome));
     } catch { UNIDADES_TURNO = new Set(); }
+
+    try {
+      const cadastro = await consultar("/rest/v1/unidades?select=nome,tipo&ativo=is.true&order=id.asc");
+      UNIDADES_PAINEL = cadastro.filter(x => !TIPOS_FORA_DO_PAINEL.has(x.tipo)).map(x => x.nome);
+    } catch { UNIDADES_PAINEL = []; }
 
     /* Tanques: quais parâmetros são nível, e as leituras turno a turno.
        Também acessório — se o 16_tanques.sql ainda não rodou, a faixa
