@@ -166,7 +166,7 @@
   .topo-linha { display: flex; align-items: center; gap: 20px; padding: 16px 0 14px; }
   img.logo { height: 34px; width: auto; flex: none; display: block; }
   img.logo[hidden] { display: none; }
-  /* Logo das estações. Um desenho só, usado como máscara e pintado com
+  /* Logo das estações (fica no canto direito, junto das ações). Um desenho só, usado como máscara e pintado com
      a cor do tema: no claro sai azul, no escuro sai branca, e a troca
      acompanha o botão "Tema" sem trocar de arquivo. */
   header.topo h1 { display: flex; align-items: center; gap: 12px; }
@@ -183,7 +183,10 @@
   }
   .filete { height: 4px; background: var(--brand); }
 
-  .acoes { display: flex; gap: 4px; flex: none; }
+  .acoes { display: flex; align-items: center; gap: 4px; flex: none; }
+  /* Logo das estações no canto direito, espelhando a Coca-Cola Andina
+     no esquerdo: cada marca num lado do cabeçalho. */
+  .topo-linha > .marca-ete { margin-left: 8px; }
   button.quieto {
     font: 500 13px Barlow, sans-serif; cursor: pointer; white-space: nowrap;
     padding: 7px 11px; border-radius: 7px; border: 1px solid transparent;
@@ -326,7 +329,7 @@
   @media (max-width: 640px) {
     .topo-linha { padding: 13px 0 11px; gap: 10px 12px; }
     img.logo { height: 27px; }
-    .marca-ete { width: 30px; height: 30px; }
+    .marca-ete { width: 28px; height: 28px; }
     header.topo h1 { gap: 10px; }
     header.topo h1 { font-size: 16px; }
     .contexto { padding: 20px 0 14px; gap: 14px; }
@@ -340,9 +343,10 @@
   @media (max-width: 560px) {
     .topo-linha { flex-wrap: wrap; }
     img.logo { order: 1; }
-    .acoes { order: 2; margin-left: auto; }
+    .topo-linha > .marca-ete { order: 2; margin-left: auto; }
+    .acoes { order: 3; }
     header.topo h1 {
-      order: 3; flex: 1 0 100%; font-size: 17px;
+      order: 4; flex: 1 0 100%; font-size: 17px;
       white-space: normal; line-height: 1.2;
     }
   }
@@ -373,7 +377,8 @@
     <div class="coluna">
       <div class="topo-linha">
         <img class="logo" id="logo-empresa" alt="" hidden>
-        <h1><span class="marca-ete" role="img" aria-label="Logo das estações de tratamento"></span><span class="titulo">Lançamento de dados</span></h1>
+        <h1><span class="titulo">Lançamento de dados</span></h1>
+        <span class="marca-ete" role="img" aria-label="Logo das estações de tratamento"></span>
         <div class="acoes">
           <button class="quieto" id="btn-tema" type="button">Tema</button>
           <button class="quieto" id="btn-sair" type="button">Sair</button>

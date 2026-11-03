@@ -24,12 +24,19 @@ foi recortada da versão azul (fundo vira transparente, o reflexo da
 gota é preservado). Fica em `docs/logo-estacoes-mascara.png` (221×224 px)
 e embutida em base64 nos dois HTML.
 
-Posição: ao lado do título, depois da logo Coca-Cola Andina — a marca
-corporativa continua à esquerda. 36 px no monitor, 30 px no celular.
+Posição (ajustada a pedido no mesmo dia): uma marca em cada lado do
+cabeçalho — Coca-Cola Andina à esquerda, logo das estações à direita,
+junto dos botões Apresentar/Tema/Sair. No celular as duas logos ficam na
+primeira linha, em lados opostos; no painel os botões descem para a
+linha de baixo, alinhados à direita. 36 px no monitor, 28 px no celular.
 Login e apresentação não mudaram.
+
+De passagem: entre 561 e ~640 px de largura a linha de controles
+(Diário/Semanal/Mensal, mês, turno, tabela) não quebrava e gerava
+rolagem horizontal de 137 px. `.controles` ganhou `max-width: 100%`.
 
 ## Teste
 
 `logo.mjs` (Playwright): painel e lançamento, monitor e celular, claro
-e escuro. Confere a cor aplicada, o tamanho e a ausência de rolagem
-horizontal.
+e escuro, mais 320, 480, 600 e 820 px. Confere a cor aplicada, o
+tamanho e a ausência de rolagem horizontal.
