@@ -23,6 +23,8 @@ import unicodedata
 import datetime as dt
 import json
 import re
+import shutil
+import zipfile
 import sys
 from collections import Counter, OrderedDict
 
@@ -367,7 +369,34 @@ def processa(caminho, tolerancia, ajustes=()):
                 atencao=atencao, tolerancia=tolerancia)
 
 
+def grava_valores(caminho, cache):
+    """Grava, ao lado de cada fórmula, o valor já calculado.
+
+    O openpyxl só escreve a fórmula, então visualizadores que não recalculam
+    (celular, Google Drive, pré-visualização) mostrariam tudo zerado. O Excel
+    continua recalculando ao abrir.
+    """
+    sheets = {f"xl/worksheets/sheet{i}.xml": nome for i, nome in enumerate(("Resumo", "Detalhe diário"), 1)}
+    tmp = caminho + ".tmp"
+    with zipfile.ZipFile(caminho) as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
+        for item in zin.infolist():
+            dados = zin.read(item.filename)
+            if item.filename in sheets:
+                nome = sheets[item.filename]
+
+                def troca(m):
+                    v = cache.get((nome, m.group(1)))
+                    if v is None:
+                        return m.group(0)
+                    return f'<c r="{m.group(1)}"{m.group(2)}><f>{m.group(3)}</f><v>{v!r}</v></c>'
+                dados = re.sub(r'<c r="([A-Z]+\d+)"((?: s="\d+")?)><f>(.*?)</f><v></v></c>', troca,
+                               dados.decode("utf-8")).encode("utf-8")
+            zout.writestr(item, dados)
+    shutil.move(tmp, caminho)
+
+
 def gera_planilha(r, saida):
+    cache = {}
     F = "Arial"
     hdr_font = Font(name=F, bold=True, color="FFFFFF")
     hdr_fill = PatternFill("solid", fgColor="1F4E78")
@@ -436,6 +465,10 @@ def gera_planilha(r, saida):
                     x.alignment = ctr
                 if not RE_CH.match(g["ch"]):
                     x.fill = cinza
+            prev = r["escalas"].get(g["ch"]) if RE_CH.match(g["ch"]) else None
+            if prev:
+                cache[("Detalhe diário", f"G{row}")] = int(prev[:2]) / 24 + int(prev[3:]) / 1440
+            cache[("Detalhe diário", f"L{row}")] = g.get("atraso", 0)
             det.cell(row=row, column=4).number_format = "dd/mm/yyyy"
             det.cell(row=row, column=7).number_format = "hh:mm"
             det.cell(row=row, column=8).number_format = "hh:mm"
@@ -481,12 +514,22 @@ def gera_planilha(r, saida):
             x.font, x.border = base, brd
             if col >= 4:
                 x.alignment = ctr
+        at = [g.get("atraso", 0) for g in c["registros"]]
+        dias_t, dias_a, tot = sum(1 for g in c["registros"] if g.get("trabalhou")), sum(1 for v in at if v > 0), sum(at)
+        c["_res"] = (dias_t, dias_a, tot, max(at, default=0))
+        for col, v in zip("EFGHIJK", (dias_t, dias_a, dias_a / dias_t if dias_t else 0, tot, tot / 1440,
+                                      max(at, default=0), tot / dias_a if dias_a else 0)):
+            cache[("Resumo", f"{col}{rr}")] = v
         res.cell(row=rr, column=8).font = Font(name=F, size=10, bold=True)
         res.cell(row=rr, column=7).number_format = "0%"
         res.cell(row=rr, column=9).number_format = "[h]:mm"
         res.cell(row=rr, column=11).number_format = "0.0"
     L = 4 + len(ordem)
     T = L + 1
+    tt, ta, th = (sum(c["_res"][i] for c in ordem) for i in (0, 1, 2))
+    for col, v in zip("EFGHIJK", (tt, ta, ta / tt if tt else 0, th, th / 1440, max(c["_res"][3] for c in ordem),
+                                  th / ta if ta else 0)):
+        cache[("Resumo", f"{col}{T}")] = v
     res.cell(row=T, column=2, value="TOTAL DA EQUIPE")
     for col, f in [(5, f"=SUM(E5:E{L})"), (6, f"=SUM(F5:F{L})"), (7, f"=IF(E{T}=0,0,F{T}/E{T})"),
                    (8, f"=SUM(H5:H{L})"), (9, f"=H{T}/1440"), (10, f"=MAX(J5:J{L})"), (11, f"=IF(F{T}=0,0,H{T}/F{T})")]:
@@ -530,6 +573,7 @@ def gera_planilha(r, saida):
 
     wb.calculation = CalcProperties(fullCalcOnLoad=True)
     wb.save(saida)
+    grava_valores(saida, cache)
 
 
 def main():
