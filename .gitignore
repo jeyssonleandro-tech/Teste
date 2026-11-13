@@ -1,3 +1,4 @@
 # Planilhas e espelhos de ponto têm dados pessoais: não versionar
 saidas/
 Consolidado_Atrasos_*.xlsx
+__pycache__/

@@ -7,10 +7,19 @@ Saída: planilha .xlsx com as abas Resumo, Detalhe diário, Pontos de atenção 
 Escalas, além de um resumo em JSON no stdout para conferência.
 
 Uso:
-    python3 gerar_consolidado.py ENTRADA.md [--saida ARQUIVO.xlsx] [--tolerancia MIN]
+    python3 gerar_consolidado.py ENTRADA.md [--saida ARQUIVO.xlsx] [--tolerancia MIN] [--ajustes AJUSTES.csv]
+
+Arquivo de ajustes (opcional): CSV separado por ';' com cabeçalho
+    colaborador;data;tipo;valor
+- colaborador: matrícula ou parte do nome (sem diferenciar acentos/maiúsculas)
+- data: dd/mm/aaaa
+- tipo: saida | entrada | justificativa | desconsiderar
+- valor: horário hh:mm (saida/entrada) ou texto (justificativa/desconsiderar = motivo)
 """
 import argparse
 import calendar
+import csv
+import unicodedata
 import datetime as dt
 import json
 import re
@@ -22,6 +31,7 @@ try:
     from openpyxl.formatting.rule import CellIsRule, DataBarRule
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.datavalidation import DataValidation
     from openpyxl.workbook.properties import CalcProperties
 except ImportError:
     sys.exit("openpyxl não está instalado. Rode: pip install openpyxl")
@@ -125,7 +135,7 @@ def le_espelhos(texto):
                     chave = mat[-7:]
                     atual = colabs.setdefault(chave, dict(nomes=[], cargos=[], gestores=[], escalas={}, linhas=[]))
                     atual["nomes"].append(nome)
-                    cargo = re.split(r"\*\*Cargo\*\*", linha, 1)[1]
+                    cargo = re.split(r"\*\*Cargo\*\*", linha, maxsplit=1)[1]
                     atual["cargos"].append(limpa_cab(re.split(r"\*\*", cargo)[0]))
         if atual is None:
             continue
@@ -141,7 +151,7 @@ def le_espelhos(texto):
                 atual["escalas"].setdefault(cod, ent)
             if "**Data**" in linha:
                 bloco_ch = False
-        if re.match(r"^\|\s*(\.\.\s*(<br>)?\s*)?\d{2}\.?\d{2}\.?\d{4}", linha):
+        if re.match(r"^\|\s*(\.\.)?\s*(<br>)?\s*\d{2}\.?\d{2}\.?\d{4}", linha):
             atual["linhas"].append((n, celulas(linha)))
     return colabs
 
@@ -201,6 +211,54 @@ def entrada(jornada):
     return f"{int(m.group(1)):02d}:{m.group(2)}"
 
 
+def saida(jornada):
+    horas = RE_HORA.findall(jornada)
+    if len(horas) < 2 or int(horas[-1][0]) > 23:
+        return None
+    return f"{int(horas[-1][0]):02d}:{horas[-1][1]}"
+
+
+def sem_acento(s):
+    return "".join(ch for ch in unicodedata.normalize("NFD", s) if unicodedata.category(ch) != "Mn").upper()
+
+
+def le_ajustes(caminho):
+    ajustes = []
+    if not caminho:
+        return ajustes
+    with open(caminho, encoding="utf-8-sig") as f:
+        for i, lin in enumerate(csv.DictReader(f, delimiter=";"), 2):
+            lin = {k.strip().lower(): (v or "").strip() for k, v in lin.items() if k}
+            tipo = sem_acento(lin.get("tipo", "")).lower()
+            if tipo not in ("saida", "entrada", "justificativa", "desconsiderar"):
+                sys.exit(f"Ajustes, linha {i}: tipo '{lin.get('tipo')}' inválido (use saida, entrada, justificativa ou desconsiderar).")
+            try:
+                data = dt.datetime.strptime(lin["data"], "%d/%m/%Y").date()
+            except (KeyError, ValueError):
+                sys.exit(f"Ajustes, linha {i}: data '{lin.get('data')}' inválida (use dd/mm/aaaa).")
+            valor = lin.get("valor", "")
+            if tipo in ("saida", "entrada"):
+                m = re.fullmatch(r"(\d{1,2}):(\d{2})", valor)
+                if not m:
+                    sys.exit(f"Ajustes, linha {i}: horário '{valor}' inválido (use hh:mm).")
+                valor = f"{int(m.group(1)):02d}:{m.group(2)}"
+            ajustes.append(dict(colaborador=lin.get("colaborador", ""), data=data, tipo=tipo, valor=valor,
+                                linha=i, usado=False))
+    return ajustes
+
+
+def ajustes_do(ajustes, mat, nome):
+    alvo = sem_acento(nome)
+    out = []
+    for a in ajustes:
+        chave = sem_acento(a["colaborador"])
+        digitos = re.sub(r"\D", "", chave)
+        if (digitos and digitos.lstrip("0") == mat.lstrip("0")) or (not digitos and chave and
+                all(p in alvo.split() for p in chave.split())):
+            out.append(a)
+    return out
+
+
 def minutos_atraso(prevista, registrada, tolerancia):
     p = int(prevista[:2]) * 60 + int(prevista[3:])
     r = int(registrada[:2]) * 60 + int(registrada[3:])
@@ -210,7 +268,7 @@ def minutos_atraso(prevista, registrada, tolerancia):
     return 0 if bruto <= tolerancia else bruto
 
 
-def processa(caminho, tolerancia):
+def processa(caminho, tolerancia, ajustes=()):
     texto = open(caminho, encoding="utf-8").read()
     colabs = le_espelhos(texto)
     todas_datas = Counter()
@@ -233,6 +291,10 @@ def processa(caminho, tolerancia):
         nome = junta_fragmentos(c["nomes"]).title()
         cargo = junta_fragmentos(c["cargos"])
         dias = interpreta_linhas(c["linhas"], ano, mes)
+        meus = ajustes_do(ajustes, mat, nome)
+        for a in meus:
+            if a["usado"]:
+                sys.exit(f"Ajustes, linha {a['linha']}: '{a['colaborador']}' corresponde a mais de um colaborador.")
         registros = []
         for d in range(1, ndias + 1):
             data = dt.date(ano, mes, d)
@@ -242,16 +304,34 @@ def processa(caminho, tolerancia):
                 atencao.append((nome, data, "Dia não encontrado no arquivo. Conferir no espelho original."))
                 continue
             ch = x["ch"]
-            ent = entrada(x["jornada"])
+            just = "Sem marcação" if "Sem marca" in x["just"] else x["just"]
+            ent, sai = entrada(x["jornada"]), saida(x["jornada"])
             trabalho = bool(RE_CH.match(ch))
             if trabalho:
                 usados.add(ch)
-            obs = []
-            if x["just"] and x["just"] != "Sem marcação" or (x["just"] == "Sem marcação" and not trabalho):
-                obs.append(x["just"])
+            obs, desconsiderar = [], ""
+            if just and (just != "Sem marcação" or not trabalho):
+                obs.append(just)
+            if "abono" in just.lower():
+                desconsiderar = "Sim"
             if x["inclusao"]:
                 obs.append("Marcação incluída manualmente")
-            if trabalho and not ent and not x["just"]:
+            for a in (a for a in meus if a["data"] == data):
+                a["usado"] = True
+                if a["tipo"] == "saida":
+                    sai = a["valor"]
+                    obs.append(f"Saída {a['valor']} informada pelo gestor")
+                elif a["tipo"] == "entrada":
+                    ent = a["valor"]
+                    obs.append(f"Entrada {a['valor']} informada pelo gestor")
+                elif a["tipo"] == "justificativa":
+                    just = a["valor"] or "Justificado"
+                    obs.append(f"{just} (informado pelo gestor)")
+                else:
+                    desconsiderar = "Sim"
+                    obs.append("Atraso desconsiderado pelo gestor" + (f": {a['valor']}" if a["valor"] else ""))
+                atencao.append((nome, data, f"Ajuste do gestor aplicado: {a['tipo']} {a['valor']}".strip() + "."))
+            if trabalho and not ent and not just:
                 obs.append("Sem marcação")
                 atencao.append((nome, data, f"Dia de escala {ch} sem marcação e sem justificativa (feriado?)."))
             if not trabalho and ent:
@@ -264,11 +344,19 @@ def processa(caminho, tolerancia):
                 prev = escalas.get(ch) or ESCALAS_PADRAO.get(ch, (None,))[0]
                 if prev:
                     atraso = minutos_atraso(prev, ent, tolerancia)
-                    if x["inclusao"] and atraso:
+                    if atraso and desconsiderar:
+                        atencao.append((nome, data, f"Atraso de {atraso} min desconsiderado ({'; '.join(obs)})."))
+                        atraso = 0
+                    elif x["inclusao"] and atraso:
                         atencao.append((nome, data, f"Atraso de {atraso} min vem de marcação incluída manualmente."))
-            registros.append(dict(data=data, ch=ch, entrada=ent if trabalho or ent else None,
-                                  obs="; ".join(obs), atraso=atraso, trabalhou=trabalho and bool(ent)))
+            registros.append(dict(data=data, ch=ch, entrada=ent if trabalho or ent else None, saida=sai,
+                                  obs="; ".join(obs), desconsiderar=desconsiderar, atraso=atraso,
+                                  trabalhou=trabalho and bool(ent)))
         resultado.append(dict(matricula=mat.zfill(8), nome=nome, cargo=cargo, registros=registros))
+    sobra = [a for a in ajustes if not a["usado"]]
+    if sobra:
+        sys.exit("Ajustes não aplicados (colaborador ou data não encontrados): " +
+                 ", ".join(f"linha {a['linha']} ({a['colaborador']} {a['data']:%d/%m/%Y})" for a in sobra))
     gestor = junta_fragmentos([g for c in colabs.values() for g in c["gestores"]])
     gestor = gestor.title()
     for cod in usados:
@@ -327,8 +415,9 @@ def gera_planilha(r, saida):
 
     # Detalhe diário
     header(det, 1, ["Matrícula", "Colaborador", "Cargo", "Data", "Dia", "CH (escala do dia)", "Entrada prevista",
-                    "Entrada registrada (Jornada)", "Observação", "Atraso (min)"],
-           [11, 36, 22, 11, 6, 10, 10, 13, 44, 10])
+                    "Entrada registrada (Jornada)", "Saída registrada", "Observação", "Desconsiderar atraso?",
+                    "Atraso (min)"],
+           [11, 36, 22, 11, 6, 10, 10, 13, 10, 48, 13, 10])
     row = 2
     faixas = {}
     for c in r["colaboradores"]:
@@ -336,28 +425,33 @@ def gera_planilha(r, saida):
         for g in c["registros"]:
             vals = [c["matricula"], c["nome"], c["cargo"], g["data"], DIAS[g["data"].weekday()], g["ch"],
                     f'=IFERROR(INDEX({ESC_B},MATCH(F{row},{ESC_A},0)),"")',
-                    hora(g["entrada"]) if g.get("entrada") else None, g["obs"],
-                    f'=IF(OR(G{row}="",H{row}=""),0,IF(MAX(0,ROUND((H{row}-G{row}+IF(AND(G{row}>=0.5,H{row}<G{row}-0.5),1,0))*1440,0))<={TOL},0,'
+                    hora(g["entrada"]) if g.get("entrada") else None,
+                    hora(g["saida"]) if g.get("saida") else None, g["obs"], g.get("desconsiderar") or None,
+                    f'=IF(OR(K{row}="Sim",G{row}="",H{row}=""),0,IF(MAX(0,ROUND((H{row}-G{row}+IF(AND(G{row}>=0.5,H{row}<G{row}-0.5),1,0))*1440,0))<={TOL},0,'
                     f'MAX(0,ROUND((H{row}-G{row}+IF(AND(G{row}>=0.5,H{row}<G{row}-0.5),1,0))*1440,0))))']
             for col, v in enumerate(vals, 1):
                 x = det.cell(row=row, column=col, value=v)
                 x.font, x.border = base, brd
-                if col in (1, 4, 5, 6, 7, 8, 10):
+                if col in (1, 4, 5, 6, 7, 8, 9, 11, 12):
                     x.alignment = ctr
                 if not RE_CH.match(g["ch"]):
                     x.fill = cinza
             det.cell(row=row, column=4).number_format = "dd/mm/yyyy"
             det.cell(row=row, column=7).number_format = "hh:mm"
             det.cell(row=row, column=8).number_format = "hh:mm"
-            det.cell(row=row, column=10).number_format = '0;-0;"-"'
+            det.cell(row=row, column=9).number_format = "hh:mm"
+            det.cell(row=row, column=12).number_format = '0;-0;"-"'
             row += 1
         faixas[c["matricula"]] = (ini, row - 1)
     N = row - 1
     det.freeze_panes = "C2"
-    det.auto_filter.ref = f"A1:J{N}"
-    det.conditional_formatting.add(f"J2:J{N}", CellIsRule(operator="greaterThanOrEqual", formula=["30"],
+    det.auto_filter.ref = f"A1:L{N}"
+    dv = DataValidation(type="list", formula1='"Sim"', allow_blank=True)
+    det.add_data_validation(dv)
+    dv.add(f"K2:K{N}")
+    det.conditional_formatting.add(f"L2:L{N}", CellIsRule(operator="greaterThanOrEqual", formula=["30"],
                                    fill=PatternFill("solid", fgColor="F8CBAD"), font=Font(name=F, bold=True, color="9C0006")))
-    det.conditional_formatting.add(f"J2:J{N}", CellIsRule(operator="between", formula=["1", "29"],
+    det.conditional_formatting.add(f"L2:L{N}", CellIsRule(operator="between", formula=["1", "29"],
                                    fill=PatternFill("solid", fgColor="FFF2CC")))
 
     # Resumo, do maior para o menor atraso
@@ -376,7 +470,7 @@ def gera_planilha(r, saida):
     for i, c in enumerate(ordem):
         rr = 5 + i
         a, b = faixas[c["matricula"]]
-        J, G, H = (f"{D}${k}${a}:${k}${b}" for k in "JGH")
+        J, G, H = (f"{D}${k}${a}:${k}${b}" for k in "LGH")
         chs = sorted({g["ch"] for g in c["registros"] if RE_CH.match(g["ch"])})
         vals = [c["matricula"], c["nome"], c["cargo"],
                 " / ".join(f"{k} ({r['escalas'].get(k, '?')})" for k in chs),
@@ -414,6 +508,9 @@ def gera_planilha(r, saida):
         "• O CH é lido dia a dia, então trocas de escala no meio do mês são respeitadas.",
         "• Marcações incluídas manualmente e aprovadas são usadas como estão na coluna 'Jornada'.",
         "• Folga, DSR, compensado, feriado, licenças, acidente de trabalho, treinamento e trabalho externo não geram atraso.",
+        "• Dias com abono no espelho ou desconsiderados pelo gestor vêm com 'Sim' na coluna 'Desconsiderar atraso?' "
+        "do Detalhe diário e não geram atraso. Marcar ou desmarcar 'Sim' ali recalcula a planilha.",
+        "• Ajustes informados pelo gestor (saídas, entradas, justificativas) aparecem na Observação de cada dia.",
         "• Casos que merecem conferência estão na aba 'Pontos de atenção'.",
     ]
     for i, t in enumerate(notas):
@@ -440,8 +537,9 @@ def main():
     ap.add_argument("entrada")
     ap.add_argument("--saida")
     ap.add_argument("--tolerancia", type=int, default=0, help="minutos de tolerância (padrão 0)")
+    ap.add_argument("--ajustes", help="CSV com ajustes informados pelo gestor (ver docstring)")
     a = ap.parse_args()
-    r = processa(a.entrada, a.tolerancia)
+    r = processa(a.entrada, a.tolerancia, le_ajustes(a.ajustes))
     saida = a.saida or f"Consolidado_Atrasos_{MESES[r['mes']]}_{r['ano']}.xlsx"
     gera_planilha(r, saida)
     resumo = []

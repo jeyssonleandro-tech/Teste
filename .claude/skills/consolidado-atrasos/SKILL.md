@@ -26,17 +26,44 @@ e pergunte se ele consegue enviar nesse formato antes de tentar outra coisa.
 - O CH é lido dia a dia, o que respeita trocas de escala no meio do mês.
 - Marcações incluídas manualmente e aprovadas valem como estão na Jornada.
 - Folga, DSR, COMP, feriado, licenças, acidente, treinamento e trabalho externo não geram atraso.
+- **Abono no espelho** (ex.: "Abono # Ausência Op.") zera o atraso do dia: vem marcado
+  "Sim" na coluna "Desconsiderar atraso?".
+- **Meio turno sem justificativa** (entrada perto das 12:00 num dia de ausência
+  operacional, como a decisão de out/2026): **pergunte ao gestor** antes de contar.
+  Se ele mandar desconsiderar, lance um ajuste `desconsiderar`.
 - O horário de cada CH vem do quadro "Códigos de Horários" dos próprios espelhos.
   Em setembro/2026 eram 0026 = 08:00, 0030 = 06:00 e 0032 = 18:00.
 
+## Ajustes informados pelo gestor
+
+O gestor costuma completar pontos em branco (saídas, atestados etc.). Grave-os num CSV
+**no scratchpad** (nunca no repositório) e passe com `--ajustes`:
+
+```csv
+colaborador;data;tipo;valor
+Fulano de Tal;09/10/2026;saida;06:02
+Fulano;29/10/2026;justificativa;Atestado médico
+01234567;25/10/2026;desconsiderar;Motivo informado pelo gestor
+```
+
+- `colaborador`: matrícula ou parte do nome (acentos e maiúsculas não importam).
+- `tipo`: `saida` e `entrada` (hh:mm), `justificativa` (texto) ou `desconsiderar` (motivo).
+- Só `entrada` e `desconsiderar` mudam o atraso. Saída e justificativa ficam registradas
+  na planilha. Diga isso ao gestor quando o ajuste dele não alterar o total.
+- O script para com erro se um ajuste não casar com nenhum colaborador ou dia.
+
 ## Passo a passo
+
+0. **Antes de calcular, leia o `.md` e pergunte ao gestor** sobre o que for ambíguo:
+   atrasos muito grandes (horas), meio turno, CH novo, dias faltando. O usuário pediu
+   para ser acionado antes de qualquer resposta quando houver dúvida.
 
 1. **Rode o script** (instale o openpyxl antes, se faltar: `pip install openpyxl`):
 
    ```bash
    mkdir -p saidas
    python3 .claude/skills/consolidado-atrasos/scripts/gerar_consolidado.py "<arquivo.md>" \
-     --saida "saidas/Consolidado_Atrasos_<Mes>_<Ano>.xlsx"
+     --saida "saidas/Consolidado_Atrasos_<Mes>_<Ano>.xlsx" [--ajustes "<scratchpad>/ajustes.csv"]
    ```
 
    O script grava a planilha e imprime um JSON com o período, as escalas encontradas,
@@ -63,7 +90,8 @@ e pergunte se ele consegue enviar nesse formato antes de tentar outra coisa.
   dos colaboradores, e o usuário pediu que não fossem para o GitHub. A pasta
   `saidas/` está no `.gitignore`.
 - Abas da planilha: **Resumo** (ordenado do maior para o menor atraso),
-  **Detalhe diário**, **Pontos de atenção** e **Escalas**. A tolerância fica numa
+  **Detalhe diário** (com saída registrada e a coluna "Desconsiderar atraso?", que o
+  gestor pode editar no Excel), **Pontos de atenção** e **Escalas**. A tolerância fica numa
   célula da aba Escalas e recalcula tudo quando alterada.
 - O LibreOffice deste ambiente pode não abrir arquivos. A planilha já sai marcada
   para recalcular ao abrir no Excel. Para conferir as fórmulas, use `pycel`
