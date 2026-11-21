@@ -83,6 +83,8 @@
     /* Líquido do tanque: distante do cinza da série e do vermelho de
        desvio, para as três coisas não se confundirem. */
     --liquido:  #00658F;
+    /* Meses na comparação: do mais recente (1) ao mais antigo (4). */
+    --cmp-1: #00658F; --cmp-2: #57504E; --cmp-3: #A85400; --cmp-4: #6B3FA0;
     --ok:       #12730F;
     --ok-soft:  rgba(18,115,15,0.10);
     --alerta:   #C00000;
@@ -108,6 +110,7 @@
     --serie:    #A9A1A0;
     --serie-fill: rgba(169,161,160,0.12);
     --liquido:  #5CC0F0;
+    --cmp-1: #5CC0F0; --cmp-2: #A9A1A0; --cmp-3: #F0A04B; --cmp-4: #B79CE8;
     --ok:       #3FC93F;
     --ok-soft:  rgba(63,201,63,0.13);
     --alerta:   #F0625F;
@@ -435,6 +438,118 @@
   tbody tr + tr td, tbody tr + tr th { border-top: 1px solid var(--rule-2); }
   td.vazio { color: var(--ink-3); }
 
+  /* ---------- comparação mês a mês ----------
+     O mês mais recente leva o azul, o anterior o cinza; do terceiro em
+     diante entram o laranja e o roxo. Nenhuma das quatro é o vermelho de
+     desvio nem o verde de conforme — essas duas cores só falam de limite.
+     Todas passam de 4,5:1 sobre o fundo, nos dois temas. */
+  .cmp-cards {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 20px 28px; margin-top: 16px;
+  }
+  .cmp-card { border-top: 4px solid var(--cor); padding-top: 10px; min-width: 0; }
+  .cmp-mes {
+    display: block; font: 500 12px "IBM Plex Mono", monospace; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--ink-2);
+  }
+  /* Duas linhas reservadas em todos os cartões: só o mês em andamento usa a
+     segunda, e sem a reserva o número dele descia e desalinhava dos outros. */
+  .cmp-mes { min-height: 2.9em; }
+  .cmp-mes em { display: block; font-style: normal; color: var(--ink-3); text-transform: none; letter-spacing: 0; }
+  .cmp-valor {
+    font-size: clamp(36px, 4.6vw, 54px); font-weight: 600; line-height: 1;
+    margin: 8px 0 6px; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+  }
+  .cmp-valor .un { font: 400 14px "IBM Plex Mono", monospace; color: var(--ink-3); }
+  .cmp-valor.fora { color: var(--alerta); }
+  .cmp-valor.ok   { color: var(--ok); }
+  .cmp-delta { display: block; font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 8px; }
+  .cmp-card .selo { font-size: 12.5px; }
+  .cmp-sub { display: block; margin-top: 26px; }
+  .nota-cmp { grid-column: 1 / -1; margin: -12px 0 0; font-size: 13px; color: var(--ink-3); }
+  .cmp-nota-card { margin: 14px 0 0; font-size: 13px; color: var(--ink-3); }
+  .tabela-cmp td.fora { color: var(--alerta); font-weight: 600; }
+  .tabela-cmp th small { font: 400 11.5px "IBM Plex Mono", monospace; color: var(--ink-3); margin-left: 4px; }
+  .tabela-cmp thead th .ponto {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--cor); margin-right: 7px; vertical-align: 0;
+  }
+  .menu-painel [role="menuitemcheckbox"] { display: flex; align-items: center; gap: 9px; }
+  .menu-painel .marca-sel {
+    width: 16px; height: 16px; border: 1.5px solid var(--ink-3); border-radius: 4px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; line-height: 1; color: var(--ground);
+  }
+  .menu-painel [aria-checked="true"] { background: var(--sunk); color: var(--ink); font-weight: 600; }
+  .menu-painel [aria-checked="true"] .marca-sel { background: var(--ink); border-color: var(--ink); }
+  .menu-painel [aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+  .menu-dica { margin: 0; padding: 8px 12px 6px; font-size: 12px; color: var(--ink-3); }
+
+  /* ---------- modo TV ----------
+     Pensado para a tela do laboratório: ninguém está com o mouse na mão.
+     Some tudo que é controle, o gráfico cresce com a tela (o zoom é
+     calculado em JavaScript) e uma barra fina embaixo mostra quanto falta
+     para o próximo. Mexeu o mouse ou tocou na tela, os comandos aparecem
+     por três segundos. */
+  body.telao { cursor: none; padding-bottom: 40px; overflow: hidden; }
+  body.telao.mexeu { cursor: default; }
+  body.telao header.topo { position: static; }
+  body.telao nav.abas, body.telao .acoes, body.telao footer.rodape,
+  body.telao .painel-lista, body.telao .barra-unidade .controles { display: none !important; }
+  body.telao .barra-unidade { padding: 16px 0 4px; }
+  body.telao .palco { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; padding-bottom: 8px; }
+  body.telao .palco:has(.tanques) { grid-template-columns: minmax(0, 1fr) 330px; }
+  body.telao .tanques { grid-column: 2; grid-row: 1; }
+  body.telao .destaque { grid-column: 1; grid-row: 1; }
+  body.telao .destaque .valor { font-size: 84px; }
+  body.telao .destaque h3 { font-size: 24px; }
+  @keyframes tv-entra { from { opacity: 0; } to { opacity: 1; } }
+  body.telao #conteudo.tv-entra { animation: tv-entra .45s ease-out; }
+  @media (prefers-reduced-motion: reduce) { body.telao #conteudo.tv-entra { animation: none; } }
+
+  #tv-barra { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--ground); }
+  .tv-progresso { height: 5px; background: var(--rule-2); }
+  .tv-progresso i { display: block; height: 100%; width: 0; background: var(--brand); }
+  .tv-faixa {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 6px 20px; min-height: 34px;
+  }
+  .tv-info { font: 400 12.5px "IBM Plex Mono", monospace; color: var(--ink-3); }
+  .tv-info.erro { color: var(--alerta); }
+  .tv-comandos { display: flex; gap: 6px; opacity: 0; transition: opacity .2s; }
+  body.mexeu .tv-comandos, .tv-comandos:focus-within { opacity: 1; }
+  .tv-comandos button {
+    font: 500 13px Barlow, sans-serif; cursor: pointer; padding: 5px 13px; border-radius: 7px;
+    border: 1px solid var(--rule); background: var(--panel); color: var(--ink-2);
+  }
+  .tv-comandos button:hover { background: var(--sunk); color: var(--ink); }
+
+  dialog#dlg-tv {
+    border: 1px solid var(--rule); border-radius: 14px; background: var(--panel); color: var(--ink);
+    padding: 0; width: min(520px, calc(100vw - 32px)); box-shadow: var(--sombra);
+  }
+  dialog#dlg-tv::backdrop { background: rgba(0, 0, 0, .45); }
+  #dlg-tv form { padding: 24px 24px 20px; display: grid; gap: 16px; }
+  #dlg-tv h2 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
+  #dlg-tv p { margin: 0; font-size: 14px; color: var(--ink-2); }
+  #dlg-tv fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 4px; }
+  #dlg-tv legend, #dlg-tv .campo > span {
+    font: 500 12px "IBM Plex Mono", monospace; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--ink-3); padding: 0; margin-bottom: 6px;
+  }
+  #dlg-tv label.opcao { display: flex; align-items: center; gap: 10px; padding: 7px 4px; font-size: 15px; cursor: pointer; }
+  #dlg-tv input[type="radio"], #dlg-tv input[type="checkbox"] { accent-color: var(--brand); width: 17px; height: 17px; }
+  #dlg-tv select, #dlg-tv input[type="text"] {
+    font: 400 15px Barlow, sans-serif; padding: 9px 11px; border-radius: 8px;
+    border: 1px solid var(--rule); background: var(--ground); color: var(--ink); width: 100%;
+  }
+  #dlg-tv .campo { display: grid; }
+  #dlg-tv .link { display: flex; gap: 8px; }
+  #dlg-tv .link input { font: 400 12.5px "IBM Plex Mono", monospace; min-width: 0; }
+  #dlg-tv .rodape-dlg { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+  #dlg-tv button { font: 500 14px Barlow, sans-serif; cursor: pointer; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); }
+  #dlg-tv button.principal { background: var(--ink); color: var(--ground); border-color: var(--ink); font-weight: 600; }
+
   #tooltip {
     position: fixed; z-index: 60; pointer-events: none; opacity: 0;
     transition: opacity .1s; background: var(--ink); color: var(--ground);
@@ -718,6 +833,7 @@
         <h1><span class="titulo">Dashboard Estações de tratamento</span></h1>
         <span class="marca-ete" role="img" aria-label="Logo das estações de tratamento"></span>
         <div class="acoes">
+          <button class="quieto" id="btn-tv" type="button" title="Os gráficos passam sozinhos, para deixar na tela do laboratório">Modo TV</button>
           <button class="quieto" id="btn-apresentar" type="button">Apresentar</button>
           <button class="quieto" id="btn-tema" type="button">Tema</button>
           <button class="quieto" id="btn-sair" type="button">Sair</button>
@@ -762,6 +878,58 @@
   </div>
 </div>
 
+<!-- ============ MODO TV ============ -->
+<dialog id="dlg-tv" aria-labelledby="tv-titulo">
+  <form id="form-tv" method="dialog">
+    <h2 id="tv-titulo">Modo TV</h2>
+    <p>Os gráficos passam sozinhos, um depois do outro, sem ninguém mexer. Serve para deixar
+       na tela do laboratório. Mostra sempre o mês mais recente e atualiza a cada 5 minutos.</p>
+    <fieldset>
+      <legend>O que passar</legend>
+      <div id="tv-unidades"></div>
+    </fieldset>
+    <p id="tv-periodo"></p>
+    <div class="campo">
+      <span>Tempo em cada gráfico</span>
+      <select id="tv-seg" aria-label="Tempo em cada gráfico">
+        <option value="10">10 segundos</option>
+        <option value="15">15 segundos</option>
+        <option value="20">20 segundos</option>
+        <option value="30" selected>30 segundos</option>
+        <option value="45">45 segundos</option>
+        <option value="60">1 minuto</option>
+      </select>
+    </div>
+    <label class="opcao"><input type="checkbox" id="tv-cheia" checked>Abrir em tela cheia</label>
+    <div class="campo">
+      <span>Endereço para abrir direto na TV</span>
+      <div class="link">
+        <input type="text" id="tv-link" readonly aria-label="Endereço do modo TV">
+        <button type="button" id="tv-copiar">Copiar</button>
+      </div>
+    </div>
+    <p>Para sair: tecla Esc, ou mexa o mouse e use o botão Sair. Setas trocam de gráfico e a
+       barra de espaço pausa.</p>
+    <div class="rodape-dlg">
+      <button type="button" id="tv-cancelar">Cancelar</button>
+      <button type="submit" class="principal">Iniciar</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="tv-barra" class="oculto">
+  <div class="tv-progresso" aria-hidden="true"><i id="tv-progresso"></i></div>
+  <div class="tv-faixa">
+    <span class="tv-info" id="tv-info"></span>
+    <span class="tv-comandos">
+      <button type="button" id="tv-anterior" aria-label="Gráfico anterior">‹</button>
+      <button type="button" id="tv-pausa">Pausar</button>
+      <button type="button" id="tv-proximo" aria-label="Próximo gráfico">›</button>
+      <button type="button" id="tv-sair">Sair</button>
+    </span>
+  </div>
+</div>
+
 <!-- ============ APRESENTAÇÃO ============ -->
 <div id="apresentacao" class="oculto" role="dialog" aria-modal="true"
      aria-label="Apresentação do mês"></div>
@@ -790,7 +958,7 @@ let sessao = null;
 let LINHAS = [];
 let unidadeAtiva = null;
 let paramAtivo = null;
-let modo = "diario";            // "diario" | "semanal" | "mensal"
+let modo = "diario";            // "diario" | "semanal" | "mensal" | "comparar"
 /* O painel trabalha sempre sobre UM mês de referência. No diário são os
    dias desse mês; no semanal, as quatro últimas semanas que terminam
    nele; no mensal, os doze meses que terminam nele. Além de ser a
@@ -923,12 +1091,12 @@ let unidadeTemTurno = false;
 const grao = () => unidadeTemTurno ? "turno" : "dia";
 
 const temLimite = p => p.limInf !== null || p.limSup !== null;
-const limitePorDia = p => modo !== "diario" && p.limBase === "diario";
+const limitePorDia = p => modo !== "diario" && modo !== "comparar" && p.limBase === "diario";
 /* A linha de limite só some quando não teria onde pousar: um teto
    diário sobre uma SOMA do período. Num parâmetro de média ou último
    valor — pH, DQO — o desenho está na mesma escala do limite. */
 const limiteDesenhavel = p =>
-  !(modo !== "diario" && p.limBase === "diario" && p.agreg === "soma");
+  !(modo !== "diario" && modo !== "comparar" && p.limBase === "diario" && p.agreg === "soma");
 
 /* O que o alerta julga: o acumulado do mês, quando o parâmetro é desse
    tipo; senão, o último ponto da série. O número da lista continua sendo
@@ -1057,6 +1225,7 @@ async function renovarSessao() {
 }
 
 function sair() {
+  tvParar(false);
   sessao = null;
   esquecerSessao();
   document.getElementById("tela-painel").classList.add("oculto");
@@ -1241,11 +1410,15 @@ function escalaBonita(min, max, alvo = 4) {
    pontos fora da faixa; duas séries dispensam a área — dois preenchimentos
    sobrepostos embaralham a leitura — e mantêm cada linha na sua cor, senão
    o vermelho de desvio apagaria a distinção entre os turnos. */
-function graficoGrande(p, largura, series) {
+function graficoGrande(p, largura, series, opcoes = {}) {
+  /* opcoes.eixo troca o eixo de datas pelo dia do mês — é o que sobrepõe
+     meses diferentes. opcoes.altura serve ao modo TV. */
+  const eixo = opcoes.eixo || null;
+  const chave = eixo ? eixo.chave : d => d.periodo;
   series = series || [{ nome: null, cor: "var(--serie)", pontos: p.validos }];
   const uma = series.length === 1;
   const todos = series.flatMap(s => s.pontos);
-  const periodos = [...new Set(todos.map(d => d.periodo))].sort();
+  const periodos = eixo ? eixo.periodos : [...new Set(todos.map(d => d.periodo))].sort();
 
   if (todos.length === 0) return '<p class="sem-dado">Sem valores no período.</p>';
   if (periodos.length === 1) {
@@ -1255,7 +1428,7 @@ function graficoGrande(p, largura, series) {
   }
 
   const W = Math.max(280, largura);
-  const H = W < 560 ? 250 : W < 900 ? 300 : 340;
+  const H = opcoes.altura || (W < 560 ? 250 : W < 900 ? 300 : 340);
   const vs = todos.map(d => d.valor);
   const refs = limiteDesenhavel(p)
     ? [p.limInf, p.limSup].filter(v => v !== null) : [];
@@ -1273,7 +1446,7 @@ function graficoGrande(p, largura, series) {
   const caminho = pontos => {
     let d = "", anterior = -2;
     for (const pt of pontos) {
-      const i = ordem.get(pt.periodo);
+      const i = ordem.get(chave(pt));
       d += `${i === anterior + 1 ? "L" : "M"}${x(i).toFixed(1)},${y(pt.valor).toFixed(1)} `;
       anterior = i;
     }
@@ -1283,8 +1456,8 @@ function graficoGrande(p, largura, series) {
   const traçados = series.map(s => {
     const d = caminho(s.pontos);
     const area = uma && s.pontos.length
-      ? `<path d="${d} L${x(ordem.get(s.pontos[s.pontos.length - 1].periodo)).toFixed(1)},${H - pad.b}`
-        + ` L${x(ordem.get(s.pontos[0].periodo)).toFixed(1)},${H - pad.b} Z"
+      ? `<path d="${d} L${x(ordem.get(chave(s.pontos[s.pontos.length - 1]))).toFixed(1)},${H - pad.b}`
+        + ` L${x(ordem.get(chave(s.pontos[0]))).toFixed(1)},${H - pad.b} Z"
               fill="var(--serie-fill)" stroke="none"/>` : "";
     return `${area}<path d="${d}" fill="none" stroke="${s.cor}" stroke-width="2.4"
             stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -1327,7 +1500,7 @@ function graficoGrande(p, largura, series) {
     const anc = i === 0 ? "start" : i === ultimoI ? "end" : "middle";
     return `<text x="${x(i).toFixed(1)}" y="${H - 11}" font-size="11.5"
                   font-family="IBM Plex Mono, monospace" fill="var(--ink-3)"
-                  text-anchor="${anc}">${rotularCurto(periodos[i])}</text>`;
+                  text-anchor="${anc}">${eixo ? eixo.rotulo(periodos[i]) : rotularCurto(periodos[i])}</text>`;
   }).join("");
 
   /* Com muitos pontos as áreas de toque se sobreporiam e uma bloquearia
@@ -1338,7 +1511,7 @@ function graficoGrande(p, largura, series) {
   const comBolinha = espaco >= (uma ? 16 : 26);
 
   const marcas = series.map(s => s.pontos.map((d, j) => {
-    const i = ordem.get(d.periodo);
+    const i = ordem.get(chave(d));
     const a = uma ? avaliar(p, d) : null;
     const desviou = a && a.estado !== "dentro";
     const ultimo = uma && j === s.pontos.length - 1;
@@ -1358,8 +1531,8 @@ function graficoGrande(p, largura, series) {
     `<span><i style="background:${s.cor}"></i>${esc(s.nome)}</span>`).join("")}</div>`;
 
   return `${legenda}<svg viewBox="0 0 ${W} ${H}" role="img"
-    aria-label="${esc(p.nome)} — ${periodos.length} períodos, de
-    ${rotularPeriodo(periodos[0])} a ${rotularPeriodo(periodos[periodos.length - 1])}">
+    aria-label="${esc(p.nome)} — ${periodos.length} ${eixo ? "dias do mês" : "períodos"}, de
+    ${eixo ? "dia " + eixo.rotulo(periodos[0]) : rotularPeriodo(periodos[0])} a ${eixo ? "dia " + eixo.rotulo(periodos[periodos.length - 1]) : rotularPeriodo(periodos[periodos.length - 1])}">
     ${grades}${linhasLimite}${rotuloLimite}
     ${traçados}${datas}${marcas}
   </svg>`;
@@ -1414,6 +1587,7 @@ function desenhar() {
     : comDado;
   if (!unidadeAtiva || !nomesAbas.includes(unidadeAtiva)) unidadeAtiva = comDado[0] || nomesAbas[0];
   montarAbas(nomesAbas);
+  if (modo === "comparar") { desenharComparacao(); return; }
 
   const vista = turnoVisto
     ? organizar(LINHAS_TURNO.filter(l => Number(l.turno) === turnoVisto))
@@ -1553,7 +1727,14 @@ function desenhar() {
 function desenharGrafico(p) {
   const alvo = document.getElementById("tela-grafico");
   if (!alvo) return;
-  alvo.innerHTML = graficoGrande(p, Math.round(alvo.clientWidth) || 320);
+  /* Na TV o gráfico ocupa o que sobra da altura da tela, e não os 340 px
+     de sempre — senão sobraria um vão embaixo. */
+  let altura;
+  if (TV.ativo) {
+    const livre = innerHeight / TV.zoom - alvo.getBoundingClientRect().top / TV.zoom - 52;
+    altura = Math.max(230, Math.min(560, Math.round(livre)));
+  }
+  alvo.innerHTML = graficoGrande(p, Math.round(alvo.clientWidth) || 320, undefined, altura ? { altura } : {});
   ligarTooltip(p);
 }
 
@@ -2139,6 +2320,558 @@ document.getElementById("conteudo").addEventListener("click", async ev => {
   await recarregar();
 });
 
+/* ---------- comparação mês a mês ----------
+   Até quatro meses lado a lado. O número de cada mês vem da visão
+   mensal do banco — a mesma que o modo Mensal lê, com a regra de cada
+   parâmetro (soma, média, razão) — e o desenho dia a dia vem das
+   leituras diárias, com os dias do mês sobrepostos: o dia 12 de um mês
+   cai em cima do dia 12 do outro. O julgamento do número é do mês; o do
+   gráfico é do dia, e por isso o modo é trocado por um instante em cada
+   etapa, como na apresentação. */
+const MAX_CMP = 4;
+let mesesCmp = [];               // do mais antigo ao mais recente
+let CMP = null;                  // { chave, mensal, diario: Map(mês → linhas) }
+let pedidoCmp = 0;               // descarta resposta de uma escolha que já foi trocada
+let adiaCmp = null;
+
+const COR_CMP = ["var(--cmp-1)", "var(--cmp-2)", "var(--cmp-3)", "var(--cmp-4)"];
+const corDoMes = (meses, mes) => COR_CMP[meses.length - 1 - meses.indexOf(mes)];
+const mesCurto = mes => {
+  const [a, m] = mes.split("-");
+  const abrev = MESES[Number(m) - 1].slice(0, 3);
+  return `${abrev.charAt(0).toUpperCase()}${abrev.slice(1)}/${a.slice(2)}`;
+};
+const emAndamento = mes => mes === mesDe(hojeSP());
+
+function emModo(m, fn) {
+  const antes = modo;
+  modo = m;
+  try { return fn(); } finally { modo = antes; }
+}
+
+function deltaTexto(atual, antes) {
+  if (atual === null || antes === null || atual === undefined || antes === undefined
+      || !isFinite(atual) || !isFinite(antes)) return null;
+  const dif = atual - antes;
+  const seta = dif > 0 ? "▲" : dif < 0 ? "▼" : "▬";
+  const pct = antes !== 0
+    ? `${dif > 0 ? "+" : ""}${(dif / Math.abs(antes) * 100).toFixed(1).replace(".", ",")}%` : "";
+  return { seta, pct, dif };
+}
+
+async function carregarComparacao() {
+  const meu = ++pedidoCmp;
+  const meses = [...mesesCmp];
+  const colunas = "unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,"
+    + "valor,agregacao,valor_min_dia,valor_max_dia,"
+    + "limite_inferior,limite_superior,limite_base";
+  const mensal = await consultar(`/rest/v1/vw_dashboard_mensal?select=${colunas},mes`
+    + `&mes=in.(${meses.join(",")})&order=mes.asc&limit=5000`);
+
+  /* Um mês por vez, e não todos juntos: a consulta avisa quando o banco
+     cortou a resposta, e esse aviso é de uma consulta só. */
+  const diario = new Map(), avisos = [];
+  for (const mes of meses) {
+    const linhas = await consultar(`/rest/v1/vw_leituras_diarias`
+      + `?select=unidade,tipo_unidade,parametro,unidade_medida,ordem_parametro,`
+      + `agregacao,data,valor,limite_inferior,limite_superior`
+      + `&data=gte.${mes}&data=lt.${somaMeses(mes, 1)}&order=data.asc&limit=5000`, true);
+    if (avisoCorte) avisos.push(`${rotuloDoMes(mes)}: ${avisoCorte}`);
+    diario.set(mes, linhas);
+    if (meu !== pedidoCmp) return false;
+  }
+  if (meu !== pedidoCmp) return false;
+  CMP = { chave: meses.join(), mensal, diario };
+  avisoCorte = avisos.join(" ");
+  return true;
+}
+
+function alternarMesCmp(mes) {
+  const i = mesesCmp.indexOf(mes);
+  if (i >= 0) {
+    if (mesesCmp.length <= 2) return;                 // comparar exige dois, no mínimo
+    mesesCmp.splice(i, 1);
+  } else {
+    if (mesesCmp.length >= MAX_CMP) return;
+    mesesCmp.push(mes);
+    mesesCmp.sort();
+  }
+  mesRef = mesesCmp[mesesCmp.length - 1];
+  montarControles();                                   // marcas e rótulo; o menu segue aberto
+  /* Quem marca três meses seguidos não quer três consultas: espera a
+     mão parar. */
+  clearTimeout(adiaCmp);
+  adiaCmp = setTimeout(() => recarregar(), 350);
+}
+
+function desenharComparacao() {
+  const conteudo = document.getElementById("conteudo");
+  const meses = [...mesesCmp];
+  const ultimoMes = meses[meses.length - 1];
+  document.getElementById("barra-unidade").hidden = false;
+  document.getElementById("filtro-turno").hidden = true;
+  document.getElementById("btn-tabela").hidden = true;
+  turnoVisto = 0;
+  unidadeTemTurno = UNIDADES_TURNO.has(unidadeAtiva);
+  document.getElementById("nome-unidade").textContent = unidadeAtiva || "";
+
+  if (!CMP || CMP.chave !== meses.join()) {
+    conteudo.innerHTML = `<p class="aviso" style="grid-column:1/-1">Carregando a comparação…</p>`;
+    return;
+  }
+
+  const mensalOrg = emModo("mensal", () =>
+    organizar(CMP.mensal.map(l => ({ ...l, periodo: l.mes }))));
+  const u = mensalOrg.unidades.find(x => x.nome === unidadeAtiva);
+  if (!u) {
+    document.getElementById("resumo").innerHTML =
+      `<span class="desvio">sem lançamentos nos meses escolhidos</span>`;
+    conteudo.innerHTML = `<p class="aviso" style="grid-column:1/-1">
+      <b>${esc(unidadeAtiva || "")}</b> não tem lançamento em nenhum destes meses:
+      ${meses.map(m => esc(rotuloDoMes(m))).join(", ")}. Escolha outros meses no seletor.</p>`;
+    return;
+  }
+
+  /* Como na tela normal: com os tanques à parte, o nível não entra
+     na lista — mas aqui nem a faixa de tanques é desenhada, porque
+     nível é retrato do fim do turno, não total do mês. */
+  if (TANQUES.size) {
+    const semTanque = u.listaParam.filter(x => !TANQUES.has(x.nome));
+    if (semTanque.length) u.listaParam = semTanque;
+  }
+  const pontoDe = (item, mes) =>
+    item.pontos.find(x => x.periodo === mes && x.valor !== null && isFinite(x.valor)) || null;
+  const julga = (item, pt) => pt ? emModo("mensal", () => avaliar(item, pt)) : null;
+
+  let p = u.listaParam.find(x => x.nome === paramAtivo);
+  if (!p) p = u.listaParam.find(x => meses.some(m => pontoDe(x, m))) || u.listaParam[0];
+  paramAtivo = p.nome;
+  const unLegivel = p.un && p.un !== "-" ? p.un : "";
+
+  const comLimite = u.listaParam.filter(temLimite);
+  const fora = comLimite.filter(item => {
+    const a = julga(item, pontoDe(item, ultimoMes));
+    return a && a.estado !== "dentro";
+  }).length;
+  document.getElementById("resumo").innerHTML =
+    `<span><b>${u.listaParam.length}</b> parâmetros</span><span class="sep">·</span>`
+    + `<span>${meses.map(mesCurto).join(" × ")}</span>`
+    + (comLimite.length
+        ? `<span class="sep">·</span>` + (fora > 0
+            ? `<span class="desvio">${fora} fora de faixa em ${esc(mesCurto(ultimoMes))}</span>`
+            : `<span class="conforme">todos dentro dos limites em ${esc(mesCurto(ultimoMes))}</span>`)
+        : "");
+
+  const cartoes = meses.map((mes, i) => {
+    const pt = pontoDe(p, mes);
+    const antes = i > 0 ? pontoDe(p, meses[i - 1]) : null;
+    const al = julga(p, pt);
+    const d = pt && antes ? deltaTexto(pt.valor, antes.valor) : null;
+    const legenda = d
+      ? `${d.seta} ${d.pct || fmtNum(Math.abs(d.dif))} vs. ${mesCurto(meses[i - 1])}`
+      : !pt ? "sem lançamento"
+      : i === 0 ? "ponto de partida" : `sem ${mesCurto(meses[i - 1])} para comparar`;
+    return `<div class="cmp-card" style="--cor:${corDoMes(meses, mes)}">
+      <span class="cmp-mes">${esc(rotuloDoMes(mes))}${emAndamento(mes) ? "<em>em andamento</em>" : ""}</span>
+      <div class="cmp-valor numero${al ? " " + classeEstado(al) : ""}">
+        <span>${pt ? fmtNum(pt.valor) : "—"}</span>${pt && unLegivel ? `<span class="un">${esc(unLegivel)}</span>` : ""}
+      </div>
+      <span class="cmp-delta">${esc(legenda)}</span>
+      ${al ? `<span class="selo ${classeEstado(al)}">${esc(emModo("mensal", () => textoEstado(p, al)))}</span>` : ""}
+    </div>`;
+  }).join("");
+
+  const somaParcial = p.agreg === "soma" && meses.some(emAndamento);
+  const nota = somaParcial
+    ? `<p class="cmp-nota-card">${esc(p.nome)} é um total: o mês em andamento ainda não fechou,
+       então não compare com um mês completo.</p>` : "";
+
+  const itens = u.listaParam.map(item => {
+    const pts = meses.map(m => pontoDe(item, m));
+    const n = meses.length;
+    const ult = pts[n - 1];
+    const d = deltaTexto(ult && ult.valor, pts[n - 2] && pts[n - 2].valor);
+    const al = julga(item, ult);
+    const cl = classeEstado(al);
+    const un = item.un && item.un !== "-" ? item.un : "";
+    const mini = emModo("mensal", () => miniTendencia({ ...item, validos: pts.filter(Boolean) }));
+    return `<li><button type="button" data-param="${esc(item.nome)}"
+        aria-current="${item.nome === p.nome}"
+        ${al ? `title="${esc(emModo("mensal", () => textoEstado(item, al)))}"` : ""}>
+      <span class="sinal ${cl}" aria-hidden="true">${al ? SIMBOLO[al.estado] : ""}</span>
+      <span class="item-nome">${esc(item.nome)}${un ? `<small>${esc(un)}</small>` : ""}</span>
+      <span class="item-mini">${mini}</span>
+      <span class="item-num numero${cl ? " " + cl : ""}">${ult ? fmtNum(ult.valor) : "—"}
+        ${d && d.pct ? `<small>${d.seta} ${d.pct}</small>` : ""}</span>
+    </button></li>`;
+  }).join("");
+
+  const cab = meses.map(m =>
+    `<th scope="col" style="--cor:${corDoMes(meses, m)}"><span class="ponto"></span>${esc(mesCurto(m))}</th>`).join("");
+  let usouAsterisco = false;
+  const linhas = u.listaParam.map(item => {
+    const pts = meses.map(m => pontoDe(item, m));
+    const n = meses.length;
+    const celulas = meses.map((m, i) => {
+      const pt = pts[i];
+      if (!pt) return `<td class="vazio">—</td>`;
+      const al = julga(item, pt);
+      const parcial = item.agreg === "soma" && emAndamento(m);
+      if (parcial) usouAsterisco = true;
+      return `<td class="${al && al.estado !== "dentro" ? "fora" : ""}">${fmtNum(pt.valor)}${parcial ? "*" : ""}</td>`;
+    }).join("");
+    const d = deltaTexto(pts[n - 1] && pts[n - 1].valor, pts[n - 2] && pts[n - 2].valor);
+    const un = item.un && item.un !== "-" ? `<small>${esc(item.un)}</small>` : "";
+    return `<tr><th scope="row">${esc(item.nome)}${un}</th>${celulas}
+      <td>${d ? `${d.seta} ${d.pct || "—"}` : "—"}</td></tr>`;
+  }).join("");
+  const tabelaCmp = `<div class="tabela-wrap tabela-cmp"><table>
+    <caption class="so-leitor">Comparação mês a mês de ${esc(u.nome)}</caption>
+    <thead><tr><th scope="col">Parâmetro</th>${cab}
+      <th scope="col">${esc(mesCurto(ultimoMes))} vs. ${esc(mesCurto(meses[meses.length - 2]))}</th></tr></thead>
+    <tbody>${linhas}</tbody></table></div>
+    ${usouAsterisco ? `<p class="nota-cmp">* Mês em andamento: o total ainda não fechou.</p>` : ""}`;
+
+  conteudo.innerHTML = `
+    ${avisoCorte ? `<p class="aviso" style="grid-column:1/-1">${esc(avisoCorte)}</p>` : ""}
+    <section class="destaque">
+      <span class="rotulo">Comparando ${meses.length} meses</span>
+      <h3>${esc(p.nome)}</h3>
+      <div class="cmp-cards">${cartoes}</div>
+      ${nota}
+      <span class="rotulo cmp-sub">Dia a dia · os meses sobrepostos pelo dia</span>
+      <div class="tela-grafico" id="tela-grafico"></div>
+    </section>
+    <aside class="painel-lista">
+      <span class="rotulo">Parâmetros da unidade</span>
+      <ul class="lista" id="lista-param" aria-label="Parâmetros de ${esc(u.nome)}">${itens}</ul>
+    </aside>
+    ${tabelaCmp}`;
+
+  desenharGraficoCmp(meses, p.nome);
+  document.getElementById("lista-param").onclick = ev => {
+    const b = ev.target.closest("[data-param]"); if (!b) return;
+    paramAtivo = b.dataset.param;
+    desenhar();
+  };
+}
+
+function desenharGraficoCmp(meses, nome) {
+  const alvo = document.getElementById("tela-grafico");
+  if (!alvo) return;
+  let pDia = null, maxDia = 0;
+  const series = [];
+  for (const mes of meses) {
+    const org = emModo("diario", () =>
+      organizar((CMP.diario.get(mes) || []).map(l => ({ ...l, periodo: l.data }))));
+    const un = org.unidades.find(x => x.nome === unidadeAtiva);
+    const dp = un && un.parametros.get(nome);
+    if (!dp || !dp.validos.length) continue;
+    pDia = dp;
+    maxDia = Math.max(maxDia, ...dp.validos.map(d => Number(d.periodo.slice(8, 10))));
+    series.push({ nome: rotuloDoMes(mes), cor: corDoMes(meses, mes), pontos: dp.validos });
+  }
+  if (!pDia) { alvo.innerHTML = `<p class="sem-dado">Sem leituras diárias nestes meses.</p>`; return; }
+  const eixo = {
+    periodos: Array.from({ length: maxDia }, (_, i) => i + 1),
+    chave: d => Number(d.periodo.slice(8, 10)),
+    rotulo: k => String(k).padStart(2, "0")
+  };
+  alvo.innerHTML = emModo("diario", () =>
+    graficoGrande(pDia, Math.round(alvo.clientWidth) || 320, series, { eixo }));
+  ligarTooltip(pDia);
+}
+
+/* ---------- modo TV ----------
+   Para deixar o painel passando sozinho na tela do laboratório. Cada
+   "gráfico" é um parâmetro de uma unidade, e a cada intervalo o painel
+   avança para o próximo — a unidade escolhida inteira, ou todas em
+   sequência. É a mesma tela de sempre, só sem controles e maior: o que
+   se vê aqui é o que se vê no painel, sem uma segunda implementação para
+   manter.
+
+   Fica de pé o dia todo, então ele se cuida sozinho: refaz a consulta a
+   cada cinco minutos, acompanha a virada do mês, pede ao navegador para
+   não apagar a tela e, se a rede cair, continua mostrando o último dado
+   e avisa a que horas ele é. */
+const TV = {
+  ativo: false, unidade: "*", seg: 30, itens: [], i: 0, pausado: false,
+  timer: null, fim: 0, restante: 0, recarga: null, lock: null, ocioso: null,
+  atualizadoEm: null, erro: false, zoom: 1, tela: false
+};
+const INTERVALO_RECARGA_TV = 5 * 60 * 1000;
+
+const horaSP = d => new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }).format(d);
+
+async function carregarNiveis() {
+  const marcados = await consultar("/rest/v1/parametros?select=nome&e_tanque=is.true");
+  const tanques = new Set(marcados.map(p => p.nome));
+  const niveis = tanques.size ? await consultar(
+    "/rest/v1/vw_turnos?select=unidade,parametro,unidade_medida,turno,periodo,valor,"
+    + "limite_inferior,limite_superior&granularidade=eq.diario"
+    + "&order=periodo.desc&limit=400") : [];
+  TANQUES = tanques; NIVEIS = niveis;       // só troca depois que as duas consultas deram certo
+}
+
+function tvRoteiro() {
+  const base = organizar(LINHAS);
+  const nomes = TV.unidade === "*"
+    ? (UNIDADES_PAINEL.length ? UNIDADES_PAINEL : base.unidades.map(x => x.nome))
+    : [TV.unidade];
+  const itens = [];
+  for (const nome of nomes) {
+    const u = base.unidades.find(x => x.nome === nome);
+    if (!u) continue;
+    let lista = u.listaParam;
+    if (tanquesDa(nome)) {                  // os níveis já aparecem como tanque
+      const sem = lista.filter(x => !TANQUES.has(x.nome));
+      if (sem.length) lista = sem;
+    }
+    for (const p of lista) if (p.validos.length) itens.push({ unidade: nome, parametro: p.nome });
+  }
+  return itens;
+}
+
+function tvAjustarZoom() {
+  /* A tela é desenhada para ~1280 × 760; numa TV Full HD tudo cresce
+     perto de 1,4×, e o texto continua legível da bancada. */
+  TV.zoom = Math.max(1, Math.min(2.4, Math.min(innerWidth / 1280, innerHeight / 760)));
+  document.body.style.zoom = String(TV.zoom);
+}
+
+function tvInfo() {
+  const el = document.getElementById("tv-info");
+  const n = TV.itens.length;
+  const quando = TV.atualizadoEm ? horaSP(TV.atualizadoEm) : "—";
+  el.classList.toggle("erro", TV.erro);
+  el.textContent = `${TV.i + 1} / ${n} · ${TV.erro
+    ? `sem conexão — dados de ${quando}` : `atualizado às ${quando}`}`
+    + (TV.pausado ? " · pausado" : "");
+}
+
+function tvBarra(ms) {
+  const barra = document.getElementById("tv-progresso");
+  const feito = Math.max(0, Math.min(1, 1 - ms / (TV.seg * 1000)));
+  barra.style.transition = "none";
+  barra.style.width = `${feito * 100}%`;
+  void barra.offsetWidth;                    // sem isto o navegador funde as duas atribuições
+  if (ms > 0 && !TV.pausado) {
+    barra.style.transition = `width ${ms}ms linear`;
+    barra.style.width = "100%";
+  }
+}
+
+function tvAgendar(ms) {
+  clearTimeout(TV.timer);
+  TV.fim = Date.now() + ms;
+  tvBarra(ms);
+  TV.timer = setTimeout(() => tvIr(TV.i + 1), ms);
+}
+
+function tvIr(i) {
+  const n = TV.itens.length;
+  if (!TV.ativo || !n) return;
+  TV.i = ((i % n) + n) % n;
+  const it = TV.itens[TV.i];
+  unidadeAtiva = it.unidade;
+  paramAtivo = it.parametro;
+  desenhar();
+  const palco = document.getElementById("conteudo");
+  palco.classList.remove("tv-entra");
+  void palco.offsetWidth;
+  palco.classList.add("tv-entra");
+  if (TV.pausado) { TV.restante = TV.seg * 1000; tvBarra(TV.restante); }
+  else tvAgendar(TV.seg * 1000);
+  tvInfo();
+}
+
+function tvPausar(pausar) {
+  if (!TV.ativo || pausar === TV.pausado) return;
+  TV.pausado = pausar;
+  const barra = document.getElementById("tv-progresso");
+  if (pausar) {
+    clearTimeout(TV.timer);
+    TV.restante = Math.max(0, TV.fim - Date.now());
+    const largura = barra.getBoundingClientRect().width;
+    const total = barra.parentElement.getBoundingClientRect().width || 1;
+    barra.style.transition = "none";
+    barra.style.width = `${largura / total * 100}%`;
+  } else {
+    tvAgendar(TV.restante || TV.seg * 1000);
+  }
+  document.getElementById("tv-pausa").textContent = pausar ? "Continuar" : "Pausar";
+  tvInfo();
+}
+
+async function tvAtualizar() {
+  const mesAntes = mesRef;
+  try {
+    const ultima = await consultar("/rest/v1/vw_leituras_diarias?select=data&order=data.desc&limit=1");
+    if (ultima.length) mesRef = mesDe(ultima[0].data);   // acompanha a virada do mês
+    const linhas = await carregar(modo);
+    const pesos = await carregarPesos(modo);
+    await carregarNiveis();
+    LINHAS = linhas; PESOS = pesos;
+    TV.atualizadoEm = new Date();
+    TV.erro = false;
+  } catch {
+    mesRef = mesAntes;                       // fica com o que já estava na tela
+    TV.erro = true;
+  }
+  montarControles();
+}
+
+function tvReconstruir() {
+  const atual = TV.itens[TV.i];
+  TV.itens = tvRoteiro();
+  if (!TV.itens.length) return;
+  const k = atual ? TV.itens.findIndex(x => x.unidade === atual.unidade && x.parametro === atual.parametro) : -1;
+  TV.i = k >= 0 ? k : Math.min(TV.i, TV.itens.length - 1);
+  unidadeAtiva = TV.itens[TV.i].unidade;
+  paramAtivo = TV.itens[TV.i].parametro;
+  desenhar();
+  tvInfo();
+}
+
+async function tvManterAcordado() {
+  try {
+    if (TV.ativo && "wakeLock" in navigator) TV.lock = await navigator.wakeLock.request("screen");
+  } catch { /* sem permissão: a tela pode apagar, e o painel segue funcionando */ }
+}
+
+async function tvIniciar({ unidade, seg, telaCheia }) {
+  if (TV.ativo) return;
+  /* Tela cheia só vale se pedida no gesto do clique, antes de qualquer
+     espera pela rede. */
+  if (telaCheia && document.documentElement.requestFullscreen) {
+    try { await document.documentElement.requestFullscreen(); TV.tela = true; } catch { TV.tela = false; }
+  }
+  if (modo === "comparar") modo = "diario";
+  Object.assign(TV, { unidade, seg, pausado: false, erro: false, i: 0 });
+  mostrarTabela = false; turnoVisto = 0;
+  TV.ativo = true;
+  document.body.classList.add("telao");
+  document.getElementById("tv-barra").classList.remove("oculto");
+  document.getElementById("tv-pausa").textContent = "Pausar";
+  tvAjustarZoom();
+
+  await tvAtualizar();
+  TV.itens = tvRoteiro();
+  if (!TV.itens.length) {
+    tvParar();
+    alert("Não há dados para passar no período atual.");
+    return;
+  }
+  const comeco = TV.unidade === "*" ? -1
+    : TV.itens.findIndex(x => x.parametro === paramAtivo);
+  tvIr(Math.max(0, comeco));
+  clearInterval(TV.recarga);
+  TV.recarga = setInterval(async () => { await tvAtualizar(); tvReconstruir(); }, INTERVALO_RECARGA_TV);
+  tvManterAcordado();
+}
+
+function tvParar(redesenhar = true) {
+  if (!TV.ativo) return;
+  TV.ativo = false;
+  clearTimeout(TV.timer); clearInterval(TV.recarga); clearTimeout(TV.ocioso);
+  document.body.classList.remove("telao", "mexeu");
+  document.body.style.zoom = "";
+  document.getElementById("tv-barra").classList.add("oculto");
+  if (TV.lock) { TV.lock.release().catch(() => {}); TV.lock = null; }
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  TV.tela = false;
+  if (redesenhar) { montarControles(); desenhar(); }
+}
+
+/* ----- tela de início ----- */
+function tvEndereco() {
+  const dlg = document.getElementById("dlg-tv");
+  const un = dlg.querySelector('input[name="tv-un"]:checked');
+  const seg = dlg.querySelector("#tv-seg").value;
+  const base = location.href.split(/[?#]/)[0];
+  return `${base}?tv=${encodeURIComponent(!un || un.value === "*" ? "todas" : un.value)}&seg=${seg}`;
+}
+
+function abrirDialogoTV() {
+  const dlg = document.getElementById("dlg-tv");
+  const nomes = UNIDADES_PAINEL.length ? UNIDADES_PAINEL
+    : [...new Set(LINHAS.filter(l => !TIPOS_FORA_DO_PAINEL.has(l.tipo_unidade)).map(l => l.unidade))];
+  const atual = nomes.includes(unidadeAtiva) ? unidadeAtiva : "*";
+  dlg.querySelector("#tv-unidades").innerHTML = [...nomes, "*"].map(n => `
+    <label class="opcao"><input type="radio" name="tv-un" value="${esc(n)}"
+      ${n === atual ? "checked" : ""}>${n === "*" ? "Todas as unidades, em sequência" : esc(n)}</label>`).join("");
+  const periodo = { semanal: "Semanal", mensal: "Mensal" }[modo] || "Diário";
+  dlg.querySelector("#tv-periodo").innerHTML =
+    `Período dos gráficos: <b>${periodo}</b> — o que estiver selecionado na tela agora.`;
+  dlg.querySelector("#tv-link").value = tvEndereco();
+  dlg.showModal();
+}
+
+document.getElementById("btn-tv").onclick = abrirDialogoTV;
+const dlgTV = document.getElementById("dlg-tv");
+dlgTV.addEventListener("change", () => { dlgTV.querySelector("#tv-link").value = tvEndereco(); });
+document.getElementById("tv-cancelar").onclick = () => dlgTV.close();
+document.getElementById("tv-copiar").onclick = async ev => {
+  const campo = document.getElementById("tv-link");
+  try { await navigator.clipboard.writeText(campo.value); ev.target.textContent = "Copiado"; }
+  catch { campo.select(); ev.target.textContent = "Selecionado"; }
+  setTimeout(() => { ev.target.textContent = "Copiar"; }, 1800);
+};
+document.getElementById("form-tv").onsubmit = ev => {
+  ev.preventDefault();
+  const un = dlgTV.querySelector('input[name="tv-un"]:checked');
+  const op = {
+    unidade: un ? un.value : "*",
+    seg: Number(dlgTV.querySelector("#tv-seg").value) || 30,
+    telaCheia: dlgTV.querySelector("#tv-cheia").checked
+  };
+  dlgTV.close();
+  tvIniciar(op);
+};
+
+document.getElementById("tv-anterior").onclick = () => tvIr(TV.i - 1);
+document.getElementById("tv-proximo").onclick = () => tvIr(TV.i + 1);
+document.getElementById("tv-pausa").onclick = () => tvPausar(!TV.pausado);
+document.getElementById("tv-sair").onclick = () => tvParar();
+
+/* Mexeu no mouse, tocou ou apertou uma tecla: os comandos aparecem e
+   somem sozinhos. */
+function tvAcordarComandos() {
+  if (!TV.ativo) return;
+  document.body.classList.add("mexeu");
+  clearTimeout(TV.ocioso);
+  TV.ocioso = setTimeout(() => document.body.classList.remove("mexeu"), 3000);
+}
+["pointermove", "pointerdown", "keydown"].forEach(e =>
+  document.addEventListener(e, tvAcordarComandos, { passive: true }));
+document.addEventListener("keydown", ev => {
+  if (!TV.ativo) return;
+  if (ev.key === "Escape") tvParar();
+  else if (ev.key === "ArrowRight") tvIr(TV.i + 1);
+  else if (ev.key === "ArrowLeft") tvIr(TV.i - 1);
+  else if (ev.key === " " && ev.target === document.body) { ev.preventDefault(); tvPausar(!TV.pausado); }
+});
+/* Esc em tela cheia só sai da tela cheia; o painel entende como pedido
+   de sair do modo TV também. */
+document.addEventListener("fullscreenchange", () => {
+  if (TV.ativo && TV.tela && !document.fullscreenElement) tvParar();
+});
+document.addEventListener("visibilitychange", () => {
+  if (TV.ativo && document.visibilityState === "visible") tvManterAcordado();
+});
+
+/* Endereço com ?tv=ETE%20Industrial&seg=30 abre direto no modo TV — é o
+   que se deixa salvo no navegador da tela do laboratório. */
+function tvPeloEndereco() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has("tv") || TV.ativo) return;
+  const pedida = q.get("tv");
+  const seg = Math.max(5, Math.min(300, Number(q.get("seg")) || 30));
+  const existe = UNIDADES_PAINEL.includes(pedida);
+  tvIniciar({ unidade: existe ? pedida : "*", seg, telaCheia: false }).catch(() => tvParar());
+}
+
 function montarAbas(nomes) {
   const nav = document.getElementById("abas-unidade");
   if (!unidadeAtiva) unidadeAtiva = nomes[0];
@@ -2159,10 +2892,25 @@ const mesesOferecidos = () => {
 
 function montarControles() {
   document.getElementById("filtro-modo").innerHTML =
-    [["diario", "Diário"], ["semanal", "Semanal"], ["mensal", "Mensal"]].map(([v, r]) =>
+    [["diario", "Diário"], ["semanal", "Semanal"], ["mensal", "Mensal"], ["comparar", "Comparar"]].map(([v, r]) =>
       `<button type="button" data-modo="${v}"
          aria-pressed="${v === modo}">${r}</button>`).join("");
 
+  if (modo === "comparar") {
+    /* Aqui o menu escolhe vários meses: marca e desmarca sem fechar. */
+    const cheio = mesesCmp.length >= MAX_CMP;
+    document.getElementById("painel-periodo").innerHTML =
+      `<p class="menu-dica" role="presentation">Escolha de 2 a ${MAX_CMP} meses</p>`
+      + mesesOferecidos().map(m => {
+        const sel = mesesCmp.includes(m);
+        const travado = (!sel && cheio) || (sel && mesesCmp.length <= 2);
+        return `<button type="button" role="menuitemcheckbox" data-mes="${m}"
+           aria-checked="${sel}" ${travado ? 'aria-disabled="true"' : ""}>
+           <span class="marca-sel" aria-hidden="true">${sel ? "✓" : ""}</span>${rotuloDoMes(m)}</button>`;
+      }).join("");
+    document.getElementById("rotulo-periodo").textContent = mesesCmp.map(mesCurto).join(" × ");
+    return;
+  }
   document.getElementById("painel-periodo").innerHTML = mesesOferecidos().map(m =>
     `<button type="button" role="menuitem" data-mes="${m}"
        aria-current="${m === mesRef}">${rotuloDoMes(m)}</button>`).join("");
@@ -2182,12 +2930,17 @@ document.getElementById("btn-periodo").onclick = ev => {
   ev.currentTarget.setAttribute("aria-expanded", String(!aberto));
 };
 document.addEventListener("click", ev => {
-  if (!ev.target.closest("#menu-periodo")) fecharMenu();
+  /* O caminho do evento é gravado no disparo: no menu de comparação o
+     botão clicado é redesenhado antes de o clique chegar aqui, e
+     ev.target.closest() já não o encontraria dentro do menu. */
+  if (!ev.composedPath().some(e => e.id === "menu-periodo")) fecharMenu();
 });
 document.addEventListener("keydown", ev => { if (ev.key === "Escape") fecharMenu(); });
 
 painelPeriodo().onclick = async ev => {
-  const b = ev.target.closest("[data-mes]"); if (!b || b.dataset.mes === mesRef) return;
+  const b = ev.target.closest("[data-mes]"); if (!b) return;
+  if (modo === "comparar") { alternarMesCmp(b.dataset.mes); return; }
+  if (b.dataset.mes === mesRef) return;
   mesRef = b.dataset.mes;
   fecharMenu();
   await recarregar();
@@ -2196,6 +2949,19 @@ painelPeriodo().onclick = async ev => {
 /* Trocar de modo ou de mês refaz a consulta: a janela mora no banco,
    não na tela. */
 async function recarregar() {
+  if (modo === "comparar") {
+    try {
+      const ok = await carregarComparacao();
+      if (ok === false) return;               // a escolha mudou no meio da consulta
+    } catch (erro) {
+      document.getElementById("conteudo").innerHTML =
+        `<p class="aviso" style="grid-column:1/-1">Não foi possível carregar a comparação. ${esc(erro.message)}</p>`;
+      return;
+    }
+    montarControles();
+    desenhar();
+    return;
+  }
   LINHAS = await carregar(modo);
   PESOS  = await carregarPesos(modo);
   LINHAS_TURNO = turnoVisto ? await carregarTurnos(modo) : [];
@@ -2214,6 +2980,14 @@ document.getElementById("abas-unidade").onclick = ev => {
 document.getElementById("filtro-modo").onclick = async ev => {
   const b = ev.target.closest("[data-modo]"); if (!b || b.dataset.modo === modo) return;
   modo = b.dataset.modo;
+  if (modo === "comparar") {
+    /* Começa no que quase sempre se quer: o mês em tela contra o anterior. */
+    if (mesesCmp.length < 2) mesesCmp = [somaMeses(mesRef, -1), mesRef];
+    mesRef = mesesCmp[mesesCmp.length - 1];
+    turnoVisto = 0;
+    montarControles();
+    desenhar();                               // mostra "carregando" até a consulta voltar
+  }
   await recarregar();
 };
 
@@ -2253,7 +3027,10 @@ document.getElementById("btn-sair").onclick = sair;
 let temporizador;
 addEventListener("resize", () => {
   clearTimeout(temporizador);
-  temporizador = setTimeout(() => { if (sessao && LINHAS.length) desenhar(); }, 180);
+  temporizador = setTimeout(() => {
+    if (TV.ativo) tvAjustarZoom();
+    if (sessao && LINHAS.length) desenhar();
+  }, 180);
 });
 
 /* ---------- entrada ---------- */
@@ -2328,14 +3105,7 @@ async function abrirPainel() {
       }
     } catch { /* sem perfis no banco: segue como antes */ }
 
-    try {
-      const marcados = await consultar("/rest/v1/parametros?select=nome&e_tanque=is.true");
-      TANQUES = new Set(marcados.map(p => p.nome));
-      if (TANQUES.size) NIVEIS = await consultar(
-        "/rest/v1/vw_turnos?select=unidade,parametro,unidade_medida,turno,periodo,valor,"
-        + "limite_inferior,limite_superior&granularidade=eq.diario"
-        + "&order=periodo.desc&limit=400");
-    } catch { TANQUES = new Set(); NIVEIS = []; }
+    try { await carregarNiveis(); } catch { TANQUES = new Set(); NIVEIS = []; }
 
     /* O mês de referência é o corrente. Se ainda não houver lançamento
        nele — começo de mês, ou fim de semana prolongado —, o painel abre
@@ -2354,6 +3124,7 @@ async function abrirPainel() {
     }
     montarControles();
     desenhar();
+    tvPeloEndereco();
   } catch (erro) {
     estado.textContent = `Não foi possível carregar os dados. ${erro.message}`;
   }
